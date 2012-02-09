@@ -16,7 +16,7 @@ $("document").ready(function(){
 				$("form").append("<div class=\"last\" id=\"row" + i + "\">row" + i + "</div>");
 			}
 		}else{
-			alert("Form is too big. Keep less than 10 rows.");
+			alert("Form is too big. Please keep it less than 10 rows.");
 		}
 	}//end build_form()
 });//end doc.ready
