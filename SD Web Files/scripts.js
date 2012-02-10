@@ -4,6 +4,9 @@
 
 $("document").ready(function(){
 	
+//	1,1,999,1,1,999
+//	1199911999,1199911999
+	
 	build_form(10);
 	
 	function build_form(num){

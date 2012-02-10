@@ -4,6 +4,35 @@
 <!--[if lt IE 8]>
 	<link rel="stylesheet" href="blueprint/ie.css" type="text/css" media="screen, projection">
 <![endif]-->
+<script src="jquery-1.7.1.min.js"></script>
+
+<script>
+	$(function(){//shortcut for doc.ready
+		
+		$("#save").click(function(){
+			var data = "";
+			
+			$("#form select").each(function(){
+				data += $(this).val();					//avoid .attr
+			});
+			console.log(data);
+			
+			//$.post("http://192.168.1.9/testget",data,function(){
+			//	console.log("posted " + data);
+			//});
+			
+			
+		});
+		
+		//use to update the form
+		$("#form #first").children().each(function(){
+			data = "5";
+			if($(this).val() == data) {
+				$(this).prop("selected","selected");
+			};
+		});
+	});
+</script>
 </head>
 
 <body>
@@ -12,18 +41,18 @@
 			<h1>The HB</h1>
 			<a href="settings.html">Settings</a> | <a href="index.html">Program</a> | <a href="live.html">Live View</a>
   
-			<form>
+			<form id="form">
 				<!--begin row1 -->
 				<div class="last" id="row1">
 					When input 
-					<select class="sensor" name="sensor">
-						<option>-</option>
-						<option>A</option>
-						<option>B</option>
-						<option>C</option>
-						<option>D</option>
-						<option>E</option>
-						<option>F</option>
+					<select id="first" class="sensor" name="sensor">
+						<option value="0">-</option>
+						<option value="1">A</option>
+						<option value="2">B</option>
+						<option value="3">C</option>
+						<option value="4">D</option>
+						<option value="5">E</option>
+						<option value="6">F</option>
 					</select>
 					is
 					<select class="sensor_state" name="sensor_state">
@@ -350,13 +379,12 @@
 				</div>
 				<!--end row1 -->
 
-				<button id="save" name="save">Save Program</button>
+				<button id="save" name="save" type="button">Save Program</button>
 
 			</form>
   
 		</div>
 	</div>
-	<script src="jquery-1.7.1.min.js"></script>
 	<script src="scripts.js"></script>
 </body>
 </html>
