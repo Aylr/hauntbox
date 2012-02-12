@@ -1,6 +1,11 @@
 <html>
 <head>
 <link rel="stylesheet" href="blueprint/screen.css" type="text/css" media="screen, projection">
+<style type="text/css">
+#wait1time { /*slim up the wide 999 second boxes */
+	width: 3em;
+}
+</style>
 <!--[if lt IE 8]>
 	<link rel="stylesheet" href="blueprint/ie.css" type="text/css" media="screen, projection">
 <![endif]-->
@@ -12,7 +17,7 @@
 		$("form div#row2").remove();			//temporarily remove all the other rows
 		
 		
-		$("#save").click(cupcake);
+	//	$("#save").click(cupcake);
 		$("select").change(cupcake);
 		
 		function cupcake(){
@@ -39,6 +44,23 @@
 			};
 		});
 		*/
+		
+		$("#wait1").click(function(){
+			if($(this).is(":checked")){
+				$("#wait1text").fadeTo(150, 1);
+			}else{
+				$("#wait1text").fadeTo(150, .3);
+			};
+		});
+		
+		$("#save").click(function(){
+			if($("#wait1").is(":checked")){
+				$("form").append("checked make me send a 1 ");
+			}else{
+				$("form").append("nope make me send a 0 ");
+			};
+		});
+		
 	});//doc.ready
 </script>
 </head>
@@ -68,6 +90,9 @@
 						<option value="0">off</option>
 					</select>
 					&nbsp;&nbsp;:&nbsp;&nbsp;
+					
+					<input type="checkbox" id="wait1" name="wait1" checked="checked" />Wait <span id="wait1text"><input name="wait1time" id="wait1time" type="text" maxlength="3"> second(s) then</span>
+					<!--
 					<select class="sensor_delay" name="wait">
 						<option value="000">immediately</option>
 						<option value="001">wait 1 second then</option>
@@ -79,6 +104,7 @@
 						<option value="007">wait 7 seconds then</option>
 						<option value="010">wait 10 seconds then</option>
 					</select>
+					-->
 					turn output
 					<select class="output" name="output">
 						<option value="0">-</option>
