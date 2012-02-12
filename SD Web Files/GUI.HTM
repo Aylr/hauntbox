@@ -17,7 +17,7 @@ label {
 <script>
 	$(function(){//shortcut for doc.ready		
 		
-	//	$("#save").click(cupcake);
+		$("#save").click(cupcake);
 		$("select").change(cupcake);
 		
 		function cupcake(){
@@ -57,16 +57,24 @@ label {
 			}else{
 				$(this).parent().fadeTo(150, .3);			//fade the <span>
 				wait_time_input.prop("disabled", true);		//disable the input box
+				//wait_time_input.val(0);
 			};
 		};//update_wait()
 		
+		
 		$("#save").click(function(){
-			if($("#wait1").is(":checked")){
-				$("form").append("checked make me send a 1 ");
-			}else{
-				$("form").append("nope make me send a 0 ");
-			};
-		});
+			$("input:checkbox.wait_checkbox").each(function(){	//loop through each wait checkbox
+				var status_message = "";
+				
+				if($(this).is(":checked")){
+					status_message = "make wait send " + $(this).siblings("input").val();
+				}else{
+					status_message = "make wait send 0";
+				};
+				
+				$(this).parent().siblings(".row_status").html(status_message);	//select the span.row_status at the end of the row				
+			});//loop through each wait checkbox
+		});//#save.click()
 		
 	});//doc.ready
 </script>
@@ -99,7 +107,7 @@ label {
 					&nbsp;&nbsp;:&nbsp;&nbsp;
 					
 					<span id="wait_text1">
-						<input type="checkbox" id="wait1" name="wait1" />
+						<input type="checkbox" id="wait1" class="wait_checkbox" name="wait1" />
 						<label for="wait1">Wait</label>
 						<input name="wait_time1" class="wait_time" id="wait_time1" type="text" maxlength="3" /> second(s) then
 					</span>
@@ -141,6 +149,7 @@ label {
 						<option value="045">for 45 seconds</option>
 						<option value="060">for 60 seconds</option>
 					</select>
+					<span class="row_status">status</span>
 				</div>
 				<!--end row1 -->
 				<!--begin row2 -->
@@ -163,7 +172,7 @@ label {
 					&nbsp;&nbsp;:&nbsp;&nbsp;
 					
 					<span id="wait_text2">
-						<input type="checkbox" id="wait2" name="wait2" />
+						<input type="checkbox" id="wait2" class="wait_checkbox" name="wait2" />
 						<label for="wait2">Wait</label>
 						<input name="wait_time2" id="wait_time2" class="wait_time" type="text" maxlength="3" /> second(s) then
 					</span>
@@ -192,6 +201,7 @@ label {
 						<option value="045">for 45 seconds</option>
 						<option value="060">for 60 seconds</option>
 					</select>
+					<span class="row_status">status</span>
 				</div>
 				<!--end row2 -->
 
