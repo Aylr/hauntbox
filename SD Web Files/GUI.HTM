@@ -9,29 +9,37 @@
 <script>
 	$(function(){//shortcut for doc.ready
 		
-		$("#save").click(function(){
+		$("form div#row2").remove();			//temporarily remove all the other rows
+		
+		
+		$("#save").click(cupcake);
+		$("select").change(cupcake);
+		
+		function cupcake(){
 			var data = "";
 			
 			$("#form select").each(function(){
-				data += $(this).val();					//avoid .attr
+				data += $(this).val();				//avoid .attr
 			});
-			console.log(data);
+			console.log(data);						//log to the firebug
 			
-			//$.post("http://192.168.1.9/testget",data,function(){
+			
+			//$.post("http://192.168.1.9/testget",data,function(){ 	//the AJAX bit
 			//	console.log("posted " + data);
 			//});
-			
-			
-		});
+		};//cupcake()
 		
-		//use to update the form
+		//Update the form with data
+		// IE from the Arduino via AJAX
+		/*
 		$("#form #first").children().each(function(){
-			data = "5";
+			data = "5";						//this is just a test
 			if($(this).val() == data) {
 				$(this).prop("selected","selected");
 			};
 		});
-	});
+		*/
+	});//doc.ready
 </script>
 </head>
 
@@ -56,50 +64,50 @@
 					</select>
 					is
 					<select class="sensor_state" name="sensor_state">
-						<option>on</option>
-						<option>off</option>
+						<option value="1">on</option>
+						<option value="0">off</option>
 					</select>
 					&nbsp;&nbsp;:&nbsp;&nbsp;
 					<select class="sensor_delay" name="wait">
-						<option>immediately</option>
-						<option>wait 1 second then</option>
-						<option>wait 2 seconds then</option>
-						<option>wait 3 seconds then</option>
-						<option>wait 4 seconds then</option>
-						<option>wait 5 seconds then</option>
-						<option>wait 6 seconds then</option>
-						<option>wait 7 seconds then</option>
-						<option>wait 10 seconds then</option>
+						<option value="000">immediately</option>
+						<option value="001">wait 1 second then</option>
+						<option value="002">wait 2 seconds then</option>
+						<option value="003">wait 3 seconds then</option>
+						<option value="004">wait 4 seconds then</option>
+						<option value="005">wait 5 seconds then</option>
+						<option value="006">wait 6 seconds then</option>
+						<option value="007">wait 7 seconds then</option>
+						<option value="010">wait 10 seconds then</option>
 					</select>
 					turn output
 					<select class="output" name="output">
-						<option>-</option>
-						<option>1</option>
-						<option>2</option>
-						<option>3</option>
-						<option>4</option>
-						<option>5</option>
-						<option>6</option>
+						<option value="0">-</option>
+						<option value="1">1</option>
+						<option value="2">2</option>
+						<option value="3">3</option>
+						<option value="4">4</option>
+						<option value="5">5</option>
+						<option value="6">6</option>
 					</select>
 					<select class="output_state" name="output_state">
-						<option>on</option>
-						<option>off</option>
+						<option value="1">on</option>
+						<option value="0">off</option>
 					</select>
 					<select class="output_duration" name="output_duration">
-						<option>constantly</option>
-						<option>for 1 second</option>
-						<option>for 5 seconds</option>
-						<option>for 10 seconds</option>
-						<option>for 15 seconds</option>
-						<option>for 25 seconds</option>
-						<option>for 30 seconds</option>
-						<option>for 45 seconds</option>
-						<option>for 60 seconds</option>
+						<option value="000">constantly</option>
+						<option value="001">for 1 second</option>
+						<option value="005">for 5 seconds</option>
+						<option value="010">for 10 seconds</option>
+						<option value="015">for 15 seconds</option>
+						<option value="025">for 25 seconds</option>
+						<option value="030">for 30 seconds</option>
+						<option value="045">for 45 seconds</option>
+						<option value="060">for 60 seconds</option>
 					</select>
 				</div>
 				<!--end row1 -->
 				<!--begin row1 -->
-				<div class="last" id="row1">
+				<div class="last" id="row2">
 					When input 
 					<select class="sensor" name="sensor">
 						<option>-</option>
@@ -155,7 +163,7 @@
 				</div>
 				<!--end row1 -->
 				<!--begin row1 -->
-				<div class="last" id="row1">
+				<div class="last" id="row2">
 					When input 
 					<select class="sensor" name="sensor">
 						<option>-</option>
@@ -211,7 +219,7 @@
 				</div>
 				<!--end row1 -->
 				<!--begin row1 -->
-				<div class="last" id="row1">
+				<div class="last" id="row2">
 					When input 
 					<select class="sensor" name="sensor">
 						<option>-</option>
@@ -267,7 +275,7 @@
 				</div>
 				<!--end row1 -->
 				<!--begin row1 -->
-				<div class="last" id="row1">
+				<div class="last" id="row2">
 					When input 
 					<select class="sensor" name="sensor">
 						<option>-</option>
@@ -323,7 +331,7 @@
 				</div>
 				<!--end row1 -->
 				<!--begin row1 -->
-				<div class="last" id="row1">
+				<div class="last" id="row2">
 					When input 
 					<select class="sensor" name="sensor">
 						<option>-</option>

@@ -3,11 +3,12 @@
 // the index increases. This may save slightly on bandwith from the server
 
 $("document").ready(function(){
+	// Protocol ideas: the goal, be nice to the tiny Arduino CPU
+	//	1,1,999,1,1,999			<-- one row (10 characters) shown comma delimited
+	//	1199911999,1199911999	<-- two rows shown w/o delimiters
 	
-//	1,1,999,1,1,999
-//	1199911999,1199911999
-	
-	build_form(10);
+//	build_form(10);						//call the formbuilder
+										//consider using moustache.js template system!
 	
 	function build_form(num){
 		if(num == undefined){			//set default if num isn't passed w/ function
