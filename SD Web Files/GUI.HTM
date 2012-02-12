@@ -5,6 +5,9 @@
 #wait1time { /*slim up the wide 999 second boxes */
 	width: 3em;
 }
+label {
+	font-weight: normal;
+}
 </style>
 <!--[if lt IE 8]>
 	<link rel="stylesheet" href="blueprint/ie.css" type="text/css" media="screen, projection">
@@ -46,10 +49,12 @@
 		*/
 		
 		$("#wait1").click(function(){
-			if($(this).is(":checked")){
+			if($("#wait1").is(":checked")){
 				$("#wait1text").fadeTo(150, 1);
+				$("#wait1time").prop("disabled", false);
 			}else{
 				$("#wait1text").fadeTo(150, .3);
+				$("#wait1time").prop("disabled", true);
 			};
 		});
 		
@@ -91,7 +96,11 @@
 					</select>
 					&nbsp;&nbsp;:&nbsp;&nbsp;
 					
-					<input type="checkbox" id="wait1" name="wait1" checked="checked" />Wait <span id="wait1text"><input name="wait1time" id="wait1time" type="text" maxlength="3"> second(s) then</span>
+					<span id="wait1text">
+						<input type="checkbox" id="wait1" name="wait1" checked="checked" />
+						<label for="wait1">Wait</label>
+						<input name="wait1time" id="wait1time" type="text" maxlength="3" /> second(s) then
+					</span>
 					<!--
 					<select class="sensor_delay" name="wait">
 						<option value="000">immediately</option>
