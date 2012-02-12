@@ -2,7 +2,7 @@
 <head>
 <link rel="stylesheet" href="blueprint/screen.css" type="text/css" media="screen, projection">
 <style type="text/css">
-#wait1time { /*slim up the wide 999 second boxes */
+form input.wait_time { /*slim up the wide 999 second boxes */
 	width: 3em;
 }
 label {
@@ -15,10 +15,7 @@ label {
 <script src="jquery-1.7.1.min.js"></script>
 
 <script>
-	$(function(){//shortcut for doc.ready
-		
-		$("form div#row2").remove();			//temporarily remove all the other rows
-		
+	$(function(){//shortcut for doc.ready		
 		
 	//	$("#save").click(cupcake);
 		$("select").change(cupcake);
@@ -48,15 +45,20 @@ label {
 		});
 		*/
 		
-		$("#wait1").click(function(){
-			if($("#wait1").is(":checked")){
-				$("#wait1text").fadeTo(150, 1);
-				$("#wait1time").prop("disabled", false);
+		$("input:checkbox").each(update_wait);			//update the wait status of each row on load
+		$("input:checkbox").click(update_wait);			//update it on click
+		
+		function update_wait(){
+			var wait_time_input = $(this).siblings("input");	//select the wait_time input following the checkbox
+			
+			if($(this).is(":checked")){
+				$(this).parent().fadeTo(150, 1);			//unfade the <span>
+				wait_time_input.prop("disabled", false);	//enable the input box
 			}else{
-				$("#wait1text").fadeTo(150, .3);
-				$("#wait1time").prop("disabled", true);
+				$(this).parent().fadeTo(150, .3);			//fade the <span>
+				wait_time_input.prop("disabled", true);		//disable the input box
 			};
-		});
+		};//update_wait()
 		
 		$("#save").click(function(){
 			if($("#wait1").is(":checked")){
@@ -80,7 +82,7 @@ label {
 				<!--begin row1 -->
 				<div class="last" id="row1">
 					When input 
-					<select id="first" class="sensor" name="sensor">
+					<select id="sensor1" class="sensor" name="sensor1">
 						<option value="0">-</option>
 						<option value="1">A</option>
 						<option value="2">B</option>
@@ -90,16 +92,16 @@ label {
 						<option value="6">F</option>
 					</select>
 					is
-					<select class="sensor_state" name="sensor_state">
+					<select class="sensor_state1" name="sensor_state1">
 						<option value="1">on</option>
 						<option value="0">off</option>
 					</select>
 					&nbsp;&nbsp;:&nbsp;&nbsp;
 					
-					<span id="wait1text">
-						<input type="checkbox" id="wait1" name="wait1" checked="checked" />
+					<span id="wait_text1">
+						<input type="checkbox" id="wait1" name="wait1" />
 						<label for="wait1">Wait</label>
-						<input name="wait1time" id="wait1time" type="text" maxlength="3" /> second(s) then
+						<input name="wait_time1" class="wait_time" id="wait_time1" type="text" maxlength="3" /> second(s) then
 					</span>
 					<!--
 					<select class="sensor_delay" name="wait">
@@ -115,7 +117,7 @@ label {
 					</select>
 					-->
 					turn output
-					<select class="output" name="output">
+					<select class="output1" name="output1">
 						<option value="0">-</option>
 						<option value="1">1</option>
 						<option value="2">2</option>
@@ -124,11 +126,11 @@ label {
 						<option value="5">5</option>
 						<option value="6">6</option>
 					</select>
-					<select class="output_state" name="output_state">
+					<select class="output_state1" name="output_state1">
 						<option value="1">on</option>
 						<option value="0">off</option>
 					</select>
-					<select class="output_duration" name="output_duration">
+					<select class="output_duration1" name="output_duration1">
 						<option value="000">constantly</option>
 						<option value="001">for 1 second</option>
 						<option value="005">for 5 seconds</option>
@@ -141,286 +143,57 @@ label {
 					</select>
 				</div>
 				<!--end row1 -->
-				<!--begin row1 -->
+				<!--begin row2 -->
 				<div class="last" id="row2">
 					When input 
-					<select class="sensor" name="sensor">
-						<option>-</option>
-						<option>A</option>
-						<option>B</option>
-						<option>C</option>
-						<option>D</option>
-						<option>E</option>
-						<option>F</option>
+					<select id="sensor2" class="sensor" name="sensor2">
+						<option value="0">-</option>
+						<option value="1">A</option>
+						<option value="2">B</option>
+						<option value="3">C</option>
+						<option value="4">D</option>
+						<option value="5">E</option>
+						<option value="6">F</option>
 					</select>
 					is
-					<select class="sensor_state" name="sensor_state">
-						<option>on</option>
-						<option>off</option>
+					<select class="sensor_state2" name="sensor_state2">
+						<option value="1">on</option>
+						<option value="0">off</option>
 					</select>
 					&nbsp;&nbsp;:&nbsp;&nbsp;
-					<select class="sensor_delay" name="wait">
-						<option>immediately</option>
-						<option>wait 1 second then</option>
-						<option>wait 2 seconds then</option>
-						<option>wait 3 seconds then</option>
-						<option>wait 4 seconds then</option>
-						<option>wait 5 seconds then</option>
-						<option>wait 6 seconds then</option>
-						<option>wait 7 seconds then</option>
-						<option>wait 10 seconds then</option>
-					</select>
+					
+					<span id="wait_text2">
+						<input type="checkbox" id="wait2" name="wait2" />
+						<label for="wait2">Wait</label>
+						<input name="wait_time2" id="wait_time2" class="wait_time" type="text" maxlength="3" /> second(s) then
+					</span>
 					turn output
-					<select class="output" name="output">
-						<option>-</option>
-						<option>1</option>
-						<option>2</option>
-						<option>3</option>
-						<option>4</option>
-						<option>5</option>
-						<option>6</option>
+					<select class="output2" name="output2">
+						<option value="0">-</option>
+						<option value="1">1</option>
+						<option value="2">2</option>
+						<option value="3">3</option>
+						<option value="4">4</option>
+						<option value="5">5</option>
+						<option value="6">6</option>
 					</select>
-					<select class="output_state" name="output_state">
-						<option>on</option>
-						<option>off</option>
+					<select class="output_state2" name="output_state2">
+						<option value="1">on</option>
+						<option value="0">off</option>
 					</select>
-					<select class="output_duration" name="output_duration">
-						<option>constantly</option>
-						<option>for 1 second</option>
-						<option>for 5 seconds</option>
-						<option>for 10 seconds</option>
-						<option>for 15 seconds</option>
-						<option>for 25 seconds</option>
-						<option>for 30 seconds</option>
-						<option>for 45 seconds</option>
-						<option>for 60 seconds</option>
+					<select class="output_duration2" name="output_duration2">
+						<option value="000">constantly</option>
+						<option value="001">for 1 second</option>
+						<option value="005">for 5 seconds</option>
+						<option value="010">for 10 seconds</option>
+						<option value="015">for 15 seconds</option>
+						<option value="025">for 25 seconds</option>
+						<option value="030">for 30 seconds</option>
+						<option value="045">for 45 seconds</option>
+						<option value="060">for 60 seconds</option>
 					</select>
 				</div>
-				<!--end row1 -->
-				<!--begin row1 -->
-				<div class="last" id="row2">
-					When input 
-					<select class="sensor" name="sensor">
-						<option>-</option>
-						<option>A</option>
-						<option>B</option>
-						<option>C</option>
-						<option>D</option>
-						<option>E</option>
-						<option>F</option>
-					</select>
-					is
-					<select class="sensor_state" name="sensor_state">
-						<option>on</option>
-						<option>off</option>
-					</select>
-					&nbsp;&nbsp;:&nbsp;&nbsp;
-					<select class="sensor_delay" name="wait">
-						<option>immediately</option>
-						<option>wait 1 second then</option>
-						<option>wait 2 seconds then</option>
-						<option>wait 3 seconds then</option>
-						<option>wait 4 seconds then</option>
-						<option>wait 5 seconds then</option>
-						<option>wait 6 seconds then</option>
-						<option>wait 7 seconds then</option>
-						<option>wait 10 seconds then</option>
-					</select>
-					turn output
-					<select class="output" name="output">
-						<option>-</option>
-						<option>1</option>
-						<option>2</option>
-						<option>3</option>
-						<option>4</option>
-						<option>5</option>
-						<option>6</option>
-					</select>
-					<select class="output_state" name="output_state">
-						<option>on</option>
-						<option>off</option>
-					</select>
-					<select class="output_duration" name="output_duration">
-						<option>constantly</option>
-						<option>for 1 second</option>
-						<option>for 5 seconds</option>
-						<option>for 10 seconds</option>
-						<option>for 15 seconds</option>
-						<option>for 25 seconds</option>
-						<option>for 30 seconds</option>
-						<option>for 45 seconds</option>
-						<option>for 60 seconds</option>
-					</select>
-				</div>
-				<!--end row1 -->
-				<!--begin row1 -->
-				<div class="last" id="row2">
-					When input 
-					<select class="sensor" name="sensor">
-						<option>-</option>
-						<option>A</option>
-						<option>B</option>
-						<option>C</option>
-						<option>D</option>
-						<option>E</option>
-						<option>F</option>
-					</select>
-					is
-					<select class="sensor_state" name="sensor_state">
-						<option>on</option>
-						<option>off</option>
-					</select>
-					&nbsp;&nbsp;:&nbsp;&nbsp;
-					<select class="sensor_delay" name="wait">
-						<option>immediately</option>
-						<option>wait 1 second then</option>
-						<option>wait 2 seconds then</option>
-						<option>wait 3 seconds then</option>
-						<option>wait 4 seconds then</option>
-						<option>wait 5 seconds then</option>
-						<option>wait 6 seconds then</option>
-						<option>wait 7 seconds then</option>
-						<option>wait 10 seconds then</option>
-					</select>
-					turn output
-					<select class="output" name="output">
-						<option>-</option>
-						<option>1</option>
-						<option>2</option>
-						<option>3</option>
-						<option>4</option>
-						<option>5</option>
-						<option>6</option>
-					</select>
-					<select class="output_state" name="output_state">
-						<option>on</option>
-						<option>off</option>
-					</select>
-					<select class="output_duration" name="output_duration">
-						<option>constantly</option>
-						<option>for 1 second</option>
-						<option>for 5 seconds</option>
-						<option>for 10 seconds</option>
-						<option>for 15 seconds</option>
-						<option>for 25 seconds</option>
-						<option>for 30 seconds</option>
-						<option>for 45 seconds</option>
-						<option>for 60 seconds</option>
-					</select>
-				</div>
-				<!--end row1 -->
-				<!--begin row1 -->
-				<div class="last" id="row2">
-					When input 
-					<select class="sensor" name="sensor">
-						<option>-</option>
-						<option>A</option>
-						<option>B</option>
-						<option>C</option>
-						<option>D</option>
-						<option>E</option>
-						<option>F</option>
-					</select>
-					is
-					<select class="sensor_state" name="sensor_state">
-						<option>on</option>
-						<option>off</option>
-					</select>
-					&nbsp;&nbsp;:&nbsp;&nbsp;
-					<select class="sensor_delay" name="wait">
-						<option>immediately</option>
-						<option>wait 1 second then</option>
-						<option>wait 2 seconds then</option>
-						<option>wait 3 seconds then</option>
-						<option>wait 4 seconds then</option>
-						<option>wait 5 seconds then</option>
-						<option>wait 6 seconds then</option>
-						<option>wait 7 seconds then</option>
-						<option>wait 10 seconds then</option>
-					</select>
-					turn output
-					<select class="output" name="output">
-						<option>-</option>
-						<option>1</option>
-						<option>2</option>
-						<option>3</option>
-						<option>4</option>
-						<option>5</option>
-						<option>6</option>
-					</select>
-					<select class="output_state" name="output_state">
-						<option>on</option>
-						<option>off</option>
-					</select>
-					<select class="output_duration" name="output_duration">
-						<option>constantly</option>
-						<option>for 1 second</option>
-						<option>for 5 seconds</option>
-						<option>for 10 seconds</option>
-						<option>for 15 seconds</option>
-						<option>for 25 seconds</option>
-						<option>for 30 seconds</option>
-						<option>for 45 seconds</option>
-						<option>for 60 seconds</option>
-					</select>
-				</div>
-				<!--end row1 -->
-				<!--begin row1 -->
-				<div class="last" id="row2">
-					When input 
-					<select class="sensor" name="sensor">
-						<option>-</option>
-						<option>A</option>
-						<option>B</option>
-						<option>C</option>
-						<option>D</option>
-						<option>E</option>
-						<option>F</option>
-					</select>
-					is
-					<select class="sensor_state" name="sensor_state">
-						<option>on</option>
-						<option>off</option>
-					</select>
-					&nbsp;&nbsp;:&nbsp;&nbsp;
-					<select class="sensor_delay" name="wait">
-						<option>immediately</option>
-						<option>wait 1 second then</option>
-						<option>wait 2 seconds then</option>
-						<option>wait 3 seconds then</option>
-						<option>wait 4 seconds then</option>
-						<option>wait 5 seconds then</option>
-						<option>wait 6 seconds then</option>
-						<option>wait 7 seconds then</option>
-						<option>wait 10 seconds then</option>
-					</select>
-					turn output
-					<select class="output" name="output">
-						<option>-</option>
-						<option>1</option>
-						<option>2</option>
-						<option>3</option>
-						<option>4</option>
-						<option>5</option>
-						<option>6</option>
-					</select>
-					<select class="output_state" name="output_state">
-						<option>on</option>
-						<option>off</option>
-					</select>
-					<select class="output_duration" name="output_duration">
-						<option>constantly</option>
-						<option>for 1 second</option>
-						<option>for 5 seconds</option>
-						<option>for 10 seconds</option>
-						<option>for 15 seconds</option>
-						<option>for 25 seconds</option>
-						<option>for 30 seconds</option>
-						<option>for 45 seconds</option>
-						<option>for 60 seconds</option>
-					</select>
-				</div>
-				<!--end row1 -->
+				<!--end row2 -->
 
 				<button id="save" name="save" type="button">Save Program</button>
 
