@@ -1,4 +1,4 @@
-//Second attempt at basic building block of HB control
+//Second attempt at basic building block of HauntBox control
 //Trying to write code for a row in the GUI, not for a specific input.
 //Code written for 6 row control from HB
 //12-01-20 (YY-MM-DD)
@@ -49,15 +49,24 @@ int pinIn4 = 3;  //Analog pin
 int pinIn5 = 4;  //Analog pin
 int pinIn6 = 5;  //Analog pin
 
-int CS_pin = 4;  //Pin to SD card 
+int CS_pin = 4;  //Pin to SD card  IS THIS THE SAME AS PIN 10, BUT FOR THE SHIELD?
 int pinOut1 = 7; //Digital pin
 int pinOut2 = 6; //Digital pin
 int pinOut3 = 5; //Digital pin
 int pinOut4 = 8; //Digital pin
 int pinOut5 = 3; //Digital pin
 int pinOut6 = 2; //Digital pin
+// Pin0 unused
+// Pin1 unused
+// Pin9 unused
 
-boolean file_handler(TinyWebServer& web_server);          //T: FIND OUT WHAT THIS IS/MEANS!!!
+//Reserved digital pins for Arduino Ethernet Module SPI
+// Pin 10 (SS)  This one is being called out below in the SD card setup
+// Pin 11 (MOSI)
+// Pin 12 (MISO)
+// Pin 13 (SCK)
+
+boolean file_handler(TinyWebServer& web_server);          // FIND OUT WHAT THIS IS/MEANS!!!
 //boolean blink_led_handler(TinyWebServer& web_server);
 //boolean led_status_handler(TinyWebServer& web_server);
 boolean index_handler(TinyWebServer& web_server);
@@ -267,26 +276,24 @@ void setup() {
    pinMode(pinOut5, OUTPUT);
    pinMode(pinOut6, OUTPUT);
 }
-
+//----- AA1b -- Initialize Output Function -----
 // Function that initializes the outputs states to "off"
-void initializeFunction() {
-   Serial.println(" ");
+void initializeFunction() 
+{
+//m   Serial.println(" ");
    delay(d*3);
-   Serial.println(" ");
-   Serial.println("Initializing Variables");
+//m   Serial.println(" ");
+//m   Serial.println("Initializing Variables");
    for(int a = 0; a < 7; a++) {
      outputSelectFunction(a, 0);  //start with all pins off
    }
-//   stateRow[rn];
-//   trigState[rn];
-//   timeStampDelayRow[rn];    //gets initialized immediately before it is used
-//   timeStampDurationRow[rn];
    ini = 1;
    delay(d*3);
-   Serial.println("Initialization Complete");
-   Serial.println(" ");
+//m   Serial.println("Initialization Complete");
+//m   Serial.println(" ");
 }
 
+//----- Section AA4b -----
 // Function that pairs the input pin state to the row that is listening for it
 // Returns int 1 for "on" or 0 for "off"
 // This actually reads the sensor and interperets what the value means
@@ -311,6 +318,18 @@ int inputSelectFunction(int rowNumber) {
   return trig;
 }
 
+//  Function to write messages to gui            CURRENTLY WRITTEN FOR SERIAL, NOT GUI!
+void guiMess(int n) {
+//m  if (n==1) {Serial.println("Definitions don't make sense");}
+//m  if (n==2) {Serial.println("No SD Card anymore");}
+//m  if (n==3) {Serial.println("Problem opening file on SD card");}
+//m  if (n==4) {Serial.println("Corrupted SD file -Read/Write fail");}
+//m  if (n==5) {Serial.println("Successfully updated definitions");}
+//m  if (n==6) {Serial.println("Finished writing to .csv file");}
+  
+}
+
+//----- Section AA4c -----
 // Function that pairs the output pins to the row that is controlling for it
 void outputSelectFunction(int rowNumber, int onOff) {
   int x;      //local variable
@@ -361,9 +380,12 @@ void loop(){
   
   delay(d/2);  //For debug use only
   
-  if(ini == 0) {  //if the states have not been initialized, do so.
+  //----- Section AA1a -----
+  if(ini == 0) {  //If the states have not been initialized, do so.
     initializeFunction();
   }
+  
+  //----- Section AA4a ----- Reading Inputs and Writing to Outputs -----
   tempStampA = millis();
   for(int z = 0; z < rn; z++) {              //runs loop for each row
     if(stateRow[z] == 1) {                   //STATE 1 = Waiting for a trigger
@@ -394,25 +416,44 @@ void loop(){
     else if(stateRow[z] == 5) {             //STATE 5 = Duration of output "on"
       nowTime = millis();
       netTime = nowTime - timeStampDurationRow[z];
-      if(netTime >= DurationRow[z]) {      //SHOULD THIS BE MOVED TO STATE 1?
+      if(netTime >= DurationRow[z]) {      
         outputSelectFunction(z, 0);        //Turn output off after duration is over
         stateRow[z] = 1;                   //Moves on to trigger-waiting state
       }
     }
     else {                                 //if state is not 1-5, set to 1 (waiting)
       stateRow[z] = 1;                     // this is to increase robustness
-      Serial.print("Initializing Row State ");
-      Serial.println(z);
+//m      Serial.print("Initializing Row State ");
+//m      Serial.println(z);
       delay (d);
     }
   }
+    
+  //----- Section AA5 ----- Update the Status LEDs on shield -----
+  
+  
+  
+  
+  
+  
+  
+  
+  //----- Section AA6 ----- Update the Status variables for GUI to read
+  
+  
+  
+  
+  
+  
+  
 
-//See if GUI definitions have changed
-if(guiFlag = 0) {  //No new GUI definitions
-  return;  //break out of main funtion if no new definitions have come in.  POSSIBLY REMOVE THE HARD RETURN?
-}
-if(guiFlag = 1) {  //New GUI definitions
-  //PUT FUNCTION HERE TO READ GUI DEFINITIONS
+  //----- Section AA9 ----- See if GUI definitions have changed
+  if(guiFlag = 0) {  //No new GUI definitions
+    return;  //break out of main funtion if no new definitions have come in.  POSSIBLY REMOVE THE HARD RETURN?
+  }
+  if(guiFlag = 1) {  //New GUI definitions
+  //----- Section AB1 -----
+  // PUT FUNCTION HERE TO READ GUI DEFINITIONS
   //  int inputArray[] =       
   //  int inputHiLowArray[] =                     
   //  int outputArray[] =                          
@@ -421,17 +462,41 @@ if(guiFlag = 1) {  //New GUI definitions
   //  int DurationRow[] = 
   
   
-  //Save definitions to SD card
   
-  //CHECK TO SEE IF SD CARD IS  THERE
+  //----- Section AB2 -----
+  //FUNCTION TO MAKE SURE GUI DEFINITIONS MAKE SENSE
+ 
+ 
+ 
+ //----- Section AB3 -----
+ //FUNCTION TO SAVE DEFINITIONS TO SD CARD
+
+
+ 
+  
+  //CHECK TO SEE IF SD CARD IS THERE
   
   //Open file to write to
-  //File dataFile = SD.open("definitions.csv", FILE_WRITE);
-  //if (!dataFile) {
- //   Serial.println("Couldn't open definitions.csv file");  //Error message 3
-//  }
+  File dataFile = SD.open("definitions.csv", FILE_WRITE);
+  if (dataFile) {
+    //FUNCTION HERE TO WRITE TO FILE
+    dataFile.close();
+    guiMess(6);  //GUI message #6 
+  }
+  else {         //If unable to open SD file.
+    guiMess(3);  //GUI message #3
+  }
   
   
+  
+  
+  //----- Section AB4 -----
+  //FUNCTION TO READ DEFINITIONS ON SD CARD
+  
+  //COMPARE TO VALUES FROM AB1
+  
+  //Sends GUI confirmation message
+  guiMess(5);  //GUI message #5
   
 }  
   
