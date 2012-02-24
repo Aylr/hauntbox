@@ -100,47 +100,73 @@ boolean testget_handler(TinyWebServer& web_server){
   web_server.send_content_type("text/plain");
   web_server.end_headers();
   
-  String readString = String(); //string for fetching data from address
+  char * col[6];
+  char * tok;
+  byte input_arr[6];
+  byte in_onoff[6];
+  unsigned int ondelay[6];
+  byte out_arr[6];
+  byte out_onoff[6];
+  unsigned int duration[6];
+  
+  byte i = 0;
+  byte j = 0;
+  
+  // String readString = String(); //string for fetching data from address
+  char * readString;
   Client& client = web_server.get_client();
   
   while (client.connected()) {
     if (client.available()){
       char ch = client.read();
       // There are lots of Serial.print for debugging and learning
-      Serial << ("\n ----------- client.available() = ") << (client.available() + "\n");
-      Serial << F("Free RAM: ") << FreeRam() << "\n";
+      //Serial << ("\n ----------- client.available() = ") << (client.available() + "\n");
+      //Serial << F("Free RAM: ") << FreeRam() << "\n";
       
       //if (readString.length() < 100) {//need to find out what this limit does
-        readString += ch;
+        *(readString + i) = ch;
+        i++;
       //}
-     
+      Serial.println("----------------------- RAM: ");
+      Serial.println(FreeRam());
       
-      //Serial.print("ch = ");
-      //Serial.println(ch);
-      //Serial.print("readString = ");
-      Serial.println(readString);
-      //Serial.print("readString.length() = ");
-      //Serial.println(readString.length());
-      
-      //if (ch == '\n') {
-      if (client.available() == 0) {
-        Serial.println("Client.availabe stopped, i think it is false");
-           for(int i = 0; i < 6; i++) {
-     Serial.println("yep, here I am");
-        //inputArray[i] = atoi(&readString[i]);
-        int t = atoi(&readString[i]);
-        Serial.println(t);
-                Serial.println(readString[i]);
+      if (client.available() == 0) {       //THIS CHUNK PROBABLY NEEDS TO BE MOVED OUTSIDE OF CLIENT.AVAILABLE
+        //Serial.print("readString = ");
+        //Serial.println(readString);
+
+        //Serial.print("Client.available =  ");
+        //Serial.println(client.available());
+   
+        /*
+        i = 0;
+        col[i] = strtok(readString, ";");
+        while (col[i] != NULL) {
+          i++;
+          col[i] = strtok(NULL, ";");
+        }
+        
+        i = 0;
+        tok = strtok(col[0], ",");
+        input_arr[i] = atoi(tok);
+        while (tok != NULL) {
+          i++;
+          tok = strtok(NULL, ";");
+          input_arr[i] = atoi(tok);
+        }
+        */
+        Serial.println("~~~~~~~~~~~~~~~~~~~~finished~~~~~~~~~~~");
+        Serial.println("----------------------- RAM: ");
+        Serial.println(FreeRam());
+ 
       }
-      
-        readString = ""; //blank the string for the next read
+        //readString = ""; //blank the string for the next read
         //client.stop(); // seems like this is not needed
-      }
+
     }//client.available()
   }//while client.connected()
 
   return true; //exit the handler 
-}//
+}//end testget handler
 
 
 
