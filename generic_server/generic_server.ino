@@ -33,7 +33,7 @@ TinyWebServer::PathHandler handlers[] = {
   // strings.
   //
   // `put_handler' is defined in TinyWebServer
-  {"/", TinyWebServer::GET, &index_handler },
+//  {"/", TinyWebServer::GET, &index_handler },
   {"/testget", TinyWebServer::GET, &testget_handler },
   {"/testget", TinyWebServer::POST, &testget_handler },
 //  {"/upload/" "*", TinyWebServer::PUT, &TinyWebPutHandler::put_handler },
@@ -96,12 +96,13 @@ boolean file_handler(TinyWebServer& web_server) {
 // and: 
 // http://electronics.stackexchange.com/questions/20297/passing-data-from-python-to-arduino-over-ethernet
 boolean testget_handler(TinyWebServer& web_server){
-  web_server.send_error_code(200);
-  web_server.send_content_type("text/plain");
-  web_server.end_headers();
+  //          Serial.println("5e made");
+  //web_server.send_error_code(200);          //it is stopping here
+  //web_server.send_content_type("text/plain");
+  //web_server.end_headers();
   
-  char * col[6];
-  char * tok;
+  char* col[6];
+  char* tok;
   byte input_arr[6];
   byte in_onoff[6];
   unsigned int ondelay[6];
@@ -110,65 +111,153 @@ boolean testget_handler(TinyWebServer& web_server){
   unsigned int duration[6];
   
   byte i = 0;
-  byte j = 0;
   
   // String readString = String(); //string for fetching data from address
-  char * readString;
+
+  // We're using a character array instead of the built-in String class because
+  // that's what the strtok function needs.  Plus, using Strings in this case
+  // wouldn't provide us a lot of benefit anyway.
+  // You need to decide how many bytes your server could possibly send.  This
+  // is a nice round number as a placeholder.  Also note that this is the
+  // maximum size that the variable "byte i" will index.  If you need a bigger
+  // array, make i an int.  
+
+  char readString[256];
+  char ch;
   Client& client = web_server.get_client();
-  
+
   while (client.connected()) {
-    if (client.available()){
-      char ch = client.read();
+    if (client.available()) {
+      ch = client.read();
       // There are lots of Serial.print for debugging and learning
       //Serial << ("\n ----------- client.available() = ") << (client.available() + "\n");
-      //Serial << F("Free RAM: ") << FreeRam() << "\n";
+      Serial << F("Free RAM: ") << FreeRam() << "\n";
       
       //if (readString.length() < 100) {//need to find out what this limit does
-        *(readString + i) = ch;
-        i++;
+      // Read a byte at a time and concatenate it onto the end of the character
+      // array.
+      readString[i] = ch;
+      i++;
       //}
-      Serial.println("----------------------- RAM: ");
-      Serial.println(FreeRam());
       
-      if (client.available() == 0) {       //THIS CHUNK PROBABLY NEEDS TO BE MOVED OUTSIDE OF CLIENT.AVAILABLE
-        //Serial.print("readString = ");
-        //Serial.println(readString);
+      //Serial.print("readString = ");
+      Serial.println(readString);
+      
+      //THIS CHUNK PROBABLY NEEDS TO BE MOVED OUTSIDE OF CLIENT.AVAILABLE
+      //if (ch == '\n') {
+      if (client.available() == 0) {
+        //Serial.println("Client.availabe stopped, i think it is false");
+	
+	// Split readString into columns with comma-separated values.  Columns
+	// are separated by semicolons.  The first time you call strtok, you
+	// pass the string (char array) you want to work on.  It returns a
+	// a string with everything up to the delimiter you set.  For
+	// subsequent calls, you pass NULL, and the function keeps working on
+	// the original string.  Since we've set up the client to send 6
+	// columns, we call the function 6 times.  The check for tok == NULL is
+	// there in case there's a problem and we don't get the full packet.
+	// This may help it fail more gracefully.
+	tok = strtok(readString, ";");
+	col[0] = tok;
+	for (i = 1; i < 6; i++) {
+	  if (tok == NULL)
+	    break;
+	  tok = strtok(NULL, ";");
+	  col[i] = tok;
+	}
 
-        //Serial.print("Client.available =  ");
-        //Serial.println(client.available());
-   
-        /*
-        i = 0;
-        col[i] = strtok(readString, ";");
-        while (col[i] != NULL) {
-          i++;
-          col[i] = strtok(NULL, ";");
-        }
-        
-        i = 0;
-        tok = strtok(col[0], ",");
-        input_arr[i] = atoi(tok);
-        while (tok != NULL) {
-          i++;
-          tok = strtok(NULL, ";");
-          input_arr[i] = atoi(tok);
-        }
-        */
-        Serial.println("~~~~~~~~~~~~~~~~~~~~finished~~~~~~~~~~~");
-        Serial.println("----------------------- RAM: ");
-        Serial.println(FreeRam());
- 
+	// Now turn the array of strings into arrays of numbers.  Each array is
+	// named for the column it represents.  The values are separated by
+	// commas.  atoi is used to convert the stringified numbers back into
+	// integers.  The values returned by atoi, which are ints, are cast
+	// into the appropriate data type.  (That's what the (byte) before
+	// atoi(tok) is doing.)  It would be more graceful to create a function
+	// to do this, rather than repeat it 6 times.
+	// input_arr
+	tok = strtok(col[0], ",");
+	for (i = 0; i < 6; i++) {
+	  if (tok == NULL)
+	    break;
+	  input_arr[i] = (byte)atoi(tok);
+	  tok = strtok(NULL, ",");
+	}
+	// in_onoff
+	tok = strtok(col[1], ",");
+	for (i = 0; i < 6; i++) {
+	  if (tok == NULL)
+	    break;
+	  in_onoff[i] = (byte)atoi(tok);
+	  tok = strtok(NULL, ",");
+	}
+	// ondelay
+	tok = strtok(col[2], ",");
+	for (i = 0; i < 6; i++) {
+	  if (tok == NULL)
+	    break;
+	  ondelay[i] = (unsigned int)atoi(tok);
+	  tok = strtok(NULL, ",");
+	}
+	// out_arr
+	tok = strtok(col[3], ",");
+	for (i = 0; i < 6; i++) {
+	  if (tok == NULL)
+	    break;
+	  out_arr[i] = (byte)atoi(tok);
+	  tok = strtok(NULL, ",");
+	}
+	// out_onoff
+	tok = strtok(col[4], ",");
+	for (i = 0; i < 6; i++) {
+	  if (tok == NULL)
+	    break;
+	  out_onoff[i] = (byte)atoi(tok);
+	  tok = strtok(NULL, ",");
+	}
+	// duration
+	tok = strtok(col[5], ",");
+	for (i = 0; i < 6; i++) {
+	  if (tok == NULL)
+	    break;
+	  duration[i] = (unsigned int)atoi(tok);
+	  tok = strtok(NULL, ",");
+	}
+
+	// Now print out all the values to make sure it all worked
+	Serial.println("And the numbers are...");
+	Serial.print("Input array: ");
+	for (i = 0; i < 6; i++)
+	  Serial.print(input_arr[i]); Serial.print(" ");
+	
+	Serial.print("\nInput on/off: ");
+	for (i = 0; i < 6; i++)
+	  Serial.print(in_onoff[i]); Serial.print(" ");
+	
+	Serial.print("\nOn delay: ");
+	for (i = 0; i < 6; i++)
+	  Serial.print(ondelay[i]); Serial.print(" ");
+	
+	Serial.print("\nOutput array: ");
+	for (i = 0; i < 6; i++)
+	  Serial.print(out_arr[i]); Serial.print(" ");
+	
+	Serial.print("\nOutput on/off: ");
+	for (i = 0; i < 6; i++)
+	  Serial.print(out_onoff[i]); Serial.print(" ");
+	
+	Serial.print("\nDuration: ");
+	for (i = 0; i < 6; i++)
+	  Serial.print(duration[i]); Serial.print(" ");
+	
+	//printf("\nDone!\n");
+	
+	//readString = ""; //blank the string for the next read
+	//client.stop(); // seems like this is not needed
       }
-        //readString = ""; //blank the string for the next read
-        //client.stop(); // seems like this is not needed
-
     }//client.available()
   }//while client.connected()
-
+  
   return true; //exit the handler 
-}//end testget handler
-
-
+}//
 
 
 
@@ -200,7 +289,7 @@ boolean testget_handler(TinyWebServer& web_server){
 //  return true;
 //}
 
-
+/*
 boolean index_handler(TinyWebServer& web_server) {
   send_file_name(web_server, "GUI.HTM");
   return true;
@@ -245,6 +334,7 @@ void file_uploader_handler(TinyWebServer& web_server,
     file.close();
   }
 }//upload handler
+*/
 
 
 void setup() {
