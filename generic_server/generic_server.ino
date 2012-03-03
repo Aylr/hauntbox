@@ -122,7 +122,7 @@ boolean testget_handler(TinyWebServer& web_server){
   // maximum size that the variable "byte i" will index.  If you need a bigger
   // array, make i an int.  
 
-  char readString[256];
+  char readString[100];
   char ch;
   Client& client = web_server.get_client();
 
@@ -140,13 +140,13 @@ boolean testget_handler(TinyWebServer& web_server){
       i++;
       //}
       
-      //Serial.print("readString = ");
-      Serial.println(readString);
       
       //THIS CHUNK PROBABLY NEEDS TO BE MOVED OUTSIDE OF CLIENT.AVAILABLE
       //if (ch == '\n') {
       if (client.available() == 0) {
         //Serial.println("Client.availabe stopped, i think it is false");
+         //Serial.print("readString = ");
+        Serial.println(readString);
 	
 	// Split readString into columns with comma-separated values.  Columns
 	// are separated by semicolons.  The first time you call strtok, you
