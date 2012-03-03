@@ -5,30 +5,40 @@
 <!--[if lt IE 8]>
   <link rel="stylesheet" href="blueprint/ie.css" type="text/css" media="screen, projection">
 <![endif]-->
+<style type="text/css">
+input {
+	width: 90px;
+}
+</style>
 
 </head>
 
 <body>
-  <div class="container">
-    <div class="prepend-1 span-18">
-      <h1>The HB</h1>
-      <a href="settings.html">Settings</a> | <a href="index.html">Program</a> | <a href="live.html">Live View</a>
-      
-      <form>
-      
-        <div class="last">
-          Input A is considered on when its signal goes <select name=""><option>High</option><option>Low</option></select>.<br />
-          Input B is considered on when its signal goes <select name=""><option>High</option><option>Low</option></select>.<br />
-          Input C is considered on when its signal goes <select name=""><option>High</option><option>Low</option></select>.<br />
-          Input D is considered on when its signal goes <select name=""><option>High</option><option>Low</option></select>.<br />
-          Input E is considered on when its signal goes <select name=""><option>High</option><option>Low</option></select>.<br />
-          Input F is considered on when its signal goes <select name=""><option>High</option><option>Low</option></select>.
-        </div>
-      
-      </form>
-      
-    </div>
-    
-  </div>
+	<div class="container">
+		<div class="prepend-1 span-18">
+			<h1>The HB</h1>
+			<a href="settings.html">Settings</a> | <a href="index.html">Program</a> | <a href="live.html">Live View</a>
+			<h2>Settings</h2>
+			<p>Feel free to rename your inputs and outputs here. You can also set whether
+				digital HIGH or LOW will trigger the input.</p>
+			<div class="last inputs">
+				Input A: <input type="text" name="input1" id="input1" /> is considered on when its signal goes <select name=""><option>High</option><option>Low</option></select>.<br />
+				Input B: <input type="text" name="input2" id="input2" /> is considered on when its signal goes <select name=""><option>High</option><option>Low</option></select>.<br />
+				Input C: <input type="text" name="input3" id="input3" /> is considered on when its signal goes <select name=""><option>High</option><option>Low</option></select>.<br />
+				Input D: <input type="text" name="input4" id="input4" /> is considered on when its signal goes <select name=""><option>High</option><option>Low</option></select>.<br />
+				Input E: <input type="text" name="input5" id="input5" /> is considered on when its signal goes <select name=""><option>High</option><option>Low</option></select>.<br />
+				Input F: <input type="text" name="input6" id="input6" /> is considered on when its signal goes <select name=""><option>High</option><option>Low</option></select>.
+			</div>
+			<div class="last outpus">
+				Output 1: <input type="text" name="output1" id="output1" /><br />
+				Output 2: <input type="text" name="output2" id="output2" /><br />
+				Output 3: <input type="text" name="output3" id="output3" /><br />
+				Output 4: <input type="text" name="output4" id="output4" /><br />
+				Output 5: <input type="text" name="output5" id="output5" /><br />
+				Output 6: <input type="text" name="output6" id="output6" /><br />
+			</div>
+			<button id="save">Save Settings</button>
+		</div>
+	</div>
 </body>
 </html>
