@@ -8,6 +8,23 @@ form input.wait_time { /*slim up the wide 999 second boxes */
 label {
 	font-weight: normal;
 }
+div.wait_updown {
+	display: inline-block;
+	position: relative;
+	top: 8px;
+}
+div.wait_updown a {
+	display: block;
+	border: 1px solid #aaa;
+	background: rgb(247,247,247);
+	font-size: 1em;
+	text-align: center;
+	text-decoration: none;
+	color: #000;
+	width: 15px;
+	height: 16px;
+	margin: 0 0 -1px 0;
+}
 </style>
 <!--[if lt IE 8]>
 	<link rel="stylesheet" href="blueprint/ie.css" type="text/css" media="screen, projection">
@@ -75,6 +92,18 @@ label {
 			});
 		};//end cupcake()
 		
+		$(".wait_updown .up").click(function(){
+			current_wait = parseInt($(this).parent().next().val());		//get current wait
+			$(this).parent().next().val(current_wait + 5);				//add x seconds to wait
+			return false;			//prevent the html link from doing anything
+		})//end up click
+		
+		$(".wait_updown .down").click(function(){
+			current_wait = parseInt($(this).parent().next().val());
+			$(this).parent().next().val(current_wait - 5);
+			return false;			//prevent the html link from doing anything
+		})//end down click
+		
 		//Update the form with data
 		// IE from the Arduino via AJAX
 		/*
@@ -115,7 +144,12 @@ label {
 						<option value="0">off</option>
 					</select>
 					&nbsp;&nbsp;:&nbsp;&nbsp;
-					Wait (up/down ^)
+					Wait
+					
+					<div class="wait_updown">
+						<a href="#" class="up">+</a>
+						<a href="#" class="down">-</a>
+					</div>
 					<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
 					second(s) then turn output
 					<select id="output3" class="output" name="output3">
