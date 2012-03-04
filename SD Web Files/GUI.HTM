@@ -3,7 +3,8 @@
 <link rel="stylesheet" href="blueprint/screen.css" type="text/css" media="screen, projection">
 <style type="text/css">
 form input.wait_time { /*slim up the wide 999 second boxes */
-	width: 3em;
+	width: 2.6em;
+	text-align:right;
 }
 label {
 	font-weight: normal;
@@ -34,24 +35,19 @@ div.wait_updown a {
 <script>
 	$(function(){//shortcut for doc.ready		
 				
-		$("input.wait_time").change(function(){			//whenever the visible field changes
-			var newval = three_digits($(this).val());		//sanitize the input box
-			$(this).siblings("input:hidden").val(newval);	//update the hidden field with sanitized and padded data
-			$(this).val(parseInt(newval));					//update the input box with sanitized UNpadded data
+		$("input.wait_time").change(function(){					//whenever the wait field changes
+			$(this).val(parseInt(sanitize($(this).val())));		//update the input with sanitized
 		});
-
 		
-		function three_digits(num) {
-			if(parseInt(num) >= 0){		//sanitize, filter out NaN and negative numbers
-				//console.log(parseInt(num));
-			    var num = "000" + num;
-			    return num.substr(num.length - 3);
+		function sanitize(num) {
+			if(parseInt(num) >= 0){					//sanitize, filter out NaN and negative numbers
+				console.log("OK: num = " + num + "  	parseInt(num) = " + parseInt(num));
+			    return parseInt(num);				//return the clean value
 			}else{
-				//alert("Dude, \"" + num + "\" is not positive integer.")
-				console.log("ERROR: num = " + num + "  	parseInt(num) = " + parseInt(num));
-				return "000";			//if the user entered garbage, set to "000"
+				console.log("ERROR: num = " + num + "  	parseInt(num) = " + parseInt(num) + "   ==> 0");
+				return "0";							//if the user entered garbage, set to "0"
 			};
-		};//three_digits()
+		};//sanitize()
 		
 		
 		//$("#save").click(cupcake);
@@ -93,15 +89,29 @@ div.wait_updown a {
 		};//end cupcake()
 		
 		$(".wait_updown .up").click(function(){
-			current_wait = parseInt($(this).parent().next().val());		//get current wait
-			$(this).parent().next().val(current_wait + 5);				//add x seconds to wait
-			return false;			//prevent the html link from doing anything
+			current_wait = sanitize($(this).parent().next().val());		//get sanitized current wait
+			var newval;
+			if(current_wait < 999){										//if less than 999
+				newval = current_wait + 1;								//add 1
+			}else{
+				newval = 999;											//if at 999, leave at 999
+				//flash error message here that 999 is the limit
+			};
+			$(this).parent().next().val(newval);						//set new value
+			return false;												//prevent the html link from doing anything
 		})//end up click
 		
 		$(".wait_updown .down").click(function(){
-			current_wait = parseInt($(this).parent().next().val());
-			$(this).parent().next().val(current_wait - 5);
-			return false;			//prevent the html link from doing anything
+			current_wait = sanitize($(this).parent().next().val());		//get sanitized current wait
+			var newval;
+			if(current_wait <= 0){										//if 0 or negative
+				newval = 0;												//set to zero
+				//flash error here if you want
+			}else{														//if positive
+				newval = current_wait - 1;								//subtract 1
+			};
+			$(this).parent().next().val(newval);						//set the new value
+			return false;												//prevent the html link from doing anything
 		})//end down click
 		
 		//Update the form with data
@@ -197,7 +207,12 @@ div.wait_updown a {
 						<option value="0">off</option>
 					</select>
 					&nbsp;&nbsp;:&nbsp;&nbsp;
-					Wait (up/down ^)
+					Wait
+					
+					<div class="wait_updown">
+						<a href="#" class="up">+</a>
+						<a href="#" class="down">-</a>
+					</div>
 					<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
 					second(s) then turn output
 					<select id="output3" class="output" name="output3">
@@ -245,7 +260,12 @@ div.wait_updown a {
 						<option value="0">off</option>
 					</select>
 					&nbsp;&nbsp;:&nbsp;&nbsp;
-					Wait (up/down ^)
+					Wait
+					
+					<div class="wait_updown">
+						<a href="#" class="up">+</a>
+						<a href="#" class="down">-</a>
+					</div>
 					<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
 					second(s) then turn output
 					<select id="output3" class="output" name="output3">
@@ -293,7 +313,12 @@ div.wait_updown a {
 						<option value="0">off</option>
 					</select>
 					&nbsp;&nbsp;:&nbsp;&nbsp;
-					Wait (up/down ^)
+					Wait
+					
+					<div class="wait_updown">
+						<a href="#" class="up">+</a>
+						<a href="#" class="down">-</a>
+					</div>
 					<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
 					second(s) then turn output
 					<select id="output3" class="output" name="output3">
@@ -341,7 +366,12 @@ div.wait_updown a {
 						<option value="0">off</option>
 					</select>
 					&nbsp;&nbsp;:&nbsp;&nbsp;
-					Wait (up/down ^)
+					Wait
+					
+					<div class="wait_updown">
+						<a href="#" class="up">+</a>
+						<a href="#" class="down">-</a>
+					</div>
 					<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
 					second(s) then turn output
 					<select id="output3" class="output" name="output3">
@@ -389,7 +419,12 @@ div.wait_updown a {
 						<option value="0">off</option>
 					</select>
 					&nbsp;&nbsp;:&nbsp;&nbsp;
-					Wait (up/down ^)
+					Wait
+					
+					<div class="wait_updown">
+						<a href="#" class="up">+</a>
+						<a href="#" class="down">-</a>
+					</div>
 					<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
 					second(s) then turn output
 					<select id="output3" class="output" name="output3">
@@ -419,6 +454,7 @@ div.wait_updown a {
 					<span class="row_status"></span>
 				</div>
 				<!--end row3 -->
+				
 
 				<button id="save" name="save" type="button">Save Program</button>
 
