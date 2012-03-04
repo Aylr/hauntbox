@@ -3,7 +3,7 @@
 <link rel="stylesheet" href="blueprint/screen.css" type="text/css" media="screen, projection">
 <style type="text/css">
 input { /*slim up the wide 999 second boxes */
-	width: 2.6em;
+	width: 2.55em;
 	text-align:right;
 }
 label {
@@ -44,7 +44,7 @@ div.wait a, div.duration a {
 		
 		function sanitize(num) {
 			if(parseInt(num) >= 0){					//sanitize, filter out NaN and negative numbers
-				console.log("OK: num = " + num + "  	parseInt(num) = " + parseInt(num));
+				//console.log("OK: num = " + num + "  	parseInt(num) = " + parseInt(num));
 			    return parseInt(num);				//return the clean value
 			}else{
 				console.log("ERROR: num = " + num + "  	parseInt(num) = " + parseInt(num) + "   ==> 0");
@@ -118,30 +118,30 @@ div.wait a, div.duration a {
 		})//end down click
 
 
-		$("input.dummy_field").change(function(){						//on manual keybaord entry
-			temp = sanitize($(this).val());								//sanitize
-			$(this).val(temp);											//update visible dummy field
-			$(this).parent().siblings('input[type="hidden"][class="output_duration"]').val(temp);//update hidden field
-			console.log("hidden = " + $(this).parent().siblings('input[type="hidden"][class="output_duration"]').val());
-		})//end
+		$("input.output_duration").change(function(){					//on manual keybaord entry
+			var newval = 1;												//default new value
+			var current = sanitize($(this).val());						//get the sanitized value
+			if(current != 0){											//if sanitized not 0, then let it pass, otherwise use the default of 1
+				newval = current;
+			}
+			$(this).val(newval);										//update field with either 1 or clean value
+			console.log("changed, duration = " + newval);
+		});
 		
-		$("select.output_duration").change(function(){
-			temp = $(this).val();
-			if(temp == "constantly"){									//if constantly
+		$("select.output_duration").change(function(){					//when dropdown changes...
+			temp = $(this).val();										//get current value
+			var new_duration;											//initialize new duration
+			if(temp == "constantly"){									//if "constantly"
 				$(".duration_container").fadeOut(250);					//fade out buttons & field
-				$(this).children('option[value="for"]').html("for...")	//update grammar				
-				$(this).next('input[type="hidden"][class="output_duration"]').val(0);	//set hidden field = 0
-				//set visible field to zero
-			}else if(temp == "for"){									//if for...
+				$(this).children('option[value="for"]').html("for...")	//update grammar
+				new_duration = 0;										//set duration = 0
+			}else if(temp == "for"){									//if "for..".
 				$(".duration_container").fadeIn(250);					//show buttons & field
 				$(this).children('option[value="for"]').html("for");	//update grammar
-				//SANITIZE
-				//PUDATE VISIBLE FIELD
-				//UPDATE HIDDEN FIELD TO VISIBLE FIELD, IF ANY
+				new_duration = "1";										//set duration = 1
 			}
-			
-			console.log("hidden = " + $("#output_duration3").val());
-		
+			$(this).next().children('input[class="output_duration"]').val(new_duration);	//set the field to the new value	
+			console.log("output changed, value = " + $("#output_duration3").val());
 		});//output_duration.change()
 		
 		$(".duration .up").click(function(){
@@ -154,8 +154,7 @@ div.wait a, div.duration a {
 				//flash error message here that 999 is the limit
 			};
 			$(this).parent().next().val(newval);						//set new value
-			$(this).parent().parent().siblings('input[type="hidden"][class="output_duration"]').val(newval);	//set the hidden field
-			console.log("hidden = " + $("#output_duration3").val());
+			console.log("+ pressed, duration = " + $("#output_duration3").val());
 			
 			return false;												//prevent the html link from doing anything
 		})//end up click
@@ -163,15 +162,14 @@ div.wait a, div.duration a {
 		$(".duration .down").click(function(){
 			current = sanitize($(this).parent().next().val());			//get sanitized current wait
 			var newval;
-			if(current <= 0){											//if 0 or negative
-				newval = 0;												//set to zero
+			if(current <= 1){											//if less than or = 1 (1 is the minimum)
+				newval = 1;												//set to 1
 				//flash error here if you want
 			}else{														//if positive
 				newval = current - 1;									//subtract 1
 			};
 			$(this).parent().next().val(newval);						//set the new value
-			$(this).parent().parent().siblings('input[type="hidden"][class="output_duration"]').val(newval);	//set the hidden field
-			console.log("hidden = " + $("#output_duration3").val());
+			console.log("- pressed, value = " + $("#output_duration3").val());
 			return false;												//prevent the html link from doing anything
 		})//end down click
 		
@@ -237,19 +235,16 @@ div.wait a, div.duration a {
 						<option value="1">on</option>
 						<option value="0">off</option>
 					</select>
-					
-					
 					<select class="output_duration">
 						<option value="constantly">constantly.</option>
 						<option value="for">for...</option>
 					</select>
-					<input type="hidden" id="output_duration3" class="output_duration" name="output_duration3" />
 					<div class="duration_container">
 						<div class="duration">
 							<a href="#" class="up">+</a>
 							<a href="#" class="down">-</a>
 						</div>
-						<input type="text" class="dummy_field" maxlength="3" value="0" />
+						<input type="text" id="output_duration3" class="output_duration" name="output_duration3" maxlength="3" value="0" />
 						second(s).
 					</div>
 					<span class="row_status"></span>
