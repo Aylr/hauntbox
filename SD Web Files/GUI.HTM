@@ -37,7 +37,17 @@ div.wait a, div.duration a {
 
 <script>
 	$(function(){//shortcut for doc.ready		
-				
+		
+		function load_settings(){
+			//this should load values from the firmware
+			//including intelligent defaults
+			//and populate the form correctly
+			var dummy_load_data = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;"
+			
+		};//end load_settings()
+		
+		load_settings();
+		
 		$("input.wait_time").change(function(){					//whenever the wait field changes
 			$(this).val(parseInt(sanitize($(this).val())));		//update the input with sanitized
 		});
@@ -132,11 +142,11 @@ div.wait a, div.duration a {
 			temp = $(this).val();										//get current value
 			var new_duration;											//initialize new duration
 			if(temp == "constantly"){									//if "constantly"
-				$(".duration_container").fadeOut(250);					//fade out buttons & field
+				$(this).next(".duration_container").fadeOut(250);		//fade out buttons & field
 				$(this).children('option[value="for"]').html("for...")	//update grammar
 				new_duration = 0;										//set duration = 0
 			}else if(temp == "for"){									//if "for..".
-				$(".duration_container").fadeIn(250);					//show buttons & field
+				$(this).next(".duration_container").fadeIn(250);		//show buttons & field
 				$(this).children('option[value="for"]').html("for");	//update grammar
 				new_duration = "1";										//set duration = 1
 			}
@@ -155,7 +165,6 @@ div.wait a, div.duration a {
 			};
 			$(this).parent().next().val(newval);						//set new value
 			console.log("+ pressed, duration = " + $("#output_duration3").val());
-			
 			return false;												//prevent the html link from doing anything
 		})//end up click
 		
@@ -197,6 +206,271 @@ div.wait a, div.duration a {
   			<h2>Program</h2>
 			<p>Some kind of description here.</p>
 			<form id="form">
+				<!--begin row3 -->
+				<div id="row3" class="row last">
+					When input 
+					<select id="sensor3" class="sensor" name="sensor3">
+						<option value="0">-</option>
+						<option value="1">A</option>
+						<option value="2">B</option>
+						<option value="3">C</option>
+						<option value="4">D</option>
+						<option value="5">E</option>
+						<option value="6">F</option>
+					</select>
+					is
+					<select id="sensor_state3" class="sensor_state" name="sensor_state3">
+						<option value="1">on</option>
+						<option value="0">off</option>
+					</select>
+					&nbsp;&nbsp;:&nbsp;&nbsp;
+					Wait
+					<div class="wait">
+						<a href="#" class="up">+</a>
+						<a href="#" class="down">-</a>
+					</div>
+					<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
+					second(s) then turn output
+					<select id="output3" class="output" name="output3">
+						<option value="0">-</option>
+						<option value="1">1</option>
+						<option value="2">2</option>
+						<option value="3">3</option>
+						<option value="4">4</option>
+						<option value="5">5</option>
+						<option value="6">6</option>
+					</select>
+					<select id=="output_state3" class="output_state" name="output_state3">
+						<option value="1">on</option>
+						<option value="0">off</option>
+					</select>
+					<select class="output_duration">
+						<option value="constantly">constantly.</option>
+						<option value="for">for...</option>
+					</select>
+					<div class="duration_container">
+						<div class="duration">
+							<a href="#" class="up">+</a>
+							<a href="#" class="down">-</a>
+						</div>
+						<input type="text" id="output_duration3" class="output_duration" name="output_duration3" maxlength="3" value="1" />
+						second(s).
+					</div>
+					<span class="row_status"></span>
+				</div>
+				<!--end row3 -->
+				<!--begin row3 -->
+				<div id="row3" class="row last">
+					When input 
+					<select id="sensor3" class="sensor" name="sensor3">
+						<option value="0">-</option>
+						<option value="1">A</option>
+						<option value="2">B</option>
+						<option value="3">C</option>
+						<option value="4">D</option>
+						<option value="5">E</option>
+						<option value="6">F</option>
+					</select>
+					is
+					<select id="sensor_state3" class="sensor_state" name="sensor_state3">
+						<option value="1">on</option>
+						<option value="0">off</option>
+					</select>
+					&nbsp;&nbsp;:&nbsp;&nbsp;
+					Wait
+					<div class="wait">
+						<a href="#" class="up">+</a>
+						<a href="#" class="down">-</a>
+					</div>
+					<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
+					second(s) then turn output
+					<select id="output3" class="output" name="output3">
+						<option value="0">-</option>
+						<option value="1">1</option>
+						<option value="2">2</option>
+						<option value="3">3</option>
+						<option value="4">4</option>
+						<option value="5">5</option>
+						<option value="6">6</option>
+					</select>
+					<select id=="output_state3" class="output_state" name="output_state3">
+						<option value="1">on</option>
+						<option value="0">off</option>
+					</select>
+					<select class="output_duration">
+						<option value="constantly">constantly.</option>
+						<option value="for">for...</option>
+					</select>
+					<div class="duration_container">
+						<div class="duration">
+							<a href="#" class="up">+</a>
+							<a href="#" class="down">-</a>
+						</div>
+						<input type="text" id="output_duration3" class="output_duration" name="output_duration3" maxlength="3" value="0" />
+						second(s).
+					</div>
+					<span class="row_status"></span>
+				</div>
+				<!--end row3 -->
+				<!--begin row3 -->
+				<div id="row3" class="row last">
+					When input 
+					<select id="sensor3" class="sensor" name="sensor3">
+						<option value="0">-</option>
+						<option value="1">A</option>
+						<option value="2">B</option>
+						<option value="3">C</option>
+						<option value="4">D</option>
+						<option value="5">E</option>
+						<option value="6">F</option>
+					</select>
+					is
+					<select id="sensor_state3" class="sensor_state" name="sensor_state3">
+						<option value="1">on</option>
+						<option value="0">off</option>
+					</select>
+					&nbsp;&nbsp;:&nbsp;&nbsp;
+					Wait
+					<div class="wait">
+						<a href="#" class="up">+</a>
+						<a href="#" class="down">-</a>
+					</div>
+					<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
+					second(s) then turn output
+					<select id="output3" class="output" name="output3">
+						<option value="0">-</option>
+						<option value="1">1</option>
+						<option value="2">2</option>
+						<option value="3">3</option>
+						<option value="4">4</option>
+						<option value="5">5</option>
+						<option value="6">6</option>
+					</select>
+					<select id=="output_state3" class="output_state" name="output_state3">
+						<option value="1">on</option>
+						<option value="0">off</option>
+					</select>
+					<select class="output_duration">
+						<option value="constantly">constantly.</option>
+						<option value="for">for...</option>
+					</select>
+					<div class="duration_container">
+						<div class="duration">
+							<a href="#" class="up">+</a>
+							<a href="#" class="down">-</a>
+						</div>
+						<input type="text" id="output_duration3" class="output_duration" name="output_duration3" maxlength="3" value="0" />
+						second(s).
+					</div>
+					<span class="row_status"></span>
+				</div>
+				<!--end row3 -->
+				<!--begin row3 -->
+				<div id="row3" class="row last">
+					When input 
+					<select id="sensor3" class="sensor" name="sensor3">
+						<option value="0">-</option>
+						<option value="1">A</option>
+						<option value="2">B</option>
+						<option value="3">C</option>
+						<option value="4">D</option>
+						<option value="5">E</option>
+						<option value="6">F</option>
+					</select>
+					is
+					<select id="sensor_state3" class="sensor_state" name="sensor_state3">
+						<option value="1">on</option>
+						<option value="0">off</option>
+					</select>
+					&nbsp;&nbsp;:&nbsp;&nbsp;
+					Wait
+					<div class="wait">
+						<a href="#" class="up">+</a>
+						<a href="#" class="down">-</a>
+					</div>
+					<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
+					second(s) then turn output
+					<select id="output3" class="output" name="output3">
+						<option value="0">-</option>
+						<option value="1">1</option>
+						<option value="2">2</option>
+						<option value="3">3</option>
+						<option value="4">4</option>
+						<option value="5">5</option>
+						<option value="6">6</option>
+					</select>
+					<select id=="output_state3" class="output_state" name="output_state3">
+						<option value="1">on</option>
+						<option value="0">off</option>
+					</select>
+					<select class="output_duration">
+						<option value="constantly">constantly.</option>
+						<option value="for">for...</option>
+					</select>
+					<div class="duration_container">
+						<div class="duration">
+							<a href="#" class="up">+</a>
+							<a href="#" class="down">-</a>
+						</div>
+						<input type="text" id="output_duration3" class="output_duration" name="output_duration3" maxlength="3" value="0" />
+						second(s).
+					</div>
+					<span class="row_status"></span>
+				</div>
+				<!--end row3 -->
+				<!--begin row3 -->
+				<div id="row3" class="row last">
+					When input 
+					<select id="sensor3" class="sensor" name="sensor3">
+						<option value="0">-</option>
+						<option value="1">A</option>
+						<option value="2">B</option>
+						<option value="3">C</option>
+						<option value="4">D</option>
+						<option value="5">E</option>
+						<option value="6">F</option>
+					</select>
+					is
+					<select id="sensor_state3" class="sensor_state" name="sensor_state3">
+						<option value="1">on</option>
+						<option value="0">off</option>
+					</select>
+					&nbsp;&nbsp;:&nbsp;&nbsp;
+					Wait
+					<div class="wait">
+						<a href="#" class="up">+</a>
+						<a href="#" class="down">-</a>
+					</div>
+					<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
+					second(s) then turn output
+					<select id="output3" class="output" name="output3">
+						<option value="0">-</option>
+						<option value="1">1</option>
+						<option value="2">2</option>
+						<option value="3">3</option>
+						<option value="4">4</option>
+						<option value="5">5</option>
+						<option value="6">6</option>
+					</select>
+					<select id=="output_state3" class="output_state" name="output_state3">
+						<option value="1">on</option>
+						<option value="0">off</option>
+					</select>
+					<select class="output_duration">
+						<option value="constantly">constantly.</option>
+						<option value="for">for...</option>
+					</select>
+					<div class="duration_container">
+						<div class="duration">
+							<a href="#" class="up">+</a>
+							<a href="#" class="down">-</a>
+						</div>
+						<input type="text" id="output_duration3" class="output_duration" name="output_duration3" maxlength="3" value="0" />
+						second(s).
+					</div>
+					<span class="row_status"></span>
+				</div>
+				<!--end row3 -->
 				<!--begin row3 -->
 				<div id="row3" class="row last">
 					When input 
