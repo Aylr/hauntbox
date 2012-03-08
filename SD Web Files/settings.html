@@ -13,7 +13,43 @@ input[type="radio"] + input[type="radio"]{
 	margin-left: .9em;
 }
 </style>
-
+<script src="jquery-1.7.1.min.js"></script>
+<script>
+	$(function(){//shortcut for doc.ready		
+		$("#save").click(function(){
+			var column_names = ["input.input_name", "input[type='radio']:checked", "input.output_name"];
+			cupcake_settings(column_names);
+		});
+		
+		function cupcake_settings(column_names){
+			var post_data = "";					//initialize the POST string
+			var counter = 0;					//use to insert commas after each row
+			var rows = $(".row").length;		//count how many rows, use for delimiters
+	
+			for (var i=0, tot=column_names.length; i < tot; i++) {
+			    //console.log(column_names[i]);
+				$(column_names[i]).each(function(){	//loop through a single column
+					counter ++;						//increment counter
+					post_data += $(this).val();		//append value of input
+					if(counter == rows){			//append appropriate element or row delimiter
+						post_data += ";";			//row delimiter
+						counter = 0;				//reset counter
+					}else{
+						post_data += ",";			//element delimiter
+					};
+				});//each sensor loop
+			};//loop through each column
+	
+			//console.log("rows: " + rows);
+			console.log(post_data);				//log to firebug
+	
+			/*$.post("http://192.168.1.9/testget",post_data,function(){ 	//the AJAX bit
+			//	console.log("posted " + post_data);
+			});
+			*/
+		};//end cupcake()
+	});
+</script>
 </head>
 
 <body>
@@ -27,22 +63,22 @@ input[type="radio"] + input[type="radio"]{
 			
 			<h3>Inputs</h3>
 			<div class="last inputs">
-				Input A: <input type="text" name="input1" id="input1" /> is considered on when its signal goes <input type="radio" name="highlow1" value="1" checked="checked">High</input><input type="radio" name="highlow1" value="0">Low</input>.<br />
-				Input B: <input type="text" name="input2" id="input2" /> is considered on when its signal goes <input type="radio" name="highlow2" value="1" checked="checked">High</input><input type="radio" name="highlow2" value="0">Low</input>.<br />
-				Input C: <input type="text" name="input3" id="input3" /> is considered on when its signal goes <input type="radio" name="highlow3" value="1" checked="checked">High</input><input type="radio" name="highlow3" value="0">Low</input>.<br />
-				Input D: <input type="text" name="input4" id="input4" /> is considered on when its signal goes <input type="radio" name="highlow4" value="1" checked="checked">High</input><input type="radio" name="highlow4" value="0">Low</input>.<br />
-				Input E: <input type="text" name="input5" id="input5" /> is considered on when its signal goes <input type="radio" name="highlow5" value="1" checked="checked">High</input><input type="radio" name="highlow5" value="0">Low</input>.<br />
-				Input F: <input type="text" name="input6" id="input6" /> is considered on when its signal goes <input type="radio" name="highlow6" value="1" checked="checked">High</input><input type="radio" name="highlow6" value="0">Low</input>.
+				Input A: <input type="text" class="input_name" name="input1" id="input1" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow1" value="1" checked>High</input><input type="radio" class="highlow" name="highlow1" value="0">Low</input>.<br />
+				Input B: <input type="text" class="input_name" name="input2" id="input2" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow2" value="1" checked>High</input><input type="radio" class="highlow" name="highlow2" value="0">Low</input>.<br />
+				Input C: <input type="text" class="input_name" name="input3" id="input3" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow3" value="1" checked>High</input><input type="radio" class="highlow" name="highlow3" value="0">Low</input>.<br />
+				Input D: <input type="text" class="input_name" name="input4" id="input4" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow4" value="1" checked>High</input><input type="radio" class="highlow" name="highlow4" value="0">Low</input>.<br />
+				Input E: <input type="text" class="input_name" name="input5" id="input5" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow5" value="1" checked>High</input><input type="radio" class="highlow" name="highlow5" value="0">Low</input>.<br />
+				Input F: <input type="text" class="input_name" name="input6" id="input6" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow6" value="1" checked>High</input><input type="radio" class="highlow" name="highlow6" value="0">Low</input>.
 			</div>
 			<br />
 			<h3>Outputs</h3>
 			<div class="last outpus">
-				Output 1: <input type="text" name="output1" id="output1" /><br />
-				Output 2: <input type="text" name="output2" id="output2" /><br />
-				Output 3: <input type="text" name="output3" id="output3" /><br />
-				Output 4: <input type="text" name="output4" id="output4" /><br />
-				Output 5: <input type="text" name="output5" id="output5" /><br />
-				Output 6: <input type="text" name="output6" id="output6" /><br />
+				Output 1: <input type="text" class="output_name" name="output1" id="output1" /><br />
+				Output 2: <input type="text" class="output_name" name="output2" id="output2" /><br />
+				Output 3: <input type="text" class="output_name" name="output3" id="output3" /><br />
+				Output 4: <input type="text" class="output_name" name="output4" id="output4" /><br />
+				Output 5: <input type="text" class="output_name" name="output5" id="output5" /><br />
+				Output 6: <input type="text" class="output_name" name="output6" id="output6" /><br />
 			</div>
 			<button id="save">Save Settings</button>
 		</div>

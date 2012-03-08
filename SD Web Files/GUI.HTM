@@ -64,7 +64,10 @@ div.wait a, div.duration a {
 		};//sanitize()
 		
 		
-		$("#save").click(cupcake);
+		$("#save").click(function(){
+			var column_names = ["select.sensor", "select.sensor_state", "input.wait_time", "select.output", "select.output_state", "input.output_duration"];
+			cupcake(column_names);
+		});
 		/*$("#save").click(function(){
 			dummy_data = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;"
 			//dummy_data = "1,2,3,4,5,6;"
@@ -75,11 +78,10 @@ div.wait a, div.duration a {
 		});
 		*/
 		
-		function cupcake(){
+		function cupcake(column_names){
 			var post_data = "";					//initialize the POST string
 			var counter = 0;					//use to insert commas after each row
 			var rows = $(".row").length;		//count how many rows, use for delimiters
-			var column_names = ["select.sensor", "select.sensor_state", "input.wait_time", "select.output", "select.output_state", "input.output_duration"];
 			
 			for (var i=0, tot=column_names.length; i < tot; i++) {
 			    //console.log(column_names[i]);
