@@ -43,6 +43,7 @@ div.wait a, div.duration a {
 			//including intelligent defaults
 			//and populate the form correctly
 			var dummy_load_data = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;"
+			$(".duration_container").hide();
 			
 		};//end load_settings()
 		
@@ -63,8 +64,8 @@ div.wait a, div.duration a {
 		};//sanitize()
 		
 		
-		//$("#save").click(cupcake);
-		$("#save").click(function(){
+		$("#save").click(cupcake);
+		/*$("#save").click(function(){
 			dummy_data = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;"
 			//dummy_data = "1,2,3,4,5,6;"
 			console.log(dummy_data);
@@ -72,6 +73,7 @@ div.wait a, div.duration a {
 				
 			});
 		});
+		*/
 		
 		function cupcake(){
 			var post_data = "";					//initialize the POST string
@@ -96,9 +98,10 @@ div.wait a, div.duration a {
 			//console.log("rows: " + rows);
 			console.log(post_data);				//log to firebug
 			
-			$.post("http://192.168.1.9/testget",post_data,function(){ 	//the AJAX bit
+			/*$.post("http://192.168.1.9/testget",post_data,function(){ 	//the AJAX bit
 			//	console.log("posted " + post_data);
 			});
+			*/
 		};//end cupcake()
 		
 		$(".wait .up").click(function(){
@@ -253,7 +256,7 @@ div.wait a, div.duration a {
 							<a href="#" class="up">+</a>
 							<a href="#" class="down">-</a>
 						</div>
-						<input type="text" id="output_duration3" class="output_duration" name="output_duration3" maxlength="3" value="1" />
+						<input type="text" id="output_duration3" class="output_duration" name="output_duration3" maxlength="3" value="0" />
 						second(s).
 					</div>
 					<span class="row_status"></span>

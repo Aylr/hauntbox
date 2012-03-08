@@ -6,8 +6,11 @@
   <link rel="stylesheet" href="blueprint/ie.css" type="text/css" media="screen, projection">
 <![endif]-->
 <style type="text/css">
-input {
+input[type="text"] {
 	width: 90px;
+}
+input[type="radio"] + input[type="radio"]{
+	margin-left: .9em;
 }
 </style>
 
@@ -21,14 +24,18 @@ input {
 			<h2>Settings</h2>
 			<p>Feel free to rename your inputs and outputs here. You can also set whether
 				digital HIGH or LOW will trigger the input.</p>
+			
+			<h3>Inputs</h3>
 			<div class="last inputs">
-				Input A: <input type="text" name="input1" id="input1" /> is considered on when its signal goes <select name=""><option>High</option><option>Low</option></select>.<br />
-				Input B: <input type="text" name="input2" id="input2" /> is considered on when its signal goes <select name=""><option>High</option><option>Low</option></select>.<br />
-				Input C: <input type="text" name="input3" id="input3" /> is considered on when its signal goes <select name=""><option>High</option><option>Low</option></select>.<br />
-				Input D: <input type="text" name="input4" id="input4" /> is considered on when its signal goes <select name=""><option>High</option><option>Low</option></select>.<br />
-				Input E: <input type="text" name="input5" id="input5" /> is considered on when its signal goes <select name=""><option>High</option><option>Low</option></select>.<br />
-				Input F: <input type="text" name="input6" id="input6" /> is considered on when its signal goes <select name=""><option>High</option><option>Low</option></select>.
+				Input A: <input type="text" name="input1" id="input1" /> is considered on when its signal goes <input type="radio" name="highlow1" value="1" checked="checked">High</input><input type="radio" name="highlow1" value="0">Low</input>.<br />
+				Input B: <input type="text" name="input2" id="input2" /> is considered on when its signal goes <input type="radio" name="highlow2" value="1" checked="checked">High</input><input type="radio" name="highlow2" value="0">Low</input>.<br />
+				Input C: <input type="text" name="input3" id="input3" /> is considered on when its signal goes <input type="radio" name="highlow3" value="1" checked="checked">High</input><input type="radio" name="highlow3" value="0">Low</input>.<br />
+				Input D: <input type="text" name="input4" id="input4" /> is considered on when its signal goes <input type="radio" name="highlow4" value="1" checked="checked">High</input><input type="radio" name="highlow4" value="0">Low</input>.<br />
+				Input E: <input type="text" name="input5" id="input5" /> is considered on when its signal goes <input type="radio" name="highlow5" value="1" checked="checked">High</input><input type="radio" name="highlow5" value="0">Low</input>.<br />
+				Input F: <input type="text" name="input6" id="input6" /> is considered on when its signal goes <input type="radio" name="highlow6" value="1" checked="checked">High</input><input type="radio" name="highlow6" value="0">Low</input>.
 			</div>
+			<br />
+			<h3>Outputs</h3>
 			<div class="last outpus">
 				Output 1: <input type="text" name="output1" id="output1" /><br />
 				Output 2: <input type="text" name="output2" id="output2" /><br />
