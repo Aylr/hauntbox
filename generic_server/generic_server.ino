@@ -90,14 +90,8 @@ boolean file_handler(TinyWebServer& web_server) {
 }
 
 
-//trying to figure out how to access form-encoded get/post data
-//using: http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1284936299/1#1
-// and: 
-// http://electronics.stackexchange.com/questions/20297/passing-data-from-python-to-arduino-over-ethernet
+
 boolean testget_handler(TinyWebServer& web_server){
-  //web_server.send_error_code(200);
-  //web_server.send_content_type("text/plain");
-  //web_server.end_headers();
   
   char* col[6];
   char* tok;
@@ -123,175 +117,166 @@ boolean testget_handler(TinyWebServer& web_server){
   char readString[100];
   char ch;
   Client& client = web_server.get_client();
+  Serial.print("Free RAM: ");
+  Serial.println(FreeRam());
 
   while (client.connected()) {
-    Serial.print("1: con = ");
-    Serial.print(client.connected());
-    Serial.print(", avail = ");
-    Serial.println(client.available());
+    //Serial.print("1: con = ");
+    //Serial.print(client.connected());
+    //Serial.print(", avail = ");
+    //Serial.println(client.available());
     
-    if (client.available()) {
-      Serial.print("2: con = ");
-      Serial.print(client.connected());
-      Serial.print(", avail = ");
-      Serial.println(client.available());
+    if (client.available() > 0) {      //if there are incoming bytes
+      //Serial.print("2: con = ");
+      //Serial.print(client.connected());
+      //Serial.print(", avail = ");
+      //Serial.println(client.available());
       
       ch = client.read();
-      // There are lots of Serial.print for debugging and learning
-      //Serial << ("\n ----------- client.available() = ") << (client.available() + "\n");
-      Serial << F("Free RAM: ") << FreeRam() << "\n";
       
       //if (readString.length() < 100) {//need to find out what this limit does
-      // Read a byte at a time and concatenate it onto the end of the character
-      // array.
+      // Read a byte at a time and concatenate it onto the end of the character array.
       readString[i] = ch;
       i++;
       //}
+          
+    }else if (client.available() == 0) {
+      //Serial.print("3: con = ");
+      //Serial.print(client.connected());
+      //Serial.print(", avail = ");
+      //Serial.println(client.available());
       
-      
-      //THIS CHUNK PROBABLY NEEDS TO BE MOVED OUTSIDE OF CLIENT.AVAILABLE
-      //if (ch == '\n') {
-      if (client.available() == 0) {
-        Serial.print("3: con = ");
-        Serial.print(client.connected());
-        Serial.print(", avail = ");
-        Serial.println(client.available());
-        
-        //Serial.println("Client.availabe stopped, i think it is false");
-         //Serial.print("readString = ");
-        Serial.println(readString);
-	
-	// Split readString into columns with comma-separated values.  Columns
-	// are separated by semicolons.  The first time you call strtok, you
-	// pass the string (char array) you want to work on.  It returns a
-	// a string with everything up to the delimiter you set.  For
-	// subsequent calls, you pass NULL, and the function keeps working on
-	// the original string.  Since we've set up the client to send 6
-	// columns, we call the function 6 times.  The check for tok == NULL is
-	// there in case there's a problem and we don't get the full packet.
-	// This may help it fail more gracefully.
-	tok = strtok(readString, ";");
-	col[0] = tok;
-	for (i = 1; i < 6; i++) {
-	  if (tok == NULL)
-	    break;
-	  tok = strtok(NULL, ";");
-	  col[i] = tok;
-	}
-
-	// Now turn the array of strings into arrays of numbers.  Each array is
-	// named for the column it represents.  The values are separated by
-	// commas.  atoi is used to convert the stringified numbers back into
-	// integers.  The values returned by atoi, which are ints, are cast
-	// into the appropriate data type.  (That's what the (byte) before
-	// atoi(tok) is doing.)  It would be more graceful to create a function
-	// to do this, rather than repeat it 6 times.
-	// input_arr
-	tok = strtok(col[0], ",");
-	for (i = 0; i < 6; i++) {
-	  if (tok == NULL)
-	    break;
-	  input_arr[i] = (byte)atoi(tok);
-	  tok = strtok(NULL, ",");
-	}
-	// in_onoff
-	tok = strtok(col[1], ",");
-	for (i = 0; i < 6; i++) {
-	  if (tok == NULL)
-	    break;
-	  in_onoff[i] = (byte)atoi(tok);
-	  tok = strtok(NULL, ",");
-	}
-	// ondelay
-	tok = strtok(col[2], ",");
-	for (i = 0; i < 6; i++) {
-	  if (tok == NULL)
-	    break;
-	  ondelay[i] = (unsigned int)atoi(tok);
-	  tok = strtok(NULL, ",");
-	}
-	// out_arr
-	tok = strtok(col[3], ",");
-	for (i = 0; i < 6; i++) {
-	  if (tok == NULL)
-	    break;
-	  out_arr[i] = (byte)atoi(tok);
-	  tok = strtok(NULL, ",");
-	}
-	// out_onoff
-	tok = strtok(col[4], ",");
-	for (i = 0; i < 6; i++) {
-	  if (tok == NULL)
-	    break;
-	  out_onoff[i] = (byte)atoi(tok);
-	  tok = strtok(NULL, ",");
-	}
-	// duration
-	tok = strtok(col[5], ",");
-	for (i = 0; i < 6; i++) {
-	  if (tok == NULL)
-	    break;
-	  duration[i] = (unsigned int)atoi(tok);
-	  tok = strtok(NULL, ",");
-	}
-
-	// Now print out all the values to make sure it all worked
-	Serial.println("And the numbers are...");
-	Serial.print("Input array: ");
-	for (i = 0; i < 6; i++)
-	  Serial.print(input_arr[i]); Serial.print(" ");
-	
-	Serial.print("\nInput on/off: ");
-	for (i = 0; i < 6; i++)
-	  Serial.print(in_onoff[i]); Serial.print(" ");
-	
-	Serial.print("\nOn delay: ");
-	for (i = 0; i < 6; i++)
-	  Serial.print(ondelay[i]); Serial.print(" ");
-	
-	Serial.print("\nOutput array: ");
-	for (i = 0; i < 6; i++)
-	  Serial.print(out_arr[i]); Serial.print(" ");
-	
-	Serial.print("\nOutput on/off: ");
-	for (i = 0; i < 6; i++)
-	  Serial.print(out_onoff[i]); Serial.print(" ");
-	
-	Serial.print("\nDuration: ");
-	for (i = 0; i < 6; i++)
-	  Serial.print(duration[i]); Serial.print(" ");
-	
-        Serial.println("Done");
-        
-        client.println("HTTP/1.0 200 OK");
-        client.println("Content-Type: text/html");
-        client.println();
-        client.println("Hey! I got your cupcakes!!!!!");
-        client.stop();
-        //  return true; //exit the handler 
-	//printf("\nDone!\n");
-	
-	//readString = ""; //blank the string for the next read
-	//client.stop(); // seems like this is not needed
+      Serial.println(readString);
+      	
+      // Split readString into columns with comma-separated values.  Columns
+      // are separated by semicolons.  The first time you call strtok, you
+      // pass the string (char array) you want to work on.  It returns a
+      // a string with everything up to the delimiter you set.  For
+      // subsequent calls, you pass NULL, and the function keeps working on
+      // the original string.  Since we've set up the client to send 6
+      // columns, we call the function 6 times.  The check for tok == NULL is
+      // there in case there's a problem and we don't get the full packet.
+      // This may help it fail more gracefully.
+      tok = strtok(readString, ";");
+      col[0] = tok;
+      for (i = 1; i < 6; i++) {
+        if (tok == NULL)
+          break;
+        tok = strtok(NULL, ";");
+        col[i] = tok;
       }
-      Serial.print("4: con = ");
-      Serial.print(client.connected());
-      Serial.print(", avail = ");
-      Serial.println(client.available());
+      
+      // Now turn the array of strings into arrays of numbers.  Each array is
+      // named for the column it represents.  The values are separated by
+      // commas.  atoi is used to convert the stringified numbers back into
+      // integers.  The values returned by atoi, which are ints, are cast
+      // into the appropriate data type.  (That's what the (byte) before
+      // atoi(tok) is doing.)  It would be more graceful to create a function
+      // to do this, rather than repeat it 6 times.
+      // input_arr
+      tok = strtok(col[0], ",");
+      for (i = 0; i < 6; i++) {
+        if (tok == NULL)
+          break;
+        input_arr[i] = (byte)atoi(tok);
+        tok = strtok(NULL, ",");
+      }
+      // in_onoff
+      tok = strtok(col[1], ",");
+      for (i = 0; i < 6; i++) {
+        if (tok == NULL)
+          break;
+        in_onoff[i] = (byte)atoi(tok);
+        tok = strtok(NULL, ",");
+      }
+      // ondelay
+      tok = strtok(col[2], ",");
+      for (i = 0; i < 6; i++) {
+        if (tok == NULL)
+          break;
+        ondelay[i] = (unsigned int)atoi(tok);
+        tok = strtok(NULL, ",");
+      }
+      // out_arr
+      tok = strtok(col[3], ",");
+      for (i = 0; i < 6; i++) {
+        if (tok == NULL)
+          break;
+        out_arr[i] = (byte)atoi(tok);
+        tok = strtok(NULL, ",");
+      }
+      // out_onoff
+      tok = strtok(col[4], ",");
+      for (i = 0; i < 6; i++) {
+        if (tok == NULL)
+          break;
+        out_onoff[i] = (byte)atoi(tok);
+        tok = strtok(NULL, ",");
+      }
+      // duration
+      tok = strtok(col[5], ",");
+      for (i = 0; i < 6; i++) {
+        if (tok == NULL)
+          break;
+        duration[i] = (unsigned int)atoi(tok);
+        tok = strtok(NULL, ",");
+      }
+      
+      // Now print out all the values to make sure it all worked
+      Serial.print("Input array: ");
+      for (i = 0; i < 6; i++)
+        Serial.print(input_arr[i]); Serial.print(" ");
+      
+      Serial.print("\nInput on/off: ");
+      for (i = 0; i < 6; i++)
+        Serial.print(in_onoff[i]); Serial.print(" ");
+      
+      Serial.print("\nOn delay: ");
+      for (i = 0; i < 6; i++)
+        Serial.print(ondelay[i]); Serial.print(" ");
+      
+      Serial.print("\nOutput array: ");
+      for (i = 0; i < 6; i++)
+        Serial.print(out_arr[i]); Serial.print(" ");
+      
+      Serial.print("\nOutput on/off: ");
+      for (i = 0; i < 6; i++)
+        Serial.print(out_onoff[i]); Serial.print(" ");
+      
+      Serial.print("\nDuration: ");
+      for (i = 0; i < 6; i++)
+        Serial.print(duration[i]); Serial.print(" ");
+	
+      //Serial.println("Done");
+      
+      client.println("HTTP/1.0 200 OK");
+      client.println("Content-Type: text/html");
+      client.println();
+      client.print("Free RAM: ");
+      client.println(FreeRam());
+      client.stop();
+
+      //Serial.print("4: con = ");
+      //Serial.print(client.connected());
+      //Serial.print(", avail = ");
+      //Serial.println(client.available());
+      
     }//client.available()
-    Serial.print("5: con = ");
-    Serial.print(client.connected());
-    Serial.print(", avail = ");
-    Serial.println(client.available());
-            //the issue appears to be fixed if you stop firefox from connecting with the post!
+    
+    //Serial.print("5: con = ");
+    //Serial.print(client.connected());
+    //Serial.print(", avail = ");
+    //Serial.println(client.available());
+    
   }//while client.connected()
-    Serial.print("6: con = ");
-    Serial.print(client.connected());
-    Serial.print(", avail = ");
-    Serial.println(client.available());
+  
+    //Serial.print("6: con = ");
+    //Serial.print(client.connected());
+    //Serial.print(", avail = ");
+    //Serial.println(client.available());
               
   return true; //exit the handler 
-}//
+}
 
 
 
