@@ -90,14 +90,12 @@ boolean file_handler(TinyWebServer& web_server) {
 }
 
 
-
 //trying to figure out how to access form-encoded get/post data
 //using: http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1284936299/1#1
 // and: 
 // http://electronics.stackexchange.com/questions/20297/passing-data-from-python-to-arduino-over-ethernet
 boolean testget_handler(TinyWebServer& web_server){
-  //          Serial.println("5e made");
-  //web_server.send_error_code(200);          //it is stopping here
+  //web_server.send_error_code(200);
   //web_server.send_content_type("text/plain");
   //web_server.end_headers();
   
@@ -127,7 +125,17 @@ boolean testget_handler(TinyWebServer& web_server){
   Client& client = web_server.get_client();
 
   while (client.connected()) {
+    Serial.print("1: con = ");
+    Serial.print(client.connected());
+    Serial.print(", avail = ");
+    Serial.println(client.available());
+    
     if (client.available()) {
+      Serial.print("2: con = ");
+      Serial.print(client.connected());
+      Serial.print(", avail = ");
+      Serial.println(client.available());
+      
       ch = client.read();
       // There are lots of Serial.print for debugging and learning
       //Serial << ("\n ----------- client.available() = ") << (client.available() + "\n");
@@ -144,6 +152,11 @@ boolean testget_handler(TinyWebServer& web_server){
       //THIS CHUNK PROBABLY NEEDS TO BE MOVED OUTSIDE OF CLIENT.AVAILABLE
       //if (ch == '\n') {
       if (client.available() == 0) {
+        Serial.print("3: con = ");
+        Serial.print(client.connected());
+        Serial.print(", avail = ");
+        Serial.println(client.available());
+        
         //Serial.println("Client.availabe stopped, i think it is false");
          //Serial.print("readString = ");
         Serial.println(readString);
@@ -249,17 +262,34 @@ boolean testget_handler(TinyWebServer& web_server){
 	  Serial.print(duration[i]); Serial.print(" ");
 	
         Serial.println("Done");
+        
+        client.println("HTTP/1.0 200 OK");
+        client.println("Content-Type: text/html");
+        client.println();
+        client.println("Hey! I got your cupcakes!!!!!");
+        client.stop();
+        //  return true; //exit the handler 
 	//printf("\nDone!\n");
 	
 	//readString = ""; //blank the string for the next read
 	//client.stop(); // seems like this is not needed
       }
+      Serial.print("4: con = ");
+      Serial.print(client.connected());
+      Serial.print(", avail = ");
+      Serial.println(client.available());
     }//client.available()
-            Serial.println("end client.available()");
+    Serial.print("5: con = ");
+    Serial.print(client.connected());
+    Serial.print(", avail = ");
+    Serial.println(client.available());
             //the issue appears to be fixed if you stop firefox from connecting with the post!
   }//while client.connected()
-              Serial.println("end client.connected()");
-  
+    Serial.print("6: con = ");
+    Serial.print(client.connected());
+    Serial.print(", avail = ");
+    Serial.println(client.available());
+              
   return true; //exit the handler 
 }//
 
