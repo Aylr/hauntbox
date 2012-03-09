@@ -248,13 +248,17 @@ boolean testget_handler(TinyWebServer& web_server){
 	for (i = 0; i < 6; i++)
 	  Serial.print(duration[i]); Serial.print(" ");
 	
+        Serial.println("Done");
 	//printf("\nDone!\n");
 	
 	//readString = ""; //blank the string for the next read
 	//client.stop(); // seems like this is not needed
       }
     }//client.available()
+            Serial.println("end client.available()");
+            //the issue appears to be fixed if you stop firefox from connecting with the post!
   }//while client.connected()
+              Serial.println("end client.connected()");
   
   return true; //exit the handler 
 }//
