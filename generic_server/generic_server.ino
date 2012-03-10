@@ -252,7 +252,33 @@ boolean testget_handler(TinyWebServer& web_server){
       client.print("Free RAM: ");
       client.print(FreeRam());
       client.print(", millis: ");
-      client.print(millis());
+      client.println(millis());
+      
+      client.print("Input array: ");
+      for (i = 0; i < 6; i++)
+        client.print(input_arr[i]); client.print(" ");
+        
+      client.print("\nInput on/off: ");
+      for (i = 0; i < 6; i++)
+        client.print(in_onoff[i]); client.print(" ");
+      
+      client.print("\nOn delay: ");
+      for (i = 0; i < 6; i++)
+        client.print(ondelay[i]); client.print(" ");
+      
+      client.print("\nOutput array: ");
+      for (i = 0; i < 6; i++)
+        client.print(out_arr[i]); client.print(" ");
+      
+      client.print("\nOutput on/off: ");
+      for (i = 0; i < 6; i++)
+        client.print(out_onoff[i]); client.print(" ");
+      
+      client.print("\nDuration: ");
+      for (i = 0; i < 6; i++)
+        client.print(duration[i]); client.print(" ");
+      
+      client.print("\n");
       
       client.stop();
 
