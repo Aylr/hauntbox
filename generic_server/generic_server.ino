@@ -246,14 +246,14 @@ boolean testget_handler(TinyWebServer& web_server){
       Serial.print("\nDuration: ");
       for (i = 0; i < 6; i++)
         Serial.print(duration[i]); Serial.print(" ");
-	
-      //Serial.println("Done");
       
-      client.println("HTTP/1.0 200 OK");
-      client.println("Content-Type: text/html");
-      client.println();
+      client.println("HTTP/1.0 200 OK\nContent-Type: text/html\n");  //2 line header including mandatory blank line to signify data below
+      //send some sample data back to the broswer
       client.print("Free RAM: ");
-      client.println(FreeRam());
+      client.print(FreeRam());
+      client.print(", millis: ");
+      client.print(millis());
+      
       client.stop();
 
       //Serial.print("4: con = ");

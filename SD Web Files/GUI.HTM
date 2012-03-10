@@ -100,8 +100,9 @@ div.wait a, div.duration a {
 			//console.log("rows: " + rows);
 			console.log(post_data);				//log to firebug
 			
-			$.post("http://192.168.1.9/testget",post_data,function(){ 	//the AJAX bit
+			$.post("http://192.168.1.9/testget", post_data, function(data){ 	//the AJAX bit
 			//	console.log("posted " + post_data);
+				$("#status").hide().html(data).fadeIn();
 			});
 			
 		};//end cupcake()
@@ -531,6 +532,7 @@ div.wait a, div.duration a {
 				<!--end row3 -->
 
 				<button id="save" name="save" type="button">Save Program</button>
+				<div id="status"></div>
 
 			</form>
   
