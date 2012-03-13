@@ -17,7 +17,6 @@ input[type="radio"] + input[type="radio"]{
 <script>
 	$(function(){//shortcut for doc.ready		
 		$("#save").click(function(){
-			var column_names = ["input.input_name", "input[type='radio']:checked", "input.output_name"];
 			//Data receiving protocol (Arduino --> Browser)
 			//inputs & outputs;input names;output names;
 			//1,1,1,1,1,1,1,1,1,1,1,1;name1,name2,name3,name4,name5,name6;name1,name2,name3,name4,name5,name6;
@@ -28,20 +27,21 @@ input[type="radio"] + input[type="radio"]{
 		function cupcake_settings(column_names){
 			var post_data = "";					//initialize the POST string
 			var counter = 0;					//use to insert commas after each row
-			var rows = $(".row").length;		//count how many rows, use for delimiters
 	
 			for (var i=0, tot=column_names.length; i < tot; i++) {
-			    //console.log(column_names[i]);
+				console.log($(column_names[i]));			//log the current object
+			    console.log($(column_names[i]).length);		//log the current object length
+			
 				$(column_names[i]).each(function(){	//loop through a single column
 					counter ++;						//increment counter
 					post_data += $(this).val();		//append value of input
-					if(counter == rows){			//append appropriate element or row delimiter
+					if(counter == $(column_names[i]).length){			//append appropriate element or row delimiter
 						post_data += ";";			//row delimiter
 						counter = 0;				//reset counter
 					}else{
 						post_data += ",";			//element delimiter
 					};
-				});//each sensor loop
+				});//each element loop
 			};//loop through each column
 	
 			//console.log("rows: " + rows);
@@ -76,7 +76,7 @@ input[type="radio"] + input[type="radio"]{
 			</div>
 			<br />
 			<h3>Outputs</h3>
-				Output 5: <input type="text" class="output_name" name="output5" id="output5" /><br />
+			<div class="last outputs">
 				Output 1: <input type="text" class="output_name" name="output1" id="output1" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow1" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow1" value="0">Low</input>.<br />
 				Output 2: <input type="text" class="output_name" name="output2" id="output2" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow2" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow2" value="0">Low</input>.<br />
 				Output 3: <input type="text" class="output_name" name="output3" id="output3" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow3" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow3" value="0">Low</input>.<br />
