@@ -18,6 +18,10 @@ input[type="radio"] + input[type="radio"]{
 	$(function(){//shortcut for doc.ready		
 		$("#save").click(function(){
 			var column_names = ["input.input_name", "input[type='radio']:checked", "input.output_name"];
+			//Data receiving protocol (Arduino --> Browser)
+			//inputs & outputs;input names;output names;
+			//1,1,1,1,1,1,1,1,1,1,1,1;name1,name2,name3,name4,name5,name6;name1,name2,name3,name4,name5,name6;
+			var column_names = ["input[type='radio']:checked", "input.input_name", "input.output_name"];
 			cupcake_settings(column_names);
 		});
 		

@@ -254,6 +254,14 @@ boolean testget_handler(TinyWebServer& web_server){
       client.print(", millis: ");
       client.println(millis());
       
+      //Data sending protocol (Arduino --> Browser)
+      //Input array;Input on/off;On delay;Output array;Output on/off;Duration;status code;Free RAM;
+      //0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0;182;
+      //status codes
+      //1 = 
+      //2 = 
+      //3 = 
+      //4 = 
       client.print("Input array: ");
       for (i = 0; i < 6; i++)
         client.print(input_arr[i]); client.print(" ");

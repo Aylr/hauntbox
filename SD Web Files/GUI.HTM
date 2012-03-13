@@ -42,7 +42,18 @@ div.wait a, div.duration a {
 			//this should load values from the firmware
 			//including intelligent defaults
 			//and populate the form correctly
-			var dummy_load_data = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;"
+			
+	      //Data receiving protocol (Arduino --> Browser)
+	      //Input array;Input on/off;On delay;Output array;Output on/off;Duration;status code;Free RAM;
+	      //0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0;182;
+	
+	      //status codes
+	      //0 = all good
+	      //1 = 
+	      //2 = 
+	      //3 = 
+	      //4 =
+			var dummy_load_data = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;0,778"
 			$(".duration_container").hide();
 			
 		};//end load_settings()
