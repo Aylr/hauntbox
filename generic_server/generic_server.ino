@@ -258,6 +258,7 @@ boolean testget_handler(TinyWebServer& web_server){
       //Input array;Input on/off;On delay;Output array;Output on/off;Duration;status code;Free RAM;
       //0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0;182;
       //status codes
+      //0 = all good
       //1 = 
       //2 = 
       //3 = 
