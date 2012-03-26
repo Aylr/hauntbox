@@ -122,10 +122,8 @@ div.wait a, div.duration a {
 		};//end cupcake()
 		
 		
-		function fast_plus_minus(input,direction){
-			//try to generalize this function to either ++ or -- the value based on what
-			//button (or class of object) was clicked
-			
+		function fast_plus_minus(input,direction){	//this increments and fast increments either + or - based on the direction
+			//it is called by the delay field and the duration field
 			stop_auto();										//stop all value auto increments
 			var current_wait = sanitize(input.val());			//get sanitized current wait
 			if(direction == "+"){								//if "+" was passed to the function
@@ -225,22 +223,30 @@ div.wait a, div.duration a {
 			console.log("output changed, value = " + $("#output_duration3").val());
 		});//output_duration.change()
 		
-		$(".duration .up").click(function(){
+		$(".duration .up").mousedown(function(){				//call the "+" handler
+			fast_plus_minus($(this).parent().next(),"+");
+		});
+		$(".duration .up").mouseup(function(){					//stop when the mouse click stops
 			stop_auto();										//stop all value auto increments
-			current = sanitize($(this).parent().next().val());			//get sanitized current wait
-			var newval;
-			if(current < 999){											//if less than 999
-				newval = current + 1;									//add 1
 			}else{
-				newval = 999;											//if at 999, leave at 999
-				//flash error message here that 999 is the limit
-			};
-			$(this).parent().next().val(newval);						//set new value
-			console.log("+ pressed, duration = " + $("#output_duration3").val());
-			return false;												//prevent the html link from doing anything
-		})//end up click
+		});
+		$(".duration .up").mouseleave(function(){				//stop when the mouse leaves the button (in case you held down then left)
+			stop_auto();										//stop all value auto increments
+		});
 		
-		$(".duration .down").click(function(){
+		$(".duration .down").mousedown(function(){				//call the "-" handler
+			fast_plus_minus($(this).parent().next(),"-");
+		});
+		$(".duration .down").mouseup(function(){				//stop when the mouse click stops
+			stop_auto();										//stop all value auto increments
+		});
+		$(".duration .down").mouseleave(function(){				//stop when the mouse leaves the button (in case you held down then left)
+			stop_auto();										//stop all value auto increments
+		});
+		
+		
+		
+	/*	$(".duration .down").click(function(){
 			stop_auto();										//stop all value auto increments
 			current = sanitize($(this).parent().next().val());			//get sanitized current wait
 			var newval;
@@ -253,7 +259,7 @@ div.wait a, div.duration a {
 			$(this).parent().next().val(newval);						//set the new value
 			console.log("- pressed, value = " + $("#output_duration3").val());
 			return false;												//prevent the html link from doing anything
-		})//end down click
+		})//end down click*/
 		
 		
 		
