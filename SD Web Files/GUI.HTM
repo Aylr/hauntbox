@@ -121,24 +121,6 @@ div.wait a, div.duration a {
 			
 		};//end cupcake()
 		
-		/*
-		$(".wait .up").click(function(){
-			stop_auto();								//stop all value auto increments
-			var input = $(this).parent().next();
-			current_wait = sanitize(input.val());		//get sanitized current wait
-			var newval;
-			if(current_wait < 999){										//if less than 999
-				newval = current_wait + 1;								//add 1
-			}else{
-				newval = 999;											//if at 999, leave at 999
-				//flash error message here that 999 is the limit
-			};
-			input.val(newval);						//set new value
-			console.log("click");
-			stop_auto();
-			return false;												//prevent the html link from doing anything
-		})//end up click
-		*/
 		
 		function fast_plus_minus(input,direction){
 			//try to generalize this function to either ++ or -- the value based on what
@@ -215,54 +197,7 @@ div.wait a, div.duration a {
 		$(".wait .down").mouseleave(function(){					//stop when the mouse leaves the button (in case you held down then left)
 			stop_auto();										//stop all value auto increments
 		});
-		/*$(".wait .up").mousedown(function(){
-			console.log("downstart");
-			var input = $(this).parent().next();
-			var newval;
-			stop_auto();										//stop all value auto increments
-			
-			current_wait = sanitize(input.val());		//get sanitized current wait
-		
-			if(current_wait < 999){										//if less than 999
-				newval = current_wait + 1;								//add 1
-			}else{
-				newval = 999;											//if at 999, leave at 999
-				//flash error message here that 999 is the limit
-			};
-			input.val(newval);						//set new value
-			
-			timeout = setTimeout(function(){					//This waits 1 second before...
-				interval = setInterval(function(){				//++ing value every 100 milliseconds
-					current_wait = sanitize(input.val());		//get sanitized current wait
-				
-					if(current_wait < 999){										//if less than 999
-						newval = current_wait + 1;								//add 1
-					}else{
-						newval = 999;											//if at 999, leave at 999
-						//flash error message here that 999 is the limit
-					};
-					input.val(newval);						//set new value
-				}, 100);										//the speed of ++ing the value
-			},1000);											//the delay (timeout) before ++ing
-			return false;										//prevent the html link from doing anything
-		});
-		
-		
-				
-		$(".wait .down").click(function(){
-			stop_auto();												//stop all value auto increments
-			current_wait = sanitize($(this).parent().next().val());		//get sanitized current wait
-			var newval;
-			if(current_wait <= 0){										//if 0 or negative
-				newval = 0;												//set to zero
-				//flash error here if you want
-			}else{														//if positive
-				newval = current_wait - 1;								//subtract 1
-			};
-			$(this).parent().next().val(newval);						//set the new value
-			return false;												//prevent the html link from doing anything
-		})//end down click
-*/
+
 
 		$("input.output_duration").change(function(){					//on manual keybaord entry
 			var newval = 1;												//default new value
