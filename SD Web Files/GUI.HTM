@@ -125,23 +125,23 @@ div.wait a, div.duration a {
 		function fast_plus_minus(input,direction){	//this increments and fast increments either + or - based on the direction
 			//it is called by the delay field and the duration field
 			stop_auto();										//stop all value auto increments
-			var current_wait = sanitize(input.val());			//get sanitized current wait
+			var current = sanitize(input.val());			//get sanitized current wait
 			if(direction == "+"){								//if "+" was passed to the function
-				input.val(input_up(current_wait));					//get & set new value
+				input.val(input_up(current));					//get & set new value
 
 				timeout = setTimeout(function(){					//This waits 1 second before...
 					interval = setInterval(function(){				//auto ++ing value every n milliseconds
-						current_wait = sanitize(input.val());		//get sanitized current wait
-						input.val(input_up(current_wait));			//get & set new value
+						current = sanitize(input.val());		//get sanitized current wait
+						input.val(input_up(current));			//get & set new value
 					}, increment_on_hold_speed);					//the speed of ++ing the value
 				},increment_hold_delay);							//the delay (timeout) before ++ing
 			}else if(direction == "-"){							//if "-" was passed to the function
-				input.val(input_down(current_wait));				//get & set new value
+				input.val(input_down(current));				//get & set new value
 
 				timeout = setTimeout(function(){					//This waits 1 second before...
 					interval = setInterval(function(){				//auto ++ing value every n milliseconds
-						current_wait = sanitize(input.val());		//get sanitized current wait
-						input.val(input_down(current_wait));		//get & set new value
+						current = sanitize(input.val());		//get sanitized current wait
+						input.val(input_down(current));		//get & set new value
 					}, increment_on_hold_speed);					//the speed of auto ++ing the value
 				},increment_hold_delay);							//the delay (timeout) before auto ++ing
 			};
@@ -222,13 +222,12 @@ div.wait a, div.duration a {
 			$(this).next().children('input[class="output_duration"]').val(new_duration);	//set the field to the new value	
 			console.log("output changed, value = " + $("#output_duration3").val());
 		});//output_duration.change()
-		
+
 		$(".duration .up").mousedown(function(){				//call the "+" handler
 			fast_plus_minus($(this).parent().next(),"+");
 		});
 		$(".duration .up").mouseup(function(){					//stop when the mouse click stops
 			stop_auto();										//stop all value auto increments
-			}else{
 		});
 		$(".duration .up").mouseleave(function(){				//stop when the mouse leaves the button (in case you held down then left)
 			stop_auto();										//stop all value auto increments
