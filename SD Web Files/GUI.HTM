@@ -36,7 +36,18 @@ div.wait a, div.duration a {
 <script src="jqry171.js"></script>
 
 <script>
-	$(function(){//shortcut for doc.ready		
+	$(function(){//shortcut for doc.ready
+		var increment_on_hold_speed = 50;	//auto ++ing value every n milliseconds
+		var increment_hold_delay = 1000;	//the delay in milliseconds (timeout) before auto ++ing
+		var interval = null;				//var for auto incrementing
+		var timeout = null;					//var for auto incrementing delay
+		
+		function stop_auto(){				//this function is called whenever you want to stop auto incrementing
+			clearInterval(interval);
+			clearTimeout(timeout);
+			console.log("stopped");
+		};//end stop_auto
+		
 		
 		function load_settings(){
 			//this should load values from the firmware
@@ -54,7 +65,7 @@ div.wait a, div.duration a {
 	      //3 = 
 	      //4 =
 			var dummy_load_data = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;0,778"
-			$(".duration_container").hide();
+			$(".duration_container").hide();		//TEMPORARY. REPLACE WITH APPROPRIATE SHOW/HIDING OF DURATION BOX BASED ON READ SETTINGS
 			
 		};//end load_settings()
 		
@@ -72,30 +83,22 @@ div.wait a, div.duration a {
 				console.log("ERROR: num = " + num + "  	parseInt(num) = " + parseInt(num) + "   ==> 0");
 				return "0";							//if the user entered garbage, set to "0"
 			};
-		};//sanitize()
+		};//end sanitize()
 		
 		
-		$("#save").click(function(){
+		$("#save").click(function(){	//this function sets up the call to cupcake with the columns you want sent
+			//for instance, you could call this on a button press, or value change
+			//define the columns to submit via cupcake()
 			var column_names = ["select.sensor", "select.sensor_state", "input.wait_time", "select.output", "select.output_state", "input.output_duration"];
 			cupcake(column_names);
 		});
-		/*$("#save").click(function(){
-			dummy_data = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;"
-			//dummy_data = "1,2,3,4,5,6;"
-			console.log(dummy_data);
-			$.post("http://192.168.1.9/testget",dummy_data,function(){
-				
-			});
-		});
-		*/
 		
-		function cupcake(column_names){
+		function cupcake(column_names){			//cupcake acutally formats and sends the data to the Arduino
 			var post_data = "";					//initialize the POST string
 			var counter = 0;					//use to insert commas after each row
 			var rows = $(".row").length;		//count how many rows, use for delimiters
 			
-			for (var i=0, tot=column_names.length; i < tot; i++) {
-			    //console.log(column_names[i]);
+			for (var i=0, tot=column_names.length; i < tot; i++) {	//loop through columns passed to cupcake
 				$(column_names[i]).each(function(){	//loop through a single column
 					counter ++;						//increment counter
 					post_data += $(this).val();		//append value of input
@@ -105,7 +108,7 @@ div.wait a, div.duration a {
 					}else{
 						post_data += ",";			//element delimiter
 					};
-				});//each sensor loop
+				});//end each sensor loop
 			};//loop through each column
 			
 			//console.log("rows: " + rows);
@@ -118,8 +121,11 @@ div.wait a, div.duration a {
 			
 		};//end cupcake()
 		
+		/*
 		$(".wait .up").click(function(){
-			current_wait = sanitize($(this).parent().next().val());		//get sanitized current wait
+			stop_auto();								//stop all value auto increments
+			var input = $(this).parent().next();
+			current_wait = sanitize(input.val());		//get sanitized current wait
 			var newval;
 			if(current_wait < 999){										//if less than 999
 				newval = current_wait + 1;								//add 1
@@ -127,11 +133,124 @@ div.wait a, div.duration a {
 				newval = 999;											//if at 999, leave at 999
 				//flash error message here that 999 is the limit
 			};
-			$(this).parent().next().val(newval);						//set new value
+			input.val(newval);						//set new value
+			console.log("click");
+			stop_auto();
 			return false;												//prevent the html link from doing anything
 		})//end up click
+		*/
 		
+		function fast_plus_minus(input,direction){
+			//try to generalize this function to either ++ or -- the value based on what
+			//button (or class of object) was clicked
+			
+			stop_auto();										//stop all value auto increments
+			var current_wait = sanitize(input.val());			//get sanitized current wait
+			if(direction == "+"){								//if "+" was passed to the function
+				input.val(input_up(current_wait));					//get & set new value
+
+				timeout = setTimeout(function(){					//This waits 1 second before...
+					interval = setInterval(function(){				//auto ++ing value every n milliseconds
+						current_wait = sanitize(input.val());		//get sanitized current wait
+						input.val(input_up(current_wait));			//get & set new value
+					}, increment_on_hold_speed);					//the speed of ++ing the value
+				},increment_hold_delay);							//the delay (timeout) before ++ing
+			}else if(direction == "-"){							//if "-" was passed to the function
+				input.val(input_down(current_wait));				//get & set new value
+
+				timeout = setTimeout(function(){					//This waits 1 second before...
+					interval = setInterval(function(){				//auto ++ing value every n milliseconds
+						current_wait = sanitize(input.val());		//get sanitized current wait
+						input.val(input_down(current_wait));		//get & set new value
+					}, increment_on_hold_speed);					//the speed of auto ++ing the value
+				},increment_hold_delay);							//the delay (timeout) before auto ++ing
+			};
+			
+			//maybe put the interval timers here.
+			return false;										//prevent the html link from doing anything	
+		};
+		
+		function input_up(current){								//this increments the current value up to 999
+			console.log("input_up " + current);
+			var newval;
+			if(current < 999){									//if less than 999
+				newval = current + 1;							//add 1
+			}else{
+				newval = 999;									//if at 999, leave at 999
+				stop_auto();									//stop auto timer, we're at zero
+				//flash limit message here if you want				
+			};
+			return newval;
+		};//end input_limits
+		
+		function input_down(current){							//this increments the current down to 0
+			console.log("input_down " + current);
+			var newval;
+			if(current <= 0){									//if 0 or negative
+				newval = 0;										//set to zero
+				stop_auto();									//stop auto timer, we're at zero
+				//flash limit message here if you want
+			}else{												//if positive
+				newval = current - 1;							//subtract 1
+			};
+			return newval;
+		};//end input_limits
+		
+		$(".wait .up").mousedown(function(){					//call the "+" handler
+			fast_plus_minus($(this).parent().next(),"+");
+		});
+		$(".wait .up").mouseup(function(){						//stop when the mouse click stops
+			stop_auto();										//stop all value auto increments
+		});
+		$(".wait .up").mouseleave(function(){					//stop when the mouse leaves the button (in case you held down then left)
+			stop_auto();										//stop all value auto increments
+		});
+		
+		$(".wait .down").mousedown(function(){					//call the "-" handler
+			fast_plus_minus($(this).parent().next(),"-");
+		});
+		$(".wait .down").mouseup(function(){					//stop when the mouse click stops
+			stop_auto();										//stop all value auto increments
+		});
+		$(".wait .down").mouseleave(function(){					//stop when the mouse leaves the button (in case you held down then left)
+			stop_auto();										//stop all value auto increments
+		});
+		/*$(".wait .up").mousedown(function(){
+			console.log("downstart");
+			var input = $(this).parent().next();
+			var newval;
+			stop_auto();										//stop all value auto increments
+			
+			current_wait = sanitize(input.val());		//get sanitized current wait
+		
+			if(current_wait < 999){										//if less than 999
+				newval = current_wait + 1;								//add 1
+			}else{
+				newval = 999;											//if at 999, leave at 999
+				//flash error message here that 999 is the limit
+			};
+			input.val(newval);						//set new value
+			
+			timeout = setTimeout(function(){					//This waits 1 second before...
+				interval = setInterval(function(){				//++ing value every 100 milliseconds
+					current_wait = sanitize(input.val());		//get sanitized current wait
+				
+					if(current_wait < 999){										//if less than 999
+						newval = current_wait + 1;								//add 1
+					}else{
+						newval = 999;											//if at 999, leave at 999
+						//flash error message here that 999 is the limit
+					};
+					input.val(newval);						//set new value
+				}, 100);										//the speed of ++ing the value
+			},1000);											//the delay (timeout) before ++ing
+			return false;										//prevent the html link from doing anything
+		});
+		
+		
+				
 		$(".wait .down").click(function(){
+			stop_auto();												//stop all value auto increments
 			current_wait = sanitize($(this).parent().next().val());		//get sanitized current wait
 			var newval;
 			if(current_wait <= 0){										//if 0 or negative
@@ -143,7 +262,7 @@ div.wait a, div.duration a {
 			$(this).parent().next().val(newval);						//set the new value
 			return false;												//prevent the html link from doing anything
 		})//end down click
-
+*/
 
 		$("input.output_duration").change(function(){					//on manual keybaord entry
 			var newval = 1;												//default new value
@@ -172,6 +291,7 @@ div.wait a, div.duration a {
 		});//output_duration.change()
 		
 		$(".duration .up").click(function(){
+			stop_auto();										//stop all value auto increments
 			current = sanitize($(this).parent().next().val());			//get sanitized current wait
 			var newval;
 			if(current < 999){											//if less than 999
@@ -186,6 +306,7 @@ div.wait a, div.duration a {
 		})//end up click
 		
 		$(".duration .down").click(function(){
+			stop_auto();										//stop all value auto increments
 			current = sanitize($(this).parent().next().val());			//get sanitized current wait
 			var newval;
 			if(current <= 1){											//if less than or = 1 (1 is the minimum)

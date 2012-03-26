@@ -20,6 +20,8 @@ input[type="radio"] + input[type="radio"]{
 			//Data receiving protocol (Arduino --> Browser)
 			//inputs & outputs;input names;output names;
 			//1,1,1,1,1,1,1,1,1,1,1,1;name1,name2,name3,name4,name5,name6;name1,name2,name3,name4,name5,name6;
+			
+			//define the columns to submit via cupcake()
 			var column_names = ["input[type='radio']:checked", "input.input_name", "input.output_name"];
 			cupcake_settings(column_names);
 		});
@@ -44,7 +46,6 @@ input[type="radio"] + input[type="radio"]{
 				});//each element loop
 			};//loop through each column
 	
-			//console.log("rows: " + rows);
 			console.log(post_data);				//log to firebug
 	
 			/*$.post("http://192.168.1.9/testget",post_data,function(){ 	//the AJAX bit
