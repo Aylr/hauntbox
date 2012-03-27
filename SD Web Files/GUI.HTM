@@ -41,40 +41,71 @@ div.wait a, div.duration a {
 		var increment_hold_delay = 1000;	//the delay in milliseconds (timeout) before auto ++ing
 		var interval = null;				//var for auto incrementing
 		var timeout = null;					//var for auto incrementing delay
-		
+	
 		function stop_auto(){				//this function is called whenever you want to stop auto incrementing
 			clearInterval(interval);
 			clearTimeout(timeout);
 			console.log("stopped");
 		};//end stop_auto
-		
-		
+	
+	
 		function load_settings(){
 			//this should load values from the firmware
 			//including intelligent defaults
 			//and populate the form correctly
-			
-	      //Data receiving protocol (Arduino --> Browser)
-	      //Input array;Input on/off;On delay;Output array;Output on/off;Duration;status code;Free RAM;
-	      //0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0;182;
-	
-	      //status codes
-	      //0 = all good
-	      //1 = 
-	      //2 = 
-	      //3 = 
-	      //4 =
+
+			//Data receiving protocol (Arduino --> Browser)
+			//Input array;Input on/off;On delay;Output array;Output on/off;Duration;status code;Free RAM;
+			//0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0;182;
+
+			//status codes
+			//0 = all good
+			//1 = 
+			//2 = 
+			//3 = 
+			//4 =
+		
 			var dummy_load_data = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;0,778"
+		
+			//Settings receiving protocol (Arduino --> Browser)
+			//input defs,output defs;input names;output names;status code;Free RAM;
+			//"1,1,1,1,1,1,1,1,1,1,1,1;name1,name2,name3,name4,name5,name6;name1,name2,name3,name4,name5,name6;0;182;"
+		
+			var dummy_settings_data = "1,1,1,1,1,1,1,1,1,1,1,1;name1,name2,name3,name4,name5,name6;name1,name2,name3,name4,name5,name6;0;199;"
+			var input_names = new Array();
+			var output_names = new Array();
+			var io_definitions = new Array();
+
+			var temp = dummy_settings_data.split(";");	//split into substrings
+		
+			if (temp[3].length == 0) {		//test for length == 0 then delete element
+				temp.splice(3,1);			//this trims off the junk after the last ";"
+			};
+		
+			io_definitions = temp[0].split(",");
+			input_names = temp[1].split(",");
+			output_names = temp[2].split(",");
+		
+			for (i in io_definitions){								//loop through each io_def
+				io_definitions[i] = parseInt(io_definitions[i]);	//convert strings to int "1" --> 1
+			};
+		
+			console.log(io_definitions);
+			console.log(input_names);
+			console.log(output_names);
+		
+			//if definitions, names are blank, populate w/ intellegent defaults
+			//DECIDE WHAT THE DEFAULTS SHOULD BE AND LINK W/ FIRMWARE
+		
 			$(".duration_container").hide();		//TEMPORARY. REPLACE WITH APPROPRIATE SHOW/HIDING OF DURATION BOX BASED ON READ SETTINGS
-			
 		};//end load_settings()
-		
+	
 		load_settings();
-		
+	
 		$("input.wait_time").change(function(){					//whenever the wait field changes
 			$(this).val(parseInt(sanitize($(this).val())));		//update the input with sanitized
 		});
-		
+	
 		function sanitize(num) {
 			if(parseInt(num) >= 0){					//sanitize, filter out NaN and negative numbers
 				//console.log("OK: num = " + num + "  	parseInt(num) = " + parseInt(num));
@@ -84,20 +115,20 @@ div.wait a, div.duration a {
 				return "0";							//if the user entered garbage, set to "0"
 			};
 		};//end sanitize()
-		
-		
+	
+	
 		$("#save").click(function(){	//this function sets up the call to cupcake with the columns you want sent
 			//for instance, you could call this on a button press, or value change
 			//define the columns to submit via cupcake()
 			var column_names = ["select.sensor", "select.sensor_state", "input.wait_time", "select.output", "select.output_state", "input.output_duration"];
 			cupcake(column_names);
 		});
-		
+	
 		function cupcake(column_names){			//cupcake acutally formats and sends the data to the Arduino
 			var post_data = "";					//initialize the POST string
 			var counter = 0;					//use to insert commas after each row
 			var rows = $(".row").length;		//count how many rows, use for delimiters
-			
+		
 			for (var i=0, tot=column_names.length; i < tot; i++) {	//loop through columns passed to cupcake
 				$(column_names[i]).each(function(){	//loop through a single column
 					counter ++;						//increment counter
@@ -110,18 +141,18 @@ div.wait a, div.duration a {
 					};
 				});//end each sensor loop
 			};//loop through each column
-			
+		
 			//console.log("rows: " + rows);
 			console.log(post_data);				//log to firebug
-			
+		
 			$.post("http://192.168.1.9/testget", post_data, function(data){ 	//the AJAX bit
 			//	console.log("posted " + post_data);
 				$("#status").hide().html(data).fadeIn();
 			});
-			
+		
 		};//end cupcake()
-		
-		
+	
+	
 		function fast_plus_minus(input,direction){	//this increments and fast increments either + or - based on the direction
 			//it is called by the delay field and the duration field
 			stop_auto();										//stop all value auto increments
@@ -145,11 +176,11 @@ div.wait a, div.duration a {
 					}, increment_on_hold_speed);					//the speed of auto ++ing the value
 				},increment_hold_delay);							//the delay (timeout) before auto ++ing
 			};
-			
+		
 			//maybe put the interval timers here.
 			return false;										//prevent the html link from doing anything	
 		};
-		
+	
 		function input_up(current){								//this increments the current value up to 999
 			console.log("input_up " + current);
 			var newval;
@@ -162,7 +193,7 @@ div.wait a, div.duration a {
 			};
 			return newval;
 		};//end input_limits
-		
+	
 		function input_down(current){							//this increments the current down to 0
 			console.log("input_down " + current);
 			var newval;
@@ -175,7 +206,7 @@ div.wait a, div.duration a {
 			};
 			return newval;
 		};//end input_limits
-		
+	
 		$(".wait .up").mousedown(function(){					//call the "+" handler
 			fast_plus_minus($(this).parent().next(),"+");
 		});
@@ -185,7 +216,7 @@ div.wait a, div.duration a {
 		$(".wait .up").mouseleave(function(){					//stop when the mouse leaves the button (in case you held down then left)
 			stop_auto();										//stop all value auto increments
 		});
-		
+	
 		$(".wait .down").mousedown(function(){					//call the "-" handler
 			fast_plus_minus($(this).parent().next(),"-");
 		});
@@ -206,7 +237,7 @@ div.wait a, div.duration a {
 			$(this).val(newval);										//update field with either 1 or clean value
 			console.log("changed, duration = " + newval);
 		});
-		
+	
 		$("select.output_duration").change(function(){					//when dropdown changes...
 			temp = $(this).val();										//get current value
 			var new_duration;											//initialize new duration
@@ -232,7 +263,7 @@ div.wait a, div.duration a {
 		$(".duration .up").mouseleave(function(){				//stop when the mouse leaves the button (in case you held down then left)
 			stop_auto();										//stop all value auto increments
 		});
-		
+	
 		$(".duration .down").mousedown(function(){				//call the "-" handler
 			fast_plus_minus($(this).parent().next(),"-");
 		});
@@ -242,10 +273,10 @@ div.wait a, div.duration a {
 		$(".duration .down").mouseleave(function(){				//stop when the mouse leaves the button (in case you held down then left)
 			stop_auto();										//stop all value auto increments
 		});
-		
-		
-		
-	/*	$(".duration .down").click(function(){
+	
+	
+	
+/*		$(".duration .down").click(function(){
 			stop_auto();										//stop all value auto increments
 			current = sanitize($(this).parent().next().val());			//get sanitized current wait
 			var newval;
@@ -259,9 +290,9 @@ div.wait a, div.duration a {
 			console.log("- pressed, value = " + $("#output_duration3").val());
 			return false;												//prevent the html link from doing anything
 		})//end down click*/
-		
-		
-		
+	
+	
+	
 		//Update the form with data
 		// IE from the Arduino via AJAX
 		/*
@@ -286,15 +317,15 @@ div.wait a, div.duration a {
 			<form id="form">
 				<!--begin row3 -->
 				<div id="row3" class="row last">
-					When input 
+					When
 					<select id="sensor3" class="sensor" name="sensor3">
 						<option value="0">-</option>
-						<option value="1">A</option>
-						<option value="2">B</option>
-						<option value="3">C</option>
-						<option value="4">D</option>
-						<option value="5">E</option>
-						<option value="6">F</option>
+						<option value="1">input A</option>
+						<option value="2">input B</option>
+						<option value="3">input C</option>
+						<option value="4">input D</option>
+						<option value="5">input E</option>
+						<option value="6">input F</option>
 					</select>
 					is
 					<select id="sensor_state3" class="sensor_state" name="sensor_state3">
@@ -308,15 +339,15 @@ div.wait a, div.duration a {
 						<a href="#" class="down">-</a>
 					</div>
 					<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
-					second(s) then keep output
+					second(s) then keep
 					<select id="output3" class="output" name="output3">
 						<option value="0">-</option>
-						<option value="1">1</option>
-						<option value="2">2</option>
-						<option value="3">3</option>
-						<option value="4">4</option>
-						<option value="5">5</option>
-						<option value="6">6</option>
+						<option value="1">output 1</option>
+						<option value="2">output 2</option>
+						<option value="3">output 3</option>
+						<option value="4">output 4</option>
+						<option value="5">output 5</option>
+						<option value="6">output 6</option>
 					</select>
 					<select id=="output_state3" class="output_state" name="output_state3">
 						<option value="1">on</option>
@@ -339,15 +370,15 @@ div.wait a, div.duration a {
 				<!--end row3 -->
 				<!--begin row3 -->
 				<div id="row3" class="row last">
-					When input 
+					When
 					<select id="sensor3" class="sensor" name="sensor3">
 						<option value="0">-</option>
-						<option value="1">A</option>
-						<option value="2">B</option>
-						<option value="3">C</option>
-						<option value="4">D</option>
-						<option value="5">E</option>
-						<option value="6">F</option>
+						<option value="1">input A</option>
+						<option value="2">input B</option>
+						<option value="3">input C</option>
+						<option value="4">input D</option>
+						<option value="5">input E</option>
+						<option value="6">input F</option>
 					</select>
 					is
 					<select id="sensor_state3" class="sensor_state" name="sensor_state3">
@@ -361,15 +392,15 @@ div.wait a, div.duration a {
 						<a href="#" class="down">-</a>
 					</div>
 					<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
-					second(s) then keep output
+					second(s) then keep
 					<select id="output3" class="output" name="output3">
 						<option value="0">-</option>
-						<option value="1">1</option>
-						<option value="2">2</option>
-						<option value="3">3</option>
-						<option value="4">4</option>
-						<option value="5">5</option>
-						<option value="6">6</option>
+						<option value="1">output 1</option>
+						<option value="2">output 2</option>
+						<option value="3">output 3</option>
+						<option value="4">output 4</option>
+						<option value="5">output 5</option>
+						<option value="6">output 6</option>
 					</select>
 					<select id=="output_state3" class="output_state" name="output_state3">
 						<option value="1">on</option>
@@ -392,15 +423,15 @@ div.wait a, div.duration a {
 				<!--end row3 -->
 				<!--begin row3 -->
 				<div id="row3" class="row last">
-					When input 
+					When
 					<select id="sensor3" class="sensor" name="sensor3">
 						<option value="0">-</option>
-						<option value="1">A</option>
-						<option value="2">B</option>
-						<option value="3">C</option>
-						<option value="4">D</option>
-						<option value="5">E</option>
-						<option value="6">F</option>
+						<option value="1">input A</option>
+						<option value="2">input B</option>
+						<option value="3">input C</option>
+						<option value="4">input D</option>
+						<option value="5">input E</option>
+						<option value="6">input F</option>
 					</select>
 					is
 					<select id="sensor_state3" class="sensor_state" name="sensor_state3">
@@ -414,15 +445,15 @@ div.wait a, div.duration a {
 						<a href="#" class="down">-</a>
 					</div>
 					<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
-					second(s) then keep output
+					second(s) then keep
 					<select id="output3" class="output" name="output3">
 						<option value="0">-</option>
-						<option value="1">1</option>
-						<option value="2">2</option>
-						<option value="3">3</option>
-						<option value="4">4</option>
-						<option value="5">5</option>
-						<option value="6">6</option>
+						<option value="1">output 1</option>
+						<option value="2">output 2</option>
+						<option value="3">output 3</option>
+						<option value="4">output 4</option>
+						<option value="5">output 5</option>
+						<option value="6">output 6</option>
 					</select>
 					<select id=="output_state3" class="output_state" name="output_state3">
 						<option value="1">on</option>
@@ -445,15 +476,15 @@ div.wait a, div.duration a {
 				<!--end row3 -->
 				<!--begin row3 -->
 				<div id="row3" class="row last">
-					When input 
+					When
 					<select id="sensor3" class="sensor" name="sensor3">
 						<option value="0">-</option>
-						<option value="1">A</option>
-						<option value="2">B</option>
-						<option value="3">C</option>
-						<option value="4">D</option>
-						<option value="5">E</option>
-						<option value="6">F</option>
+						<option value="1">input A</option>
+						<option value="2">input B</option>
+						<option value="3">input C</option>
+						<option value="4">input D</option>
+						<option value="5">input E</option>
+						<option value="6">input F</option>
 					</select>
 					is
 					<select id="sensor_state3" class="sensor_state" name="sensor_state3">
@@ -467,15 +498,15 @@ div.wait a, div.duration a {
 						<a href="#" class="down">-</a>
 					</div>
 					<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
-					second(s) then keep output
+					second(s) then keep
 					<select id="output3" class="output" name="output3">
 						<option value="0">-</option>
-						<option value="1">1</option>
-						<option value="2">2</option>
-						<option value="3">3</option>
-						<option value="4">4</option>
-						<option value="5">5</option>
-						<option value="6">6</option>
+						<option value="1">output 1</option>
+						<option value="2">output 2</option>
+						<option value="3">output 3</option>
+						<option value="4">output 4</option>
+						<option value="5">output 5</option>
+						<option value="6">output 6</option>
 					</select>
 					<select id=="output_state3" class="output_state" name="output_state3">
 						<option value="1">on</option>
@@ -498,15 +529,15 @@ div.wait a, div.duration a {
 				<!--end row3 -->
 				<!--begin row3 -->
 				<div id="row3" class="row last">
-					When input 
+					When
 					<select id="sensor3" class="sensor" name="sensor3">
 						<option value="0">-</option>
-						<option value="1">A</option>
-						<option value="2">B</option>
-						<option value="3">C</option>
-						<option value="4">D</option>
-						<option value="5">E</option>
-						<option value="6">F</option>
+						<option value="1">input A</option>
+						<option value="2">input B</option>
+						<option value="3">input C</option>
+						<option value="4">input D</option>
+						<option value="5">input E</option>
+						<option value="6">input F</option>
 					</select>
 					is
 					<select id="sensor_state3" class="sensor_state" name="sensor_state3">
@@ -520,15 +551,15 @@ div.wait a, div.duration a {
 						<a href="#" class="down">-</a>
 					</div>
 					<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
-					second(s) then keep output
+					second(s) then keep
 					<select id="output3" class="output" name="output3">
 						<option value="0">-</option>
-						<option value="1">1</option>
-						<option value="2">2</option>
-						<option value="3">3</option>
-						<option value="4">4</option>
-						<option value="5">5</option>
-						<option value="6">6</option>
+						<option value="1">output 1</option>
+						<option value="2">output 2</option>
+						<option value="3">output 3</option>
+						<option value="4">output 4</option>
+						<option value="5">output 5</option>
+						<option value="6">output 6</option>
 					</select>
 					<select id=="output_state3" class="output_state" name="output_state3">
 						<option value="1">on</option>
@@ -551,15 +582,15 @@ div.wait a, div.duration a {
 				<!--end row3 -->
 				<!--begin row3 -->
 				<div id="row3" class="row last">
-					When input 
+					When
 					<select id="sensor3" class="sensor" name="sensor3">
 						<option value="0">-</option>
-						<option value="1">A</option>
-						<option value="2">B</option>
-						<option value="3">C</option>
-						<option value="4">D</option>
-						<option value="5">E</option>
-						<option value="6">F</option>
+						<option value="1">input A</option>
+						<option value="2">input B</option>
+						<option value="3">input C</option>
+						<option value="4">input D</option>
+						<option value="5">input E</option>
+						<option value="6">input F</option>
 					</select>
 					is
 					<select id="sensor_state3" class="sensor_state" name="sensor_state3">
@@ -573,15 +604,15 @@ div.wait a, div.duration a {
 						<a href="#" class="down">-</a>
 					</div>
 					<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
-					second(s) then keep output
+					second(s) then keep
 					<select id="output3" class="output" name="output3">
 						<option value="0">-</option>
-						<option value="1">1</option>
-						<option value="2">2</option>
-						<option value="3">3</option>
-						<option value="4">4</option>
-						<option value="5">5</option>
-						<option value="6">6</option>
+						<option value="1">output 1</option>
+						<option value="2">output 2</option>
+						<option value="3">output 3</option>
+						<option value="4">output 4</option>
+						<option value="5">output 5</option>
+						<option value="6">output 6</option>
 					</select>
 					<select id=="output_state3" class="output_state" name="output_state3">
 						<option value="1">on</option>
@@ -602,7 +633,6 @@ div.wait a, div.duration a {
 					<span class="row_status"></span>
 				</div>
 				<!--end row3 -->
-
 				<button id="save" name="save" type="button">Save Program</button>
 				<div id="status"></div>
 
