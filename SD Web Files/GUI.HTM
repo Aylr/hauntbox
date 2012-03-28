@@ -69,9 +69,9 @@ div.wait a, div.duration a {
 		
 			//Settings receiving protocol (Arduino --> Browser)
 			//input defs,output defs;input names;output names;status code;Free RAM;
-			//"1,1,1,1,1,1,1,1,1,1,1,1;name1,name2,name3,name4,name5,name6;name1,name2,name3,name4,name5,name6;0;182;"
+			//"1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
 		
-			var dummy_settings_data = "1,1,1,1,1,1,1,1,1,1,1,1;name1,name2,name3,name4,name5,name6;name1,name2,name3,name4,name5,name6;0;199;"
+			var dummy_settings_data = "1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
 			var input_names = new Array();
 			var output_names = new Array();
 			var io_definitions = new Array();
@@ -93,6 +93,23 @@ div.wait a, div.duration a {
 			console.log(io_definitions);
 			console.log(input_names);
 			console.log(output_names);
+			
+			function set_io_names(select,names){					//this function sets the custom i/o names from the settings arrays
+				var i = 0;											//inititalize counter variable
+				names.unshift("-");									//add the "-" to the beginning for the default choice
+				$(select).each(function(){							//loop through each select.sensor
+					$(this).children().each(function(){				//loop through each dropdown option
+						$(this).html(names[i]);
+						//SELECT ONE IF CHOSEN FROM CUPCAKE ARRAY FROM FIRMWARE!!!!!
+						
+						i ++;										//increment i
+					});//end each option
+					i = 0;											//reset i for next group of options
+				});//end each input
+			};//end set_select_names()
+			
+			set_io_names("select.sensor",input_names);				//call the set io name functions
+			set_io_names("select.output",output_names);
 		
 			//if definitions, names are blank, populate w/ intellegent defaults
 			//DECIDE WHAT THE DEFAULTS SHOULD BE AND LINK W/ FIRMWARE

@@ -19,7 +19,7 @@ input[type="radio"] + input[type="radio"]{
 		$("#save").click(function(){
 			//Data receiving protocol (Arduino --> Browser)
 			//inputs & outputs;input names;output names;
-			//1,1,1,1,1,1,1,1,1,1,1,1;name1,name2,name3,name4,name5,name6;name1,name2,name3,name4,name5,name6;
+			//"1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
 			
 			//define the columns to submit via cupcake()
 			var column_names = ["input[type='radio']:checked", "input.input_name", "input.output_name"];
@@ -31,8 +31,8 @@ input[type="radio"] + input[type="radio"]{
 			var counter = 0;					//use to insert commas after each row
 	
 			for (var i=0, tot=column_names.length; i < tot; i++) {
-				console.log($(column_names[i]));			//log the current object
-			    console.log($(column_names[i]).length);		//log the current object length
+				//console.log($(column_names[i]));			//log the current object
+			    //console.log($(column_names[i]).length);		//log the current object length
 			
 				$(column_names[i]).each(function(){	//loop through a single column
 					counter ++;						//increment counter
