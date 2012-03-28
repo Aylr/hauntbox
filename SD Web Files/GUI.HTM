@@ -274,23 +274,18 @@ div.wait a, div.duration a {
 		$(".duration .up").mousedown(function(){				//call the "+" handler
 			fast_plus_minus($(this).parent().next(),"+");
 		});
-		$(".duration .up").mouseup(function(){					//stop when the mouse click stops
-			stop_auto();										//stop all value auto increments
-		});
-		$(".duration .up").mouseleave(function(){				//stop when the mouse leaves the button (in case you held down then left)
-			stop_auto();										//stop all value auto increments
-		});
-	
 		$(".duration .down").mousedown(function(){				//call the "-" handler
 			fast_plus_minus($(this).parent().next(),"-");
 		});
-		$(".duration .down").mouseup(function(){				//stop when the mouse click stops
+		
+		$(".duration .up,.duration .down").mouseup(function(){	//stop when the mouse click stops
 			stop_auto();										//stop all value auto increments
 		});
-		$(".duration .down").mouseleave(function(){				//stop when the mouse leaves the button (in case you held down then left)
+		$(".duration .up,.duration .down").mouseleave(function(){				//stop when the mouse leaves the button (in case you held down then left)
 			stop_auto();										//stop all value auto increments
 		});
 	
+		
 	
 	
 /*		$(".duration .down").click(function(){
