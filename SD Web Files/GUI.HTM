@@ -36,286 +36,260 @@ div.wait a, div.duration a {
 <script src="jqry171.js"></script>
 
 <script>
-	$(function(){//shortcut for doc.ready
-		var increment_on_hold_speed = 50;	//auto ++ing value every n milliseconds
-		var increment_hold_delay = 1000;	//the delay in milliseconds (timeout) before auto ++ing
-		var interval = null;				//var for auto incrementing
-		var timeout = null;					//var for auto incrementing delay
-	
-		function stop_auto(){				//this function is called whenever you want to stop auto incrementing
-			clearInterval(interval);
-			clearTimeout(timeout);
-			console.log("stopped");
-		};//end stop_auto
-	
-	
-		function load_settings(){
-			//this should load values from the firmware
-			//including intelligent defaults
-			//and populate the form correctly
+$(function(){//shortcut for doc.ready
+	var increment_on_hold_speed = 50;	//auto ++ing value every n milliseconds
+	var increment_hold_delay = 1000;	//the delay in milliseconds (timeout) before auto ++ing
+	var interval = null;				//var for auto incrementing
+	var timeout = null;					//var for auto incrementing delay
 
-			//Data receiving protocol (Arduino --> Browser)
-			//Input array;Input on/off;On delay;Output array;Output on/off;Duration;status code;Free RAM;
-			//0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0;182;
+	function stop_auto(){				//this function is called whenever you want to stop auto incrementing
+		clearInterval(interval);
+		clearTimeout(timeout);
+		console.log("stopped");
+	};//end stop_auto
 
-			//status codes
-			//0 = all good
-			//1 = 
-			//2 = 
-			//3 = 
-			//4 =
-		
-			var dummy_load_data = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;0,778"
-		
-			//Settings receiving protocol (Arduino --> Browser)
-			//input defs,output defs;input names;output names;status code;Free RAM;
-			//"1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
-		
-			var dummy_settings_data = "1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
-			var input_names = new Array();
-			var output_names = new Array();
-			var io_definitions = new Array();
 
-			var temp = dummy_settings_data.split(";");	//split into substrings
-		
-			if (temp[3].length == 0) {		//test for length == 0 then delete element
-				temp.splice(3,1);			//this trims off the junk after the last ";"
-			};
-		
-			io_definitions = temp[0].split(",");
-			input_names = temp[1].split(",");
-			output_names = temp[2].split(",");
-		
-			for (i in io_definitions){								//loop through each io_def
-				io_definitions[i] = parseInt(io_definitions[i]);	//convert strings to int "1" --> 1
-			};
-		
-			console.log(io_definitions);
-			console.log(input_names);
-			console.log(output_names);
-			
-			function set_io_names(select,names){					//this function sets the custom i/o names from the settings arrays
-				var i = 0;											//inititalize counter variable
-				names.unshift("-");									//add the "-" to the beginning for the default choice
-				$(select).each(function(){							//loop through each select.sensor
-					$(this).children().each(function(){				//loop through each dropdown option
-						$(this).html(names[i]);
-						//SELECT ONE IF CHOSEN FROM CUPCAKE ARRAY FROM FIRMWARE!!!!!
-						
-						i ++;										//increment i
-					});//end each option
-					i = 0;											//reset i for next group of options
-				});//end each input
-			};//end set_select_names()
-			
-			set_io_names("select.sensor",input_names);				//call the set io name functions
-			set_io_names("select.output",output_names);
-		
-			//if definitions, names are blank, populate w/ intellegent defaults
-			//DECIDE WHAT THE DEFAULTS SHOULD BE AND LINK W/ FIRMWARE
-		
-			$(".duration_container").hide();		//TEMPORARY. REPLACE WITH APPROPRIATE SHOW/HIDING OF DURATION BOX BASED ON READ SETTINGS
-		};//end load_settings()
-	
-		load_settings();
-	
-		$("input.wait_time").change(function(){					//whenever the wait field changes
-			$(this).val(parseInt(sanitize($(this).val())));		//update the input with sanitized
-		});
-	
-		function sanitize(num) {
-			if(parseInt(num) >= 0){					//sanitize, filter out NaN and negative numbers
-				//console.log("OK: num = " + num + "  	parseInt(num) = " + parseInt(num));
-			    return parseInt(num);				//return the clean value
-			}else{
-				console.log("ERROR: num = " + num + "  	parseInt(num) = " + parseInt(num) + "   ==> 0");
-				return "0";							//if the user entered garbage, set to "0"
-			};
-		};//end sanitize()
-	
-	
-		$("#save").click(function(){	//this function sets up the call to cupcake with the columns you want sent
-			//for instance, you could call this on a button press, or value change
-			//define the columns to submit via cupcake()
-			var column_names = ["select.sensor", "select.sensor_state", "input.wait_time", "select.output", "select.output_state", "input.output_duration"];
-			cupcake(column_names);
-		});
-	
-		function cupcake(column_names){			//cupcake acutally formats and sends the data to the Arduino
-			var post_data = "";					//initialize the POST string
-			var counter = 0;					//use to insert commas after each row
-			var rows = $(".row").length;		//count how many rows, use for delimiters
-		
-			for (var i=0, tot=column_names.length; i < tot; i++) {	//loop through columns passed to cupcake
-				$(column_names[i]).each(function(){	//loop through a single column
-					counter ++;						//increment counter
-					post_data += $(this).val();		//append value of input
-					if(counter == rows){			//append appropriate element or row delimiter
-						post_data += ";";			//row delimiter
-						counter = 0;				//reset counter
-					}else{
-						post_data += ",";			//element delimiter
-					};
-				});//end each sensor loop
-			};//loop through each column
-		
-			//console.log("rows: " + rows);
-			console.log(post_data);				//log to firebug
-		
-			$.post("http://192.168.1.9/testget", post_data, function(data){ 	//the AJAX bit
-			//	console.log("posted " + post_data);
-				$("#status").hide().html(data).fadeIn();
-			});
-		
-		};//end cupcake()
-	
-	
-		function fast_plus_minus(input,direction){	//this increments and fast increments either + or - based on the direction
-			//it is called by the delay field and the duration field
-			stop_auto();										//stop all value auto increments
-			var current = sanitize(input.val());			//get sanitized current wait
-			if(direction == "+"){								//if "+" was passed to the function
-				input.val(input_up(current));					//get & set new value
+	function load_settings(){
+		//this should load values from the firmware
+		//including intelligent defaults
+		//and populate the form correctly
 
-				timeout = setTimeout(function(){					//This waits 1 second before...
-					interval = setInterval(function(){				//auto ++ing value every n milliseconds
-						current = sanitize(input.val());		//get sanitized current wait
-						input.val(input_up(current));			//get & set new value
-					}, increment_on_hold_speed);					//the speed of ++ing the value
-				},increment_hold_delay);							//the delay (timeout) before ++ing
-			}else if(direction == "-"){							//if "-" was passed to the function
-				input.val(input_down(current));				//get & set new value
+		//Data receiving protocol (Arduino --> Browser)
+		//Input array;Input on/off;On delay;Output array;Output on/off;Duration;status code;Free RAM;
+		//0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0;182;
 
-				timeout = setTimeout(function(){					//This waits 1 second before...
-					interval = setInterval(function(){				//auto ++ing value every n milliseconds
-						current = sanitize(input.val());		//get sanitized current wait
-						input.val(input_down(current));		//get & set new value
-					}, increment_on_hold_speed);					//the speed of auto ++ing the value
-				},increment_hold_delay);							//the delay (timeout) before auto ++ing
-			};
-		
-			//maybe put the interval timers here.
-			return false;										//prevent the html link from doing anything	
+		//status codes
+		//0 = all good
+		//1 = 
+		//2 = 
+		//3 = 
+		//4 =
+	
+		var dummy_load_data = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;0,778"
+	
+		//Settings receiving protocol (Arduino --> Browser)
+		//input defs,output defs;input names;output names;status code;Free RAM;
+		//"1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
+	
+		var dummy_settings_data = "1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
+		var input_names = new Array();
+		var output_names = new Array();
+		var io_definitions = new Array();
+
+		var temp = dummy_settings_data.split(";");	//split into substrings
+	
+		if (temp[3].length == 0) {		//test for length == 0 then delete element
+			temp.splice(3,1);			//this trims off the junk after the last ";"
 		};
 	
-		function input_up(current){								//this increments the current value up to 999
-			console.log("input_up " + current);
-			var newval;
-			if(current < 999){									//if less than 999
-				newval = current + 1;							//add 1
-			}else{
-				newval = 999;									//if at 999, leave at 999
-				stop_auto();									//stop auto timer, we're at zero
-				//flash limit message here if you want				
-			};
-			return newval;
-		};//end input_limits
+		io_definitions = temp[0].split(",");
+		input_names = temp[1].split(",");
+		output_names = temp[2].split(",");
 	
-		function input_down(current){							//this increments the current down to 0
-			console.log("input_down " + current);
-			var newval;
-			if(current <= 0){									//if 0 or negative
-				newval = 0;										//set to zero
-				stop_auto();									//stop auto timer, we're at zero
-				//flash limit message here if you want
-			}else{												//if positive
-				newval = current - 1;							//subtract 1
-			};
-			return newval;
-		};//end input_limits
+		for (i in io_definitions){								//loop through each io_def
+			io_definitions[i] = parseInt(io_definitions[i]);	//convert strings to int "1" --> 1
+		};
 	
-		$(".wait .up").mousedown(function(){					//call the "+" handler
-			fast_plus_minus($(this).parent().next(),"+");
-		});
-		$(".wait .up").mouseup(function(){						//stop when the mouse click stops
-			stop_auto();										//stop all value auto increments
-		});
-		$(".wait .up").mouseleave(function(){					//stop when the mouse leaves the button (in case you held down then left)
-			stop_auto();										//stop all value auto increments
-		});
-	
-		$(".wait .down").mousedown(function(){					//call the "-" handler
-			fast_plus_minus($(this).parent().next(),"-");
-		});
-		$(".wait .down").mouseup(function(){					//stop when the mouse click stops
-			stop_auto();										//stop all value auto increments
-		});
-		$(".wait .down").mouseleave(function(){					//stop when the mouse leaves the button (in case you held down then left)
-			stop_auto();										//stop all value auto increments
-		});
-
-
-		$("input.output_duration").change(function(){					//on manual keybaord entry
-			var newval = 1;												//default new value
-			var current = sanitize($(this).val());						//get the sanitized value
-			if(current != 0){											//if sanitized not 0, then let it pass, otherwise use the default of 1
-				newval = current;
-			}
-			$(this).val(newval);										//update field with either 1 or clean value
-			console.log("changed, duration = " + newval);
-		});
-	
-		$("select.output_duration").change(function(){					//when dropdown changes...
-			temp = $(this).val();										//get current value
-			var new_duration;											//initialize new duration
-			if(temp == "constantly"){									//if "constantly"
-				$(this).next(".duration_container").fadeOut(250);		//fade out buttons & field
-				$(this).children('option[value="for"]').html("for...")	//update grammar
-				new_duration = 0;										//set duration = 0
-			}else if(temp == "for"){									//if "for..".
-				$(this).next(".duration_container").fadeIn(250);		//show buttons & field
-				$(this).children('option[value="for"]').html("for");	//update grammar
-				new_duration = "1";										//set duration = 1
-			}
-			$(this).next().children('input[class="output_duration"]').val(new_duration);	//set the field to the new value	
-			console.log("output changed, value = " + $("#output_duration3").val());
-		});//output_duration.change()
-
-		$(".duration .up").mousedown(function(){				//call the "+" handler
-			fast_plus_minus($(this).parent().next(),"+");
-		});
-		$(".duration .down").mousedown(function(){				//call the "-" handler
-			fast_plus_minus($(this).parent().next(),"-");
-		});
+		console.log(io_definitions);
+		console.log(input_names);
+		console.log(output_names);
 		
-		$(".duration .up,.duration .down").mouseup(function(){	//stop when the mouse click stops
-			stop_auto();										//stop all value auto increments
-		});
-		$(".duration .up,.duration .down").mouseleave(function(){				//stop when the mouse leaves the button (in case you held down then left)
-			stop_auto();										//stop all value auto increments
-		});
-	
+		function set_io_names(select,names){					//this function sets the custom i/o names from the settings arrays
+			var i = 0;											//inititalize counter variable
+			names.unshift("-");									//add the "-" to the beginning for the default choice
+			$(select).each(function(){							//loop through each select.sensor
+				$(this).children().each(function(){				//loop through each dropdown option
+					$(this).html(names[i]);
+					//SELECT ONE IF CHOSEN FROM CUPCAKE ARRAY FROM FIRMWARE!!!!!
+					
+					i ++;										//increment i
+				});//end each option
+				i = 0;											//reset i for next group of options
+			});//end each input
+		};//end set_select_names()
 		
+		set_io_names("select.sensor",input_names);				//call the set io name functions
+		set_io_names("select.output",output_names);
 	
+		//if definitions, names are blank, populate w/ intellegent defaults
+		//DECIDE WHAT THE DEFAULTS SHOULD BE AND LINK W/ FIRMWARE
 	
-/*		$(".duration .down").click(function(){
-			stop_auto();										//stop all value auto increments
-			current = sanitize($(this).parent().next().val());			//get sanitized current wait
-			var newval;
-			if(current <= 1){											//if less than or = 1 (1 is the minimum)
-				newval = 1;												//set to 1
-				//flash error here if you want
-			}else{														//if positive
-				newval = current - 1;									//subtract 1
-			};
-			$(this).parent().next().val(newval);						//set the new value
-			console.log("- pressed, value = " + $("#output_duration3").val());
-			return false;												//prevent the html link from doing anything
-		})//end down click*/
+		$(".duration_container").hide();		//TEMPORARY. REPLACE WITH APPROPRIATE SHOW/HIDING OF DURATION BOX BASED ON READ SETTINGS
+	};//end load_settings()
+
+	load_settings();
+
+	$("input.wait_time").change(function(){					//whenever the wait field changes
+		$(this).val(parseInt(sanitize($(this).val())));		//update the input with sanitized
+	});
+
+	function sanitize(num) {
+		if(parseInt(num) >= 0){					//sanitize, filter out NaN and negative numbers
+			//console.log("OK: num = " + num + "  	parseInt(num) = " + parseInt(num));
+		    return parseInt(num);				//return the clean value
+		}else{
+			console.log("ERROR: num = " + num + "  	parseInt(num) = " + parseInt(num) + "   ==> 0");
+			return "0";							//if the user entered garbage, set to "0"
+		};
+	};//end sanitize()
+
+
+	$("#save").click(function(){	//this function sets up the call to cupcake with the columns you want sent
+		//for instance, you could call this on a button press, or value change
+		//define the columns to submit via cupcake()
+		var column_names = ["select.sensor", "select.sensor_state", "input.wait_time", "select.output", "select.output_state", "input.output_duration"];
+		cupcake(column_names);
+	});
+
+	function cupcake(column_names){			//cupcake acutally formats and sends the data to the Arduino
+		var post_data = "";					//initialize the POST string
+		var counter = 0;					//use to insert commas after each row
+		var rows = $(".row").length;		//count how many rows, use for delimiters
 	
+		for (var i=0, tot=column_names.length; i < tot; i++) {	//loop through columns passed to cupcake
+			$(column_names[i]).each(function(){	//loop through a single column
+				counter ++;						//increment counter
+				post_data += $(this).val();		//append value of input
+				if(counter == rows){			//append appropriate element or row delimiter
+					post_data += ";";			//row delimiter
+					counter = 0;				//reset counter
+				}else{
+					post_data += ",";			//element delimiter
+				};
+			});//end each sensor loop
+		};//loop through each column
 	
+		//console.log("rows: " + rows);
+		console.log(post_data);				//log to firebug
 	
-		//Update the form with data
-		// IE from the Arduino via AJAX
-		/*
-		$("#form #first").children().each(function(){
-			data = "5";						//this is just a test
-			if($(this).val() == data) {
-				$(this).prop("selected","selected");
-			};
+		$.post("http://192.168.1.9/testget", post_data, function(data){ 	//the AJAX bit
+		//	console.log("posted " + post_data);
+			$("#status").hide().html(data).fadeIn();
 		});
-		*/
-	});//doc.ready
+	
+	};//end cupcake()
+
+
+	function fast_plus_minus(input,direction){	//this increments and fast increments either + or - based on the direction
+		//it is called by the delay field and the duration field
+		stop_auto();										//stop all value auto increments
+		var current = sanitize(input.val());				//get sanitized current wait
+		if(direction == "+"){								//if "+" was passed to the function
+			input.val(input_up(current));					//get & set new value
+
+			timeout = setTimeout(function(){				//This waits 1 second before...
+				interval = setInterval(function(){			//auto ++ing value every n milliseconds
+					current = sanitize(input.val());		//get sanitized current wait
+					input.val(input_up(current));			//get & set new value
+				}, increment_on_hold_speed);				//the speed of ++ing the value
+			},increment_hold_delay);						//the delay (timeout) before ++ing
+		}else if(direction == "-"){							//if "-" was passed to the function
+			input.val(input_down(current));					//get & set new value
+
+			timeout = setTimeout(function(){				//This waits 1 second before...
+				interval = setInterval(function(){			//auto ++ing value every n milliseconds
+					current = sanitize(input.val());		//get sanitized current wait
+					input.val(input_down(current));			//get & set new value
+				}, increment_on_hold_speed);				//the speed of auto ++ing the value
+			},increment_hold_delay);						//the delay (timeout) before auto ++ing
+		};
+		return false;										//prevent the html link from doing anything	
+	};
+
+	function input_up(current){								//this increments the current value up to 999
+		console.log("input_up " + current);
+		var newval;
+		if(current < 999){									//if less than 999
+			newval = current + 1;							//add 1
+		}else{
+			newval = 999;									//if at 999, leave at 999
+			stop_auto();									//stop auto timer, we're at zero
+			//flash limit message here if you want				
+		};
+		return newval;
+	};//end input_limits
+
+	function input_down(current){							//this increments the current down to 0
+		console.log("input_down " + current);
+		var newval;
+		if(current <= 0){									//if 0 or negative
+			newval = 0;										//set to zero
+			stop_auto();									//stop auto timer, we're at zero
+			//flash limit message here if you want
+		}else{												//if positive
+			newval = current - 1;							//subtract 1
+		};
+		return newval;
+	};//end input_limits
+
+	$(".wait .up").mousedown(function(){					//call the "+" handler
+		fast_plus_minus($(this).parent().next(),"+");
+	});
+	$(".wait .down").mousedown(function(){					//call the "-" handler
+		fast_plus_minus($(this).parent().next(),"-");
+	});
+	$(".wait .up,.wait .down").mouseup(function(){			//stop when the mouse click stops
+		stop_auto();										//stop all value auto increments
+	});
+	$(".wait .up,.wait .down").mouseleave(function(){		//stop when the mouse leaves the button (in case you held down then left)
+		stop_auto();										//stop all value auto increments
+	});
+
+	
+
+
+	$("input.output_duration").change(function(){					//on manual keybaord entry
+		var newval = 1;												//default new value
+		var current = sanitize($(this).val());						//get the sanitized value
+		if(current != 0){											//if sanitized not 0, then let it pass, otherwise use the default of 1
+			newval = current;
+		}
+		$(this).val(newval);										//update field with either 1 or clean value
+		console.log("changed, duration = " + newval);
+	});
+
+	$("select.output_duration").change(function(){					//when dropdown changes...
+		temp = $(this).val();										//get current value
+		var new_duration;											//initialize new duration
+		if(temp == "constantly"){									//if "constantly"
+			$(this).next(".duration_container").fadeOut(250);		//fade out buttons & field
+			$(this).children('option[value="for"]').html("for...")	//update grammar
+			new_duration = 0;										//set duration = 0
+		}else if(temp == "for"){									//if "for..".
+			$(this).next(".duration_container").fadeIn(250);		//show buttons & field
+			$(this).children('option[value="for"]').html("for");	//update grammar
+			new_duration = "1";										//set duration = 1
+		}
+		$(this).next().children('input[class="output_duration"]').val(new_duration);	//set the field to the new value	
+		console.log("output changed, value = " + $("#output_duration3").val());
+	});//output_duration.change()
+
+	$(".duration .up").mousedown(function(){				//call the "+" handler
+		fast_plus_minus($(this).parent().next(),"+");
+	});
+	$(".duration .down").mousedown(function(){				//call the "-" handler
+		fast_plus_minus($(this).parent().next(),"-");
+	});
+	
+	$(".duration .up,.duration .down").mouseup(function(){	//stop when the mouse click stops
+		stop_auto();										//stop all value auto increments
+	});
+	$(".duration .up,.duration .down").mouseleave(function(){				//stop when the mouse leaves the button (in case you held down then left)
+		stop_auto();										//stop all value auto increments
+	});
+
+
+	//Update the form with data
+	// IE from the Arduino via AJAX
+	/*
+	$("#form #first").children().each(function(){
+		data = "5";						//this is just a test
+		if($(this).val() == data) {
+			$(this).prop("selected","selected");
+		};
+	});
+	*/
+});//doc.ready
 </script>
 </head>
 
