@@ -66,7 +66,42 @@ $(function(){//shortcut for doc.ready
 		//4 =
 	
 		var dummy_load_data = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;0,778"
-	
+		
+		var input_array = new Array();
+		var input_onoff = new Array();
+		var on_delay = new Array();
+		var output_array = new Array();
+		var output_onoff = new Array();
+		var duration = new Array();
+		var incoming_program = dummy_load_data.split(";")		//split into substrings
+		
+		var input_array = incoming_program[0].split(",");
+		var input_onoff = incoming_program[1].split(",");
+		var on_delay = incoming_program[2].split(",");
+		var output_array = incoming_program[3].split(",");
+		var output_onoff = incoming_program[4].split(",");
+		var duration = incoming_program[5].split(",");
+		
+		function clean_this_array(dirty_array){					//converts arrays of strings into arrays of integers
+			for (i in dirty_array){								//for each element in the array
+				dirty_array[i] = parseInt(dirty_array[i]);		//convert strings to int "1" --> 1
+			}
+		};
+		
+		clean_this_array(input_array);
+		clean_this_array(input_onoff);
+		clean_this_array(on_delay);
+		clean_this_array(output_array);
+		clean_this_array(output_onoff);
+		clean_this_array(duration);
+		
+		console.log(input_array);
+		console.log(output_array);
+		console.log(on_delay);
+		console.log(output_array);
+		console.log(output_onoff);
+		console.log(duration);
+		
 		//Settings receiving protocol (Arduino --> Browser)
 		//input defs,output defs;input names;output names;status code;Free RAM;
 		//"1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
@@ -85,10 +120,8 @@ $(function(){//shortcut for doc.ready
 		io_definitions = temp[0].split(",");
 		input_names = temp[1].split(",");
 		output_names = temp[2].split(",");
-	
-		for (i in io_definitions){								//loop through each io_def
-			io_definitions[i] = parseInt(io_definitions[i]);	//convert strings to int "1" --> 1
-		};
+		
+		clean_this_array(io_definitions);
 	
 		console.log(io_definitions);
 		console.log(input_names);
