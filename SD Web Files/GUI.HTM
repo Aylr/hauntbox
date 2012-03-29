@@ -137,9 +137,7 @@ $(function(){//shortcut for doc.ready
 			names.unshift("-");									//add the "-" to the beginning for the default choice
 			$(select).each(function(){							//loop through each select.sensor
 				$(this).children().each(function(){				//loop through each dropdown option
-					$(this).html(names[i]);
-					//SELECT ONE IF CHOSEN FROM CUPCAKE ARRAY FROM FIRMWARE!!!!!
-					
+					$(this).html(names[i]);						//set the actual html names					
 					i ++;										//increment i
 				});//end each option
 				i = 0;											//reset i for next group of options

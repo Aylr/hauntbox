@@ -26,6 +26,68 @@ input[type="radio"] + input[type="radio"]{
 			cupcake_settings(column_names);
 		});
 		
+		function clean_this_array(dirty_array){					//converts arrays of strings into arrays of integers
+			for (i in dirty_array){								//for each element in the array
+				dirty_array[i] = parseInt(dirty_array[i]);		//convert strings to int "1" --> 1
+			}
+		};
+		
+		var dummy_settings_data = "0,1,1,1,1,1,1,1,1,1,1,0;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
+		var input_names = new Array();
+		var output_names = new Array();
+		var io_definitions = new Array();
+		var temp = dummy_settings_data.split(";");	//split into substrings
+	
+		if (temp[3].length == 0) {		//test for length == 0 then delete element
+			temp.splice(3,1);			//this trims off the junk after the last ";"
+		};
+	
+		io_definitions = temp[0].split(",");
+		input_names = temp[1].split(",");
+		output_names = temp[2].split(",");
+		
+		clean_this_array(io_definitions);
+		
+		/*
+		console.log(io_definitions);
+		console.log(input_names);
+		console.log(output_names);
+		*/
+		
+		function set_inputs(selector,array){			//this takes a jQuery selector (an input or select) and sets it w/ values from an array
+			j = 0;										//init a counter var
+			$(selector).each(function(){				//loop through each <select>
+				for (i in array){						//loop through each element in array
+					if (j == i){						//if this element # corresponds w/ this <select>
+						$(this).val(array[i]);			//set the value
+						
+						//if the selector is a checkbox (as on the settings page)
+						//if (selector.attr("type") == "radio"){
+						//	$(this).attr("name") 
+						//}
+						
+						//if the selector is the output duration, we have to do some fancy stuff about the hidden fields
+						if (selector == "input.output_duration") {
+							temp_selected = $(this).parent();							//reduce jquery calls
+							if (array[i] > 0) {											//if the duration is not zero
+								temp_selected.show();									//show the input field
+								temp_selected.prev().val("for");						//choose the "for" select
+								temp_selected.prev().children().last().html("for");		//and change the "for..." to "for"
+							}else{													//if it is 0
+								temp_selected.hide();									//hide the field
+								temp_selected.prev().val("constantly");					//and choose "constantly" to complete the sentence
+							}
+						};
+					};
+				};
+				j ++;									//increment counter
+			});
+		};//end set_inputs()
+		
+		set_inputs("input.highlow",io_definitions);
+		set_inputs(".input_name",input_names);
+		set_inputs(".output_name",output_names);
+		
 		function cupcake_settings(column_names){
 			var post_data = "";					//initialize the POST string
 			var counter = 0;					//use to insert commas after each row
