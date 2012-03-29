@@ -32,7 +32,7 @@ input[type="radio"] + input[type="radio"]{
 			}
 		};
 		
-		var dummy_settings_data = "0,1,0,1,0,1,0,1,0,1,1,0;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
+		var dummy_settings_data = "0,1,0,1,0,1,0,1,0,1,0,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
 		var input_names = new Array();
 		var output_names = new Array();
 		var io_definitions = new Array();
@@ -48,6 +48,17 @@ input[type="radio"] + input[type="radio"]{
 		
 		clean_this_array(io_definitions);
 		
+		function pad_radio_array(array) {		//this function takes an array and adds the opposite 1/0 after each corresponding element
+												//it will double the size of the array ie: [1,1,0,0] --> [1,0,1,0,0,1,0,1]
+			var new_padded_array = new Array();
+			for (i in array){
+				new_padded_array.splice(new_padded_array.length,0,array[i],1-array[i]);	//add the orig and inverted to the end of the new array (1-array[i] does the actual inversion)
+			}
+			//console.log("pad_radio_array input:  " + array);
+			//console.log("pad_radio_array output: " + new_padded_array);
+			return new_padded_array;
+		};//end pad_radio_array()
+		
 		/*
 		console.log(io_definitions);
 		console.log(input_names);
@@ -61,10 +72,10 @@ input[type="radio"] + input[type="radio"]{
 					if (j == i){						//if this element # corresponds w/ this <select>
 						$(this).val(array[i]);			//set the value
 						
-						//if the selector is a checkbox (as on the settings page)
-						//if (selector.attr("type") == "radio"){
-						//	$(this).attr("name") 
-						//}
+						//if the selector is a radio (as on the settings page)
+						if ($(selector).attr("type") == "radio" && array[i] == 1){	//if radio and array value = 1
+							$(this).attr("checked", "checked"); //Check it (the browser unchecks the other)
+						};
 						
 						//if the selector is the output duration, we have to do some fancy stuff about the hidden fields
 						if (selector == "input.output_duration") {
@@ -84,7 +95,9 @@ input[type="radio"] + input[type="radio"]{
 			});
 		};//end set_inputs()
 		
-		function set_radios(selector, array){ //dummy function to illustrate selecting the radios without other function cruft
+		/*
+		function set_radios(selector, array){ //This function sets radio buttons in groups of 2
+			//it uses a function called isEven() as a helper
 			var j = 0; //set up counter that only increments every other radio (since they are grouped by 2 essentially)
 			$(selector).each(function(index){
 				//Note, you will essentially go through each radio twice and thus set the value twice hence the j hack
@@ -95,9 +108,18 @@ input[type="radio"] + input[type="radio"]{
 					j++; //increment the counter to look at next array value
 				}
 			});
-		}
+		}//end set_radios()
 		
-		set_radios("input.highlow",io_definitions);
+		function isEven(value) {		//this checks if a given number is an even # and returns true/false
+			if (value%2 == 0){ //% is modulus. Basically checks for remainder
+				return true;
+			} else {
+				return false;
+			}
+		}//end isEven()*/
+		
+		//set_radios("input.highlow",io_definitions);
+		set_inputs("input.highlow",pad_radio_array(io_definitions));	//be sure to pad the radio array with it's paired inversions before sending to the set_inputs function
 		set_inputs(".input_name",input_names);
 		set_inputs(".output_name",output_names);
 		
@@ -128,13 +150,8 @@ input[type="radio"] + input[type="radio"]{
 			});
 			*/
 		};//end cupcake()
-		function isEven(value) {
-			if (value%2 == 0){ //% is modulus. Basically checks for remainder
-				return true;
-			} else {
-				return false;
-			}
-		}
+		
+
 	});
 </script>
 </head>
