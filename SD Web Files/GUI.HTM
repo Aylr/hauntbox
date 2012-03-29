@@ -64,8 +64,9 @@ $(function(){//shortcut for doc.ready
 		//2 = 
 		//3 = 
 		//4 =
-	
-		var dummy_load_data = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;0,778"
+		
+		//GET REAL DATA FROM THE ARDUINO VIA A GET REQUEST
+		var dummy_load_data = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;0,778"
 		
 		var input_array = new Array();
 		var input_onoff = new Array();
@@ -95,12 +96,14 @@ $(function(){//shortcut for doc.ready
 		clean_this_array(output_onoff);
 		clean_this_array(duration);
 		
+		/*
 		console.log(input_array);
-		console.log(output_array);
+		console.log(input_onoff);
 		console.log(on_delay);
 		console.log(output_array);
 		console.log(output_onoff);
 		console.log(duration);
+		*/
 		
 		//Settings receiving protocol (Arduino --> Browser)
 		//input defs,output defs;input names;output names;status code;Free RAM;
@@ -122,10 +125,12 @@ $(function(){//shortcut for doc.ready
 		output_names = temp[2].split(",");
 		
 		clean_this_array(io_definitions);
-	
+		
+		/*
 		console.log(io_definitions);
 		console.log(input_names);
 		console.log(output_names);
+		*/
 		
 		function set_io_names(select,names){					//this function sets the custom i/o names from the settings arrays
 			var i = 0;											//inititalize counter variable
@@ -146,8 +151,38 @@ $(function(){//shortcut for doc.ready
 	
 		//if definitions, names are blank, populate w/ intellegent defaults
 		//DECIDE WHAT THE DEFAULTS SHOULD BE AND LINK W/ FIRMWARE
-	
-		$(".duration_container").hide();		//TEMPORARY. REPLACE WITH APPROPRIATE SHOW/HIDING OF DURATION BOX BASED ON READ SETTINGS
+		
+		function set_inputs(selector,array){			//this takes a jQuery selector (an input or select) and sets it w/ values from an array
+			j = 0;										//init a counter var
+			$(selector).each(function(){				//loop through each <select>
+				for (i in array){						//loop through each element in array
+					if (j == i){						//if this element # corresponds w/ this <select>
+						$(this).val(array[i]);			//set the value
+						
+						//if the selector is the output duration, we have to do some fancy stuff about the hidden fields
+						if (selector == "input.output_duration") {
+							temp_selected = $(this).parent();							//reduce jquery calls
+							if (array[i] > 0) {											//if the duration is not zero
+								temp_selected.show();									//show the input field
+								temp_selected.prev().val("for");						//choose the "for" select
+								temp_selected.prev().children().last().html("for");		//and change the "for..." to "for"
+							}else{													//if it is 0
+								temp_selected.hide();									//hide the field
+								temp_selected.prev().val("constantly");					//and choose "constantly" to complete the sentence
+							}
+						};
+					};
+				};
+				j ++;									//increment counter
+			});
+		};//end set_inputs()
+		
+		set_inputs("select.sensor",input_array);			//set each input with the appropriate array
+		set_inputs("select.sensor_state",input_onoff);
+		set_inputs("input.wait_time",on_delay);
+		set_inputs("select.output",output_array);
+		set_inputs("select.output_state",output_onoff);
+		set_inputs("input.output_duration",duration);
 	};//end load_settings()
 
 	load_settings();
@@ -267,8 +302,6 @@ $(function(){//shortcut for doc.ready
 	$(".wait .up,.wait .down").mouseleave(function(){		//stop when the mouse leaves the button (in case you held down then left)
 		stop_auto();										//stop all value auto increments
 	});
-
-	
 
 
 	$("input.output_duration").change(function(){					//on manual keybaord entry
