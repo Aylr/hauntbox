@@ -32,7 +32,7 @@ input[type="radio"] + input[type="radio"]{
 			}
 		};
 		
-		var dummy_settings_data = "0,1,1,1,1,1,1,1,1,1,1,0;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
+		var dummy_settings_data = "0,1,0,1,0,1,0,1,0,1,1,0;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
 		var input_names = new Array();
 		var output_names = new Array();
 		var io_definitions = new Array();
@@ -84,7 +84,20 @@ input[type="radio"] + input[type="radio"]{
 			});
 		};//end set_inputs()
 		
-		set_inputs("input.highlow",io_definitions);
+		function set_radios(selector, array){ //dummy function to illustrate selecting the radios without other function cruft
+			var j = 0; //set up counter that only increments every other radio (since they are grouped by 2 essentially)
+			$(selector).each(function(index){
+				//Note, you will essentially go through each radio twice and thus set the value twice hence the j hack
+				if($(this).val() == array[j]){//if the radio value is == to the io value
+					$(this).attr("checked", "checked"); //Check it (the browser unchecks the other)
+				}
+				if(isEven(index) && index != 0){ // if this is not the first time through and is an "everyother time through"
+					j++; //increment the counter to look at next array value
+				}
+			});
+		}
+		
+		set_radios("input.highlow",io_definitions);
 		set_inputs(".input_name",input_names);
 		set_inputs(".output_name",output_names);
 		
@@ -115,6 +128,13 @@ input[type="radio"] + input[type="radio"]{
 			});
 			*/
 		};//end cupcake()
+		function isEven(value) {
+			if (value%2 == 0){ //% is modulus. Basically checks for remainder
+				return true;
+			} else {
+				return false;
+			}
+		}
 	});
 </script>
 </head>
