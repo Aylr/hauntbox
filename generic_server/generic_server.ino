@@ -13,7 +13,8 @@ const int SD_CS = 4;
 const int ETHER_CS = 10;
 
 // Don't forget to modify the IP to an available one on your home network
-byte ip[] = { 192, 168, 1, 9 };
+//byte ip[] = { 192, 168, 1, 9 };
+byte ip[] = {10,0,0,10 };
 int inputArray[6];
 
 /*********************************************/
