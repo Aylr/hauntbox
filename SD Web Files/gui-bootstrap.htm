@@ -388,7 +388,7 @@ $(function(){//shortcut for doc.ready
 			to_show = "." + selector.attr("class");
 			console.log(to_show);
 			$("#display_container").children().hide();
-			$(to_show).fadeIn();
+			$(to_show).show();
 			$(selector).parent().attr("class","active").siblings().attr("class","");	//change the active highlight in the navbar
 		}
 	}
