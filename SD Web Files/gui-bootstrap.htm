@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="stylesheet" href="css/bootstrap.css" type="text/css" media="screen, projection" \>
+<link rel="stylesheet" href="fontawes.css" type="text/css" media="screen, projection" \>
+<style type="text/css">
+input { /*slim up the wide 999 second boxes */
+	width: 2em;
+	text-align:right;
+}
+label {
+	font-weight: normal;
+}
+div.duration_container {
+	display: inline-block;
+}
+div.wait, div.duration {
+	display: inline-block;
+	position: relative;
+	top: 8px;
+}
+div.wait a, div.duration a {
+	display: block;
+	border: 1px solid #aaa;
+	background: rgb(247,247,247);
+	font-size: 1em;
+	text-align: center;
+	text-decoration: none;
+	color: #000;
+	width: 15px;
+	height: 16px;
+	margin: 0 0 -1px 0;
+}
+</style>
+<!--[if lt IE 8]>
+	<link rel="stylesheet" href="BLUEPRNT/IE.CSS" type="text/css" media="screen, projection">
+<![endif]-->
+<script src="jqry171.js"></script>
+<script src="jquicust.js"></script>
+
+<script>
+$(function(){//shortcut for doc.ready
+	/*
+	$("div#tabs").tabs({
+		select: function(event, ui) {
+			switch (ui.index){
+				case 0:
+					//on first tab click
+					//load ajax data from arduino and update form
+					console.log("case 0");
+					break;
+				case 1:
+					//on second tab click
+					//load ajax data from arduino and update form
+					console.log("case 1");
+					break;
+			};
+		}
+	});
+	*/
+	
+	var increment_on_hold_speed = 50;	//auto ++ing value every n milliseconds
+	var increment_hold_delay = 1000;	//the delay in milliseconds (timeout) before auto ++ing
+	var interval = null;				//var for auto incrementing
+	var timeout = null;					//var for auto incrementing delay
+
+	function stop_auto(){				//this function is called whenever you want to stop auto incrementing
+		clearInterval(interval);
+		clearTimeout(timeout);
+		console.log("stopped");
+	};//end stop_auto
+
+
+	function load_settings(){
+		//this should load values from the firmware
+		//including intelligent defaults
+		//and populate the form correctly
+
+		//Data receiving protocol (Arduino --> Browser)
+		//Input array;Input on/off;On delay;Output array;Output on/off;Duration;status code;Free RAM;
+		//0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0;182;
+
+		//status codes
+		//0 = all good
+		//1 = 
+		//2 = 
+		//3 = 
+		//4 =
+		
+		//GET REAL DATA FROM THE ARDUINO VIA A GET REQUEST
+		var dummy_load_data = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;0,778"
+		
+		var input_array = new Array();
+		var input_onoff = new Array();
+		var on_delay = new Array();
+		var output_array = new Array();
+		var output_onoff = new Array();
+		var duration = new Array();
+		var incoming_program = dummy_load_data.split(";")		//split into substrings
+		
+		var input_array = incoming_program[0].split(",");
+		var input_onoff = incoming_program[1].split(",");
+		var on_delay = incoming_program[2].split(",");
+		var output_array = incoming_program[3].split(",");
+		var output_onoff = incoming_program[4].split(",");
+		var duration = incoming_program[5].split(",");
+		
+		function clean_this_array(dirty_array){					//converts arrays of strings into arrays of integers
+			for (i in dirty_array){								//for each element in the array
+				dirty_array[i] = parseInt(dirty_array[i]);		//convert strings to int "1" --> 1
+			}
+		};
+		
+		clean_this_array(input_array);
+		clean_this_array(input_onoff);
+		clean_this_array(on_delay);
+		clean_this_array(output_array);
+		clean_this_array(output_onoff);
+		clean_this_array(duration);
+		
+		/*
+		console.log(input_array);
+		console.log(input_onoff);
+		console.log(on_delay);
+		console.log(output_array);
+		console.log(output_onoff);
+		console.log(duration);
+		*/
+		
+		//Settings receiving protocol (Arduino --> Browser)
+		//input defs,output defs;input names;output names;status code;Free RAM;
+		//"1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
+	
+		var dummy_settings_data = "1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
+		var input_names = new Array();
+		var output_names = new Array();
+		var io_definitions = new Array();
+
+		var temp = dummy_settings_data.split(";");	//split into substrings
+	
+		if (temp[3].length == 0) {		//test for length == 0 then delete element
+			temp.splice(3,1);			//this trims off the junk after the last ";"
+		};
+	
+		io_definitions = temp[0].split(",");
+		input_names = temp[1].split(",");
+		output_names = temp[2].split(",");
+		
+		clean_this_array(io_definitions);
+		
+		/*
+		console.log(io_definitions);
+		console.log(input_names);
+		console.log(output_names);
+		*/
+		
+		function set_io_names(select,names){					//this function sets the custom i/o names from the settings arrays
+			var i = 0;											//inititalize counter variable
+			names.unshift("-");									//add the "-" to the beginning for the default choice
+			$(select).each(function(){							//loop through each select.sensor
+				$(this).children().each(function(){				//loop through each dropdown option
+					$(this).html(names[i]);						//set the actual html names					
+					i ++;										//increment i
+				});//end each option
+				i = 0;											//reset i for next group of options
+			});//end each input
+		};//end set_select_names()
+		
+		set_io_names("select.sensor",input_names);				//call the set io name functions
+		set_io_names("select.output",output_names);
+	
+		//if definitions, names are blank, populate w/ intellegent defaults
+		//DECIDE WHAT THE DEFAULTS SHOULD BE AND LINK W/ FIRMWARE
+		
+		function set_inputs(selector,array){			//this takes a jQuery selector (an input or select) and sets it w/ values from an array
+			j = 0;										//init a counter var
+			$(selector).each(function(){				//loop through each <select>
+				for (i in array){						//loop through each element in array
+					if (j == i){						//if this element # corresponds w/ this <select>
+						$(this).val(array[i]);			//set the value
+						
+						//if the selector is the output duration, we have to do some fancy stuff about the hidden fields
+						if (selector == "input.output_duration") {
+							temp_selected = $(this).parent();							//reduce jquery calls
+							if (array[i] > 0) {											//if the duration is not zero
+								temp_selected.show();									//show the input field
+								temp_selected.prev().val("for");						//choose the "for" select
+								temp_selected.prev().children().last().html("for");		//and change the "for..." to "for"
+							}else{													//if it is 0
+								temp_selected.hide();									//hide the field
+								temp_selected.prev().val("constantly");					//and choose "constantly" to complete the sentence
+							}
+						};
+					};
+				};
+				j ++;									//increment counter
+			});
+		};//end set_inputs()
+		
+		set_inputs("select.sensor",input_array);			//set each input with the appropriate array
+		set_inputs("select.sensor_state",input_onoff);
+		set_inputs("input.wait_time",on_delay);
+		set_inputs("select.output",output_array);
+		set_inputs("select.output_state",output_onoff);
+		set_inputs("input.output_duration",duration);
+	};//end load_settings()
+
+	load_settings();
+
+	$("input.wait_time").change(function(){					//whenever the wait field changes
+		$(this).val(parseInt(sanitize($(this).val())));		//update the input with sanitized
+	});
+
+	function sanitize(num) {
+		if(parseInt(num) >= 0){					//sanitize, filter out NaN and negative numbers
+			//console.log("OK: num = " + num + "  	parseInt(num) = " + parseInt(num));
+		    return parseInt(num);				//return the clean value
+		}else{
+			console.log("ERROR: num = " + num + "  	parseInt(num) = " + parseInt(num) + "   ==> 0");
+			return "0";							//if the user entered garbage, set to "0"
+		};
+	};//end sanitize()
+
+
+	$("#save_program").click(function(){	//this function sets up the call to cupcake with the columns you want sent
+		//for instance, you could call this on a button press, or value change
+		//define the columns to submit via cupcake()
+		var column_names = ["select.sensor", "select.sensor_state", "input.wait_time", "select.output", "select.output_state", "input.output_duration"];
+		cupcake(column_names);
+	});
+
+	function cupcake(column_names){			//cupcake acutally formats and sends the data to the Arduino
+		var post_data = "";					//initialize the POST string
+		var counter = 0;					//use to insert commas after each row
+		var rows = $(".row").length;		//count how many rows, use for delimiters
+	
+		for (var i=0, tot=column_names.length; i < tot; i++) {	//loop through columns passed to cupcake
+			$(column_names[i]).each(function(){	//loop through a single column
+				counter ++;						//increment counter
+				post_data += $(this).val();		//append value of input
+				if(counter == rows){			//append appropriate element or row delimiter
+					post_data += ";";			//row delimiter
+					counter = 0;				//reset counter
+				}else{
+					post_data += ",";			//element delimiter
+				};
+			});//end each sensor loop
+		};//loop through each column
+	
+		//console.log("rows: " + rows);
+		console.log(post_data);				//log to firebug
+	
+		$.post("/testget", post_data, function(data){ 	//the AJAX bit
+		//	console.log("posted " + post_data);
+			$("#status_program").hide().html(data).fadeIn();
+		});
+	
+	};//end cupcake()
+
+
+	function fast_plus_minus(input,direction){	//this increments and fast increments either + or - based on the direction
+		//it is called by the delay field and the duration field
+		stop_auto();										//stop all value auto increments
+		var current = sanitize(input.val());				//get sanitized current wait
+		if(direction == "+"){								//if "+" was passed to the function
+			input.val(input_up(current));					//get & set new value
+
+			timeout = setTimeout(function(){				//This waits 1 second before...
+				interval = setInterval(function(){			//auto ++ing value every n milliseconds
+					current = sanitize(input.val());		//get sanitized current wait
+					input.val(input_up(current));			//get & set new value
+				}, increment_on_hold_speed);				//the speed of ++ing the value
+			},increment_hold_delay);						//the delay (timeout) before ++ing
+		}else if(direction == "-"){							//if "-" was passed to the function
+			input.val(input_down(current));					//get & set new value
+
+			timeout = setTimeout(function(){				//This waits 1 second before...
+				interval = setInterval(function(){			//auto ++ing value every n milliseconds
+					current = sanitize(input.val());		//get sanitized current wait
+					input.val(input_down(current));			//get & set new value
+				}, increment_on_hold_speed);				//the speed of auto ++ing the value
+			},increment_hold_delay);						//the delay (timeout) before auto ++ing
+		};
+		return false;										//prevent the html link from doing anything	
+	};
+
+	function input_up(current){								//this increments the current value up to 999
+		console.log("input_up " + current);
+		var newval;
+		if(current < 999){									//if less than 999
+			newval = current + 1;							//add 1
+		}else{
+			newval = 999;									//if at 999, leave at 999
+			stop_auto();									//stop auto timer, we're at zero
+			//flash limit message here if you want				
+		};
+		return newval;
+	};//end input_limits
+
+	function input_down(current){							//this increments the current down to 0
+		console.log("input_down " + current);
+		var newval;
+		if(current <= 0){									//if 0 or negative
+			newval = 0;										//set to zero
+			stop_auto();									//stop auto timer, we're at zero
+			//flash limit message here if you want
+		}else{												//if positive
+			newval = current - 1;							//subtract 1
+		};
+		return newval;
+	};//end input_limits
+
+	$(".wait .up").mousedown(function(){					//call the "+" handler
+		fast_plus_minus($(this).parent().next(),"+");
+	});
+	$(".wait .down").mousedown(function(){					//call the "-" handler
+		fast_plus_minus($(this).parent().next(),"-");
+	});
+	$(".wait .up,.wait .down").mouseup(function(){			//stop when the mouse click stops
+		stop_auto();										//stop all value auto increments
+	});
+	$(".wait .up,.wait .down").mouseleave(function(){		//stop when the mouse leaves the button (in case you held down then left)
+		stop_auto();										//stop all value auto increments
+	});
+
+
+	$("input.output_duration").change(function(){					//on manual keybaord entry
+		var newval = 1;												//default new value
+		var current = sanitize($(this).val());						//get the sanitized value
+		if(current != 0){											//if sanitized not 0, then let it pass, otherwise use the default of 1
+			newval = current;
+		}
+		$(this).val(newval);										//update field with either 1 or clean value
+		console.log("changed, duration = " + newval);
+	});
+
+	$("select.output_duration").change(function(){					//when dropdown changes...
+		temp = $(this).val();										//get current value
+		var new_duration;											//initialize new duration
+		if(temp == "constantly"){									//if "constantly"
+			$(this).next(".duration_container").fadeOut(250);		//fade out buttons & field
+			$(this).children('option[value="for"]').html("for...")	//update grammar
+			new_duration = 0;										//set duration = 0
+		}else if(temp == "for"){									//if "for..".
+			$(this).next(".duration_container").fadeIn(250);		//show buttons & field
+			$(this).children('option[value="for"]').html("for");	//update grammar
+			new_duration = "1";										//set duration = 1
+		}
+		$(this).next().children('input[class="output_duration"]').val(new_duration);	//set the field to the new value	
+		console.log("output changed, value = " + $("#output_duration3").val());
+	});//output_duration.change()
+
+	$(".duration .up").mousedown(function(){				//call the "+" handler
+		fast_plus_minus($(this).parent().next(),"+");
+	});
+	$(".duration .down").mousedown(function(){				//call the "-" handler
+		fast_plus_minus($(this).parent().next(),"-");
+	});
+	
+	$(".duration .up,.duration .down").mouseup(function(){	//stop when the mouse click stops
+		stop_auto();										//stop all value auto increments
+	});
+	$(".duration .up,.duration .down").mouseleave(function(){				//stop when the mouse leaves the button (in case you held down then left)
+		stop_auto();										//stop all value auto increments
+	});
+
+
+	//Update the form with data
+	// IE from the Arduino via AJAX
+	/*
+	$("#form #first").children().each(function(){
+		data = "5";						//this is just a test
+		if($(this).val() == data) {
+			$(this).prop("selected","selected");
+		};
+	});
+	*/
+	
+	$("#display_container").children().hide();			//load with all "tabs" hidden
+	$("div.program").show();								//...except the program div
+	$(".navbar .nav a").click(function(){
+		set_active_nav($(this));
+		//LOAD PROGRAM FROM ARDUINO VIA POST, THIS CAN ALSO BE DONE ON REFRESH CLICKED
+	});
+	
+	function set_active_nav(selector){
+		if (selector.parent().attr("class") != "active") {
+			to_show = "." + selector.attr("class");
+			console.log(to_show);
+			$("#display_container").children().hide();
+			$(to_show).fadeIn();
+			$(selector).parent().attr("class","active").siblings().attr("class","");	//change the active highlight in the navbar
+		}
+	}
+});//doc.ready
+</script>
+</head>
+
+<body>
+	<div class="navbar">
+		<div class="navbar-inner">
+			<div class="container">
+				<a class="brand">The HauntBox</a>
+				<ul class="nav">
+					<li class="active"><a href="#" class="program"><i style="font-size:18px;" class="icon-home"></i> Program</a></li>
+					<li><a href="#" class="settings"><i style="font-size:18px;" class="icon-cogs"></i> Settings</a></li>
+					<li><a href="#"><i style="font-size:18px;" class="icon-download-alt"></i> Export</a></li>
+					<li><a href="#" class="help"><i style="font-size:18px;" class="icon-question-sign"></i> Help</a></li>
+					<li>Status... Ram: ... </li>
+				</ul>
+			</div>
+		</div>
+	</div>
+		
+			
+<div id="display_container">    
+				<div class="program">
+					<h2>Program</h2>
+					<p>Some kind of description here.</p>
+					<form id="form">
+						<!--begin row3 -->
+						<div id="row3" class="row last">
+							When
+							<select id="sensor3" class="sensor" name="sensor3">
+								<option value="0">-</option>
+								<option value="1">input A</option>
+								<option value="2">input B</option>
+								<option value="3">input C</option>
+								<option value="4">input D</option>
+								<option value="5">input E</option>
+								<option value="6">input F</option>
+							</select>
+							is
+							<select id="sensor_state3" class="sensor_state" name="sensor_state3">
+								<option value="1">on</option>
+								<option value="0">off</option>
+							</select>
+							&nbsp;&nbsp;:&nbsp;&nbsp;
+							Wait
+							<div class="wait">
+								<a href="#" class="up">+</a>
+								<a href="#" class="down">-</a>
+							</div>
+							<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
+							second(s) then keep
+							<select id="output3" class="output" name="output3">
+								<option value="0">-</option>
+								<option value="1">output 1</option>
+								<option value="2">output 2</option>
+								<option value="3">output 3</option>
+								<option value="4">output 4</option>
+								<option value="5">output 5</option>
+								<option value="6">output 6</option>
+							</select>
+							<select id=="output_state3" class="output_state" name="output_state3">
+								<option value="1">on</option>
+								<option value="0">off</option>
+							</select>
+							<select class="output_duration">
+								<option value="constantly">constantly.</option>
+								<option value="for">for...</option>
+							</select>
+							<div class="duration_container">
+								<div class="duration">
+									<a href="#" class="up">+</a>
+									<a href="#" class="down">-</a>
+								</div>
+								<input type="text" id="output_duration3" class="output_duration" name="output_duration3" maxlength="3" value="0" />
+								second(s).
+							</div>
+							<span class="row_status"></span>
+						</div>
+						<!--end row3 -->
+						<!--begin row3 -->
+						<div id="row3" class="row last">
+							When
+							<select id="sensor3" class="sensor" name="sensor3">
+								<option value="0">-</option>
+								<option value="1">input A</option>
+								<option value="2">input B</option>
+								<option value="3">input C</option>
+								<option value="4">input D</option>
+								<option value="5">input E</option>
+								<option value="6">input F</option>
+							</select>
+							is
+							<select id="sensor_state3" class="sensor_state" name="sensor_state3">
+								<option value="1">on</option>
+								<option value="0">off</option>
+							</select>
+							&nbsp;&nbsp;:&nbsp;&nbsp;
+							Wait
+							<div class="wait">
+								<a href="#" class="up">+</a>
+								<a href="#" class="down">-</a>
+							</div>
+							<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
+							second(s) then keep
+							<select id="output3" class="output" name="output3">
+								<option value="0">-</option>
+								<option value="1">output 1</option>
+								<option value="2">output 2</option>
+								<option value="3">output 3</option>
+								<option value="4">output 4</option>
+								<option value="5">output 5</option>
+								<option value="6">output 6</option>
+							</select>
+							<select id=="output_state3" class="output_state" name="output_state3">
+								<option value="1">on</option>
+								<option value="0">off</option>
+							</select>
+							<select class="output_duration">
+								<option value="constantly">constantly.</option>
+								<option value="for">for...</option>
+							</select>
+							<div class="duration_container">
+								<div class="duration">
+									<a href="#" class="up">+</a>
+									<a href="#" class="down">-</a>
+								</div>
+								<input type="text" id="output_duration3" class="output_duration" name="output_duration3" maxlength="3" value="0" />
+								second(s).
+							</div>
+							<span class="row_status"></span>
+						</div>
+						<!--end row3 -->
+						<!--begin row3 -->
+						<div id="row3" class="row last">
+							When
+							<select id="sensor3" class="sensor" name="sensor3">
+								<option value="0">-</option>
+								<option value="1">input A</option>
+								<option value="2">input B</option>
+								<option value="3">input C</option>
+								<option value="4">input D</option>
+								<option value="5">input E</option>
+								<option value="6">input F</option>
+							</select>
+							is
+							<select id="sensor_state3" class="sensor_state" name="sensor_state3">
+								<option value="1">on</option>
+								<option value="0">off</option>
+							</select>
+							&nbsp;&nbsp;:&nbsp;&nbsp;
+							Wait
+							<div class="wait">
+								<a href="#" class="up">+</a>
+								<a href="#" class="down">-</a>
+							</div>
+							<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
+							second(s) then keep
+							<select id="output3" class="output" name="output3">
+								<option value="0">-</option>
+								<option value="1">output 1</option>
+								<option value="2">output 2</option>
+								<option value="3">output 3</option>
+								<option value="4">output 4</option>
+								<option value="5">output 5</option>
+								<option value="6">output 6</option>
+							</select>
+							<select id=="output_state3" class="output_state" name="output_state3">
+								<option value="1">on</option>
+								<option value="0">off</option>
+							</select>
+							<select class="output_duration">
+								<option value="constantly">constantly.</option>
+								<option value="for">for...</option>
+							</select>
+							<div class="duration_container">
+								<div class="duration">
+									<a href="#" class="up">+</a>
+									<a href="#" class="down">-</a>
+								</div>
+								<input type="text" id="output_duration3" class="output_duration" name="output_duration3" maxlength="3" value="0" />
+								second(s).
+							</div>
+							<span class="row_status"></span>
+						</div>
+						<!--end row3 -->
+						<!--begin row3 -->
+						<div id="row3" class="row last">
+							When
+							<select id="sensor3" class="sensor" name="sensor3">
+								<option value="0">-</option>
+								<option value="1">input A</option>
+								<option value="2">input B</option>
+								<option value="3">input C</option>
+								<option value="4">input D</option>
+								<option value="5">input E</option>
+								<option value="6">input F</option>
+							</select>
+							is
+							<select id="sensor_state3" class="sensor_state" name="sensor_state3">
+								<option value="1">on</option>
+								<option value="0">off</option>
+							</select>
+							&nbsp;&nbsp;:&nbsp;&nbsp;
+							Wait
+							<div class="wait">
+								<a href="#" class="up">+</a>
+								<a href="#" class="down">-</a>
+							</div>
+							<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
+							second(s) then keep
+							<select id="output3" class="output" name="output3">
+								<option value="0">-</option>
+								<option value="1">output 1</option>
+								<option value="2">output 2</option>
+								<option value="3">output 3</option>
+								<option value="4">output 4</option>
+								<option value="5">output 5</option>
+								<option value="6">output 6</option>
+							</select>
+							<select id=="output_state3" class="output_state" name="output_state3">
+								<option value="1">on</option>
+								<option value="0">off</option>
+							</select>
+							<select class="output_duration">
+								<option value="constantly">constantly.</option>
+								<option value="for">for...</option>
+							</select>
+							<div class="duration_container">
+								<div class="duration">
+									<a href="#" class="up">+</a>
+									<a href="#" class="down">-</a>
+								</div>
+								<input type="text" id="output_duration3" class="output_duration" name="output_duration3" maxlength="3" value="0" />
+								second(s).
+							</div>
+							<span class="row_status"></span>
+						</div>
+						<!--end row3 -->
+						<!--begin row3 -->
+						<div id="row3" class="row last">
+							When
+							<select id="sensor3" class="sensor" name="sensor3">
+								<option value="0">-</option>
+								<option value="1">input A</option>
+								<option value="2">input B</option>
+								<option value="3">input C</option>
+								<option value="4">input D</option>
+								<option value="5">input E</option>
+								<option value="6">input F</option>
+							</select>
+							is
+							<select id="sensor_state3" class="sensor_state" name="sensor_state3">
+								<option value="1">on</option>
+								<option value="0">off</option>
+							</select>
+							&nbsp;&nbsp;:&nbsp;&nbsp;
+							Wait
+							<div class="wait">
+								<a href="#" class="up">+</a>
+								<a href="#" class="down">-</a>
+							</div>
+							<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
+							second(s) then keep
+							<select id="output3" class="output" name="output3">
+								<option value="0">-</option>
+								<option value="1">output 1</option>
+								<option value="2">output 2</option>
+								<option value="3">output 3</option>
+								<option value="4">output 4</option>
+								<option value="5">output 5</option>
+								<option value="6">output 6</option>
+							</select>
+							<select id=="output_state3" class="output_state" name="output_state3">
+								<option value="1">on</option>
+								<option value="0">off</option>
+							</select>
+							<select class="output_duration">
+								<option value="constantly">constantly.</option>
+								<option value="for">for...</option>
+							</select>
+							<div class="duration_container">
+								<div class="duration">
+									<a href="#" class="up">+</a>
+									<a href="#" class="down">-</a>
+								</div>
+								<input type="text" id="output_duration3" class="output_duration" name="output_duration3" maxlength="3" value="0" />
+								second(s).
+							</div>
+							<span class="row_status"></span>
+						</div>
+						<!--end row3 -->
+						<!--begin row3 -->
+						<div id="row3" class="row last">
+							When
+							<select id="sensor3" class="sensor" name="sensor3">
+								<option value="0">-</option>
+								<option value="1">input A</option>
+								<option value="2">input B</option>
+								<option value="3">input C</option>
+								<option value="4">input D</option>
+								<option value="5">input E</option>
+								<option value="6">input F</option>
+							</select>
+							is
+							<select id="sensor_state3" class="sensor_state" name="sensor_state3">
+								<option value="1">on</option>
+								<option value="0">off</option>
+							</select>
+							&nbsp;&nbsp;:&nbsp;&nbsp;
+							Wait
+							<div class="wait">
+								<a href="#" class="up">+</a>
+								<a href="#" class="down">-</a>
+							</div>
+							<input type="text" id="wait_time3" class="wait_time" name="wait_time3" maxlength="3" value="0" />
+							second(s) then keep
+							<select id="output3" class="output" name="output3">
+								<option value="0">-</option>
+								<option value="1">output 1</option>
+								<option value="2">output 2</option>
+								<option value="3">output 3</option>
+								<option value="4">output 4</option>
+								<option value="5">output 5</option>
+								<option value="6">output 6</option>
+							</select>
+							<select id=="output_state3" class="output_state" name="output_state3">
+								<option value="1">on</option>
+								<option value="0">off</option>
+							</select>
+							<select class="output_duration">
+								<option value="constantly">constantly.</option>
+								<option value="for">for...</option>
+							</select>
+							<div class="duration_container">
+								<div class="duration">
+									<a href="#" class="up">+</a>
+									<a href="#" class="down">-</a>
+								</div>
+								<input type="text" id="output_duration3" class="output_duration" name="output_duration3" maxlength="3" value="0" />
+								second(s).
+							</div>
+							<span class="row_status"></span>
+						</div>
+						<!--end row3 -->
+						<button id="save_program" name="save" type="button"><i class="icon-check"></i> Save Program</button>
+						<button id="refresh_program" name="refresh" type="button"><i class="icon-refresh"></i> Refresh</button>
+						<button id="export_program"><i class="icon-download-alt"></i> Export</a></button>
+						
+						<div id="status_program"></div>
+
+					</form>
+				</div><!-- //end program -->
+				
+				<div class="settings">
+					<h2>Settings</h2>
+					<p>Feel free to rename your inputs and outputs here. You can also set whether
+						digital HIGH or LOW will trigger the input.</p>
+
+					<h3>Inputs</h3>
+					<div class="inputs">
+						Input A: <input type="text" class="input_name" name="input1" id="input1" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow1" value="1" checked>High</input><input type="radio" class="highlow" name="highlow1" value="0">Low</input>.<br />
+						Input B: <input type="text" class="input_name" name="input2" id="input2" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow2" value="1" checked>High</input><input type="radio" class="highlow" name="highlow2" value="0">Low</input>.<br />
+						Input C: <input type="text" class="input_name" name="input3" id="input3" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow3" value="1" checked>High</input><input type="radio" class="highlow" name="highlow3" value="0">Low</input>.<br />
+						Input D: <input type="text" class="input_name" name="input4" id="input4" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow4" value="1" checked>High</input><input type="radio" class="highlow" name="highlow4" value="0">Low</input>.<br />
+						Input E: <input type="text" class="input_name" name="input5" id="input5" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow5" value="1" checked>High</input><input type="radio" class="highlow" name="highlow5" value="0">Low</input>.<br />
+						Input F: <input type="text" class="input_name" name="input6" id="input6" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow6" value="1" checked>High</input><input type="radio" class="highlow" name="highlow6" value="0">Low</input>.
+					</div>
+					<br />
+					<h3>Outputs</h3>
+					<div class="outputs">
+						Output 1: <input type="text" class="output_name" name="output1" id="output1" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow1" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow1" value="0">Low</input>.<br />
+						Output 2: <input type="text" class="output_name" name="output2" id="output2" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow2" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow2" value="0">Low</input>.<br />
+						Output 3: <input type="text" class="output_name" name="output3" id="output3" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow3" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow3" value="0">Low</input>.<br />
+						Output 4: <input type="text" class="output_name" name="output4" id="output4" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow4" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow4" value="0">Low</input>.<br />
+						Output 5: <input type="text" class="output_name" name="output5" id="output5" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow5" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow5" value="0">Low</input>.<br />
+						Output 6: <input type="text" class="output_name" name="output6" id="output6" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow6" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow6" value="0">Low</input>.
+
+					</div>
+					<button id="save_settings" name="save" type="button"><i class="icon-check"></i> Save Settings</button>
+					<button id="refresh_settings" name="refresh" type="button"><i class="icon-refresh"></i> Refresh</button>
+					<button id="export_settings"><i style="font-size:;" class="icon-download-alt"></i> Export</a></button>
+					<div id="status_settigns"></div>
+				</div>
+
+	<div class="help">
+		<h2>Help</h2>
+		<p>Please visit our <a href="">website</a> for updated support</p>
+		<p>kickstarter</p>
+		<p>email</p>
+		<p><a href="https://twitter.com/hauntbox" class="twitter-follow-button" data-show-count="false">Follow @hauntbox</a>
+		<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+		<br />
+		<a href="https://twitter.com/intent/tweet?screen_name=hauntbox" class="twitter-mention-button" data-size="large" data-related="hauntbox">Tweet to @hauntbox</a>
+		<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+		</p>
+	</div>
+</div><!--//end display_container -->
+	<script src="SCRIPTS.JS"></script>
+</body>
+</html>
