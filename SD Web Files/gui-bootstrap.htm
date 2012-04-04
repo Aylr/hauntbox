@@ -10,6 +10,9 @@ input { /*slim up the wide 999 second boxes */
 	width: 2em;
 	text-align:right;
 }
+div.settings input[type="text"] {
+	width: 10em;
+}
 label {
 	font-weight: normal;
 }
@@ -70,12 +73,8 @@ $(function(){//shortcut for doc.ready
 		//GET REAL DATA FROM THE ARDUINO VIA A GET REQUEST
 		var dummy_load_data = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;0,778"
 		
-		var input_array = new Array();
-		var input_onoff = new Array();
-		var on_delay = new Array();
-		var output_array = new Array();
-		var output_onoff = new Array();
-		var duration = new Array();
+		var input_array = new Array(), input_onoff = new Array(), on_delay = new Array(), output_array = new Array(), output_onoff = new Array(), duration = new Array();
+		
 		var incoming_program = dummy_load_data.split(";")		//split into substrings
 		
 		var input_array = incoming_program[0].split(",");		//split substrings into arrays of strings "1,2,3,..." --> ["1","2","3",...]
@@ -113,9 +112,7 @@ $(function(){//shortcut for doc.ready
 	
 		//LOAD THE ACTUAL SETTINGS HERE VIA AJAX REQUEST...
 		var dummy_settings_data = "1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
-		var input_names = new Array();
-		var output_names = new Array();
-		var io_definitions = new Array();
+		var input_names = new Array(), output_names = new Array(), io_definitions = new Array();
 
 		var temp = dummy_settings_data.split(";");	//split into substrings
 	
@@ -128,7 +125,7 @@ $(function(){//shortcut for doc.ready
 		output_names = temp[2].split(",");
 		
 		array_of_strings_to_ints(io_definitions);
-		ram_status(temp[4]);					//update the free ram display
+		
 		
 		/*
 		console.log(io_definitions);
@@ -185,6 +182,10 @@ $(function(){//shortcut for doc.ready
 		set_inputs("select.output",output_array);
 		set_inputs("select.output_state",output_onoff);
 		set_inputs("input.output_duration",duration);
+		
+		status_message(parseInt(temp[3]));		//update the status alert
+		ram_status(temp[4]);					//update the free ram display
+
 	};//end load_settings()
 
 	load_settings();
@@ -382,37 +383,75 @@ $(function(){//shortcut for doc.ready
 		//switch 0,1,2,3,4,5
 		//plug in status codes here and trigger an event if needed
 		//and a BOOTSTRAP alert if needed
-		var header = "alert header";
-		var button1 = "button 1 msg";
-		var button2 = "button 2 msg";
-		var color = "red";
+		status_code = parseInt(status_code);
+		if (isNaN(status_code)) {
+			status_code = null;
+		}
+		var header = "", message = "", button1 = "", button2 = "", type = "alert-info";
 		
-		switch	(status_code){
+		switch	(status_code){					//this entire switch really just changes the message in the alert
 			case 0:
 				//0 = all good
+				header = "All systems good";
+				message = "Everything appears normal, captian.";
+				button1 = "button1";
+				button2 = "button2";
+				type = "alert-success";
 				break;
 			case 1:
 				//1 = program doesn't make sense --> reload or use defaults
+				header = "Error 1";
+				message = "1 = program doesn't make sense --> reload or use defaults";
+				button1 = "button1";
+				button2 = "button2";
+				type = "alert-error";
 				break;
 			case 2:
 				//2 = no SD card --> insert valid one and reset Arduino
+				header = "Error 2";
+				message = "2 = no SD card --> insert valid one and reset Arduino";
+				button1 = "button1";
+				button2 = "button2";
+				type = "alert-error";
 				break;
 			case 3:
 				//3 = file opening problem --> NOT SURE WHAT TO DO
+				header = "Error 3";
+				message = "3 = file opening problem --> NOT SURE WHAT TO DO";
+				button1 = "button1";
+				button2 = "button2";
+				type = "alert-error";
 				break;
 			case 4:
 				//4 = corruption or read/write problem --> NOT SURE WHAT TO DO
+				header = "Error 4";
+				message = "4 = corruption or read/write problem --> NOT SURE WHAT TO DO";
+				button1 = "button1";
+				button2 = "button2";
+				type = "alert-error";
 				break;
 			default:
 				//if no error code or garbled --> NO CLUE WHAT SHOULD HAPPEN HERE
+				header = "Unknown Error";
+				message = "if no error code or garbled --> NO CLUE WHAT SHOULD HAPPEN HERE";
+				button1 = "button1";
+				button2 = "button2";
+				type = "alert-error";
 				break;
-		}
-	}
+		}//end case
+		
+		//var alert = $("div.alert");
+		$("div.alert").attr("class","alert " + type).children("h4").html(header).next().html(message);
+
+		console.log("status_code: " + status_code);
+	}//end status_message()
+	
 });//doc.ready
 </script>
 </head>
 
 <body>
+	<div class="container">
 	<div class="navbar">
 		<div class="navbar-inner">
 			<div class="container">
@@ -435,7 +474,12 @@ $(function(){//shortcut for doc.ready
 		</div>
 	</div><!--//.navbar -->
 	
-			
+	<div class="alert">
+		<a class="close" data-dismiss="alert">×</a>
+		<h4 class="alert-heading">HTML alert header</h4>
+		<p>html text</p>
+	</div>
+
 <div id="display_container">    
 	<div class="program">
 		<h2>Program</h2>
@@ -812,6 +856,7 @@ $(function(){//shortcut for doc.ready
 		</p>
 	</div>
 </div><!--//end display_container -->
+</div><!--//end .container -->
 	<script src="hbscript.js"></script>
 </body>
 </html>
