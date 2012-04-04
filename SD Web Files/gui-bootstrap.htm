@@ -39,12 +39,6 @@ div.wait a, div.duration a {
 
 <script>
 $(function(){//shortcut for doc.ready
-			switch (ui.index){
-					//on first tab click
-					console.log("case 0");
-					break;
-					//load ajax data from arduino and update form
-			};
 	
 	var increment_on_hold_speed = 50;	//auto ++ing value every n milliseconds
 	var increment_hold_delay = 1000;	//the delay in milliseconds (timeout) before auto ++ing
@@ -134,6 +128,7 @@ $(function(){//shortcut for doc.ready
 		output_names = temp[2].split(",");
 		
 		array_of_strings_to_ints(io_definitions);
+		ram_status(temp[4]);					//update the free ram display
 		
 		/*
 		console.log(io_definitions);
@@ -379,6 +374,40 @@ $(function(){//shortcut for doc.ready
 			$(selector).parent().attr("class","active").siblings().attr("class","");	//change the active highlight in the navbar
 		}
 	}
+	
+	function ram_status(ram){		//simply updates the display with the passed free ram
+		$(".navbar p.pull-right").fadeOut().html("Free RAM: " + ram + "K").fadeIn();
+	}
+	function status_message(status_code) {
+		//switch 0,1,2,3,4,5
+		//plug in status codes here and trigger an event if needed
+		//and a BOOTSTRAP alert if needed
+		var header = "alert header";
+		var button1 = "button 1 msg";
+		var button2 = "button 2 msg";
+		var color = "red";
+		
+		switch	(status_code){
+			case 0:
+				//0 = all good
+				break;
+			case 1:
+				//1 = program doesn't make sense --> reload or use defaults
+				break;
+			case 2:
+				//2 = no SD card --> insert valid one and reset Arduino
+				break;
+			case 3:
+				//3 = file opening problem --> NOT SURE WHAT TO DO
+				break;
+			case 4:
+				//4 = corruption or read/write problem --> NOT SURE WHAT TO DO
+				break;
+			default:
+				//if no error code or garbled --> NO CLUE WHAT SHOULD HAPPEN HERE
+				break;
+		}
+	}
 });//doc.ready
 </script>
 </head>
@@ -387,7 +416,7 @@ $(function(){//shortcut for doc.ready
 	<div class="navbar">
 		<div class="navbar-inner">
 			<div class="container">
-					<li><a href="#" class="help"><i style="font-size:18px;" class="icon-question-sign"></i> Help</a></li>
+				<a class="brand" href="#">HauntBox</a>
 					<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
 					<span class="icon-bar"></span>
 					<span class="icon-bar"></span>
