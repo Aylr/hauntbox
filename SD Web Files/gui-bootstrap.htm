@@ -100,25 +100,25 @@ $(function(){//shortcut for doc.ready
 		var duration = new Array();
 		var incoming_program = dummy_load_data.split(";")		//split into substrings
 		
-		var input_array = incoming_program[0].split(",");
+		var input_array = incoming_program[0].split(",");		//split substrings into arrays of strings "1,2,3,..." --> ["1","2","3",...]
 		var input_onoff = incoming_program[1].split(",");
 		var on_delay = incoming_program[2].split(",");
 		var output_array = incoming_program[3].split(",");
 		var output_onoff = incoming_program[4].split(",");
 		var duration = incoming_program[5].split(",");
 		
-		function clean_this_array(dirty_array){					//converts arrays of strings into arrays of integers
+		function array_of_strings_to_ints(dirty_array){					//converts arrays of strings into arrays of integers ie: ["1","2","3",...] --> [1,2,3,...]
 			for (i in dirty_array){								//for each element in the array
 				dirty_array[i] = parseInt(dirty_array[i]);		//convert strings to int "1" --> 1
 			}
 		};
 		
-		clean_this_array(input_array);
-		clean_this_array(input_onoff);
-		clean_this_array(on_delay);
-		clean_this_array(output_array);
-		clean_this_array(output_onoff);
-		clean_this_array(duration);
+		array_of_strings_to_ints(input_array);							//run all the arrays through the integerizer
+		array_of_strings_to_ints(input_onoff);							//CONSIDER PUTTING THE SPLIT "," STUFF INTO THE CLEAN() FUNCTION
+ 		array_of_strings_to_ints(on_delay);
+		array_of_strings_to_ints(output_array);
+		array_of_strings_to_ints(output_onoff);
+		array_of_strings_to_ints(duration);
 		
 		/*
 		console.log(input_array);
@@ -140,15 +140,15 @@ $(function(){//shortcut for doc.ready
 
 		var temp = dummy_settings_data.split(";");	//split into substrings
 	
-		if (temp[3].length == 0) {		//test for length == 0 then delete element
-			temp.splice(3,1);			//this trims off the junk after the last ";"
+		if (temp[5].length == 0) {		//test for length == 0 then delete element
+			temp.splice(5,1);			//this trims off the junk after the last ";"
 		};
 	
 		io_definitions = temp[0].split(",");
 		input_names = temp[1].split(",");
 		output_names = temp[2].split(",");
 		
-		clean_this_array(io_definitions);
+		array_of_strings_to_ints(io_definitions);
 		
 		/*
 		console.log(io_definitions);
