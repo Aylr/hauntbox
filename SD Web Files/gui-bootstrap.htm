@@ -34,32 +34,17 @@ div.wait a, div.duration a {
 	margin: 0 0 -1px 0;
 }
 </style>
-<!--[if lt IE 8]>
-	<link rel="stylesheet" href="BLUEPRNT/IE.CSS" type="text/css" media="screen, projection">
-<![endif]-->
 <script src="jqry171.js"></script>
 <script src="jquicust.js"></script>
 
 <script>
 $(function(){//shortcut for doc.ready
-	/*
-	$("div#tabs").tabs({
-		select: function(event, ui) {
 			switch (ui.index){
-				case 0:
 					//on first tab click
-					//load ajax data from arduino and update form
 					console.log("case 0");
 					break;
-				case 1:
-					//on second tab click
 					//load ajax data from arduino and update form
-					console.log("case 1");
-					break;
 			};
-		}
-	});
-	*/
 	
 	var increment_on_hold_speed = 50;	//auto ++ing value every n milliseconds
 	var increment_hold_delay = 1000;	//the delay in milliseconds (timeout) before auto ++ing
@@ -74,9 +59,8 @@ $(function(){//shortcut for doc.ready
 
 
 	function load_settings(){
-		//this should load values from the firmware
-		//including intelligent defaults
-		//and populate the form correctly
+		//this should load values from the firmware...
+		//including intelligent defaults and populate the form correctly
 
 		//Data receiving protocol (Arduino --> Browser)
 		//Input array;Input on/off;On delay;Output array;Output on/off;Duration;status code;Free RAM;
@@ -84,10 +68,10 @@ $(function(){//shortcut for doc.ready
 
 		//status codes
 		//0 = all good
-		//1 = 
-		//2 = 
-		//3 = 
-		//4 =
+		//1 = program doesn't make sense --> reload or use defaults
+		//2 = no SD card --> insert valid one and reset Arduino
+		//3 = file opening problem --> NOT SURE WHAT TO DO
+		//4 = corruption or read/write problem --> NOT SURE WHAT TO DO
 		
 		//GET REAL DATA FROM THE ARDUINO VIA A GET REQUEST
 		var dummy_load_data = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;0,778"
@@ -130,9 +114,10 @@ $(function(){//shortcut for doc.ready
 		*/
 		
 		//Settings receiving protocol (Arduino --> Browser)
-		//input defs,output defs;input names;output names;status code;Free RAM;
+		//input defs;output defs;input names;output names;status code;Free RAM;
 		//"1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
 	
+		//LOAD THE ACTUAL SETTINGS HERE VIA AJAX REQUEST...
 		var dummy_settings_data = "1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
 		var input_names = new Array();
 		var output_names = new Array();
@@ -144,7 +129,7 @@ $(function(){//shortcut for doc.ready
 			temp.splice(5,1);			//this trims off the junk after the last ";"
 		};
 	
-		io_definitions = temp[0].split(",");
+		io_definitions = temp[0].split(",");	//split substrings into arrays of strings "1,2,3,..." --> ["1","2","3",...]
 		input_names = temp[1].split(",");
 		output_names = temp[2].split(",");
 		
@@ -402,18 +387,25 @@ $(function(){//shortcut for doc.ready
 	<div class="navbar">
 		<div class="navbar-inner">
 			<div class="container">
-				<a class="brand">The HauntBox</a>
-				<ul class="nav">
-					<li class="active"><a href="#" class="program"><i style="font-size:18px;" class="icon-home"></i> Program</a></li>
-					<li><a href="#" class="settings"><i style="font-size:18px;" class="icon-cogs"></i> Settings</a></li>
-					<li><a href="#"><i style="font-size:18px;" class="icon-download-alt"></i> Export</a></li>
 					<li><a href="#" class="help"><i style="font-size:18px;" class="icon-question-sign"></i> Help</a></li>
-				</ul>
-				<p class="nav pull-right">Ram: 000K</p>
+					<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</a>
+				<div class="nav-collapse">
+					<ul class="nav">
+						<li class="active"><a href="#" class="program"><i style="font-size:18px;" class="icon-home"></i> Program</a></li>
+						<li><a href="#" class="settings"><i style="font-size:18px;" class="icon-cogs"></i> Settings</a></li>
+						<li><a href="#"><i style="font-size:18px;" class="icon-download-alt"></i> Export</a></li>
+						<li><a href="#" class="help"><i style="font-size:18px;" class="icon-question-sign"></i> Help</a></li>
+					</ul>
+					<p class="nav pull-right">Free RAM: ?K</p>
+				</div><!--/.nav-collapse -->
 			</div>
 		</div>
-	</div><!--//end navbar -->
-		
+	</div><!--//.navbar -->
+	
 			
 <div id="display_container">    
 	<div class="program">
