@@ -3,7 +3,7 @@
 <head>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HauntBox</title>
-<link rel="stylesheet" href="css/bootstrap.css" type="text/css" media="screen, projection" \>
+<link rel="stylesheet" href="bootstrap_full/bootstrap_full.css" type="text/css" media="screen" \>
 <link rel="stylesheet" href="fontawes.css" type="text/css" media="screen, projection" \>
 <style type="text/css">
 input { /*slim up the wide 999 second boxes */
@@ -12,6 +12,9 @@ input { /*slim up the wide 999 second boxes */
 }
 div.settings input[type="text"] {
 	width: 10em;
+}
+.settings select, .sensor_state, .output_state {
+	width: 4.4em;
 }
 label {
 	font-weight: normal;
@@ -71,7 +74,7 @@ $(function(){//shortcut for doc.ready
 		//4 = corruption or read/write problem --> NOT SURE WHAT TO DO
 		
 		//GET REAL DATA FROM THE ARDUINO VIA A GET REQUEST
-		var dummy_load_data = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;0,778"
+		var dummy_load_data = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;1;778"
 		
 		var input_array = new Array(), input_onoff = new Array(), on_delay = new Array(), output_array = new Array(), output_onoff = new Array(), duration = new Array();
 		
@@ -111,7 +114,7 @@ $(function(){//shortcut for doc.ready
 		//"1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
 	
 		//LOAD THE ACTUAL SETTINGS HERE VIA AJAX REQUEST...
-		var dummy_settings_data = "1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
+		var dummy_settings_data = "1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;1;199;"
 		var input_names = new Array(), output_names = new Array(), io_definitions = new Array();
 
 		var temp = dummy_settings_data.split(";");	//split into substrings
@@ -475,7 +478,7 @@ $(function(){//shortcut for doc.ready
 	</div><!--//.navbar -->
 	
 	<div class="alert">
-		<a class="close" data-dismiss="alert">×</a>
+		<a class="close" data-dismiss="alert">&times;</a>
 		<h4 class="alert-heading">HTML alert header</h4>
 		<p>html text</p>
 	</div>
@@ -805,7 +808,6 @@ $(function(){//shortcut for doc.ready
 			<!--end row3 -->
 			<button id="save_program" name="save" type="button"><i class="icon-check"></i> Save Program</button>
 			<button id="refresh_program" name="refresh" type="button"><i class="icon-refresh"></i> Refresh</button>
-			<button id="export_program"><i class="icon-download-alt"></i> Export</a></button>
 			
 			<div id="status_program"></div>
 
@@ -819,27 +821,98 @@ $(function(){//shortcut for doc.ready
 
 					<h3>Inputs</h3>
 					<div class="inputs">
-						Input A: <input type="text" class="input_name" name="input1" id="input1" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow1" value="1" checked>High</input><input type="radio" class="highlow" name="highlow1" value="0">Low</input>.<br />
-						Input B: <input type="text" class="input_name" name="input2" id="input2" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow2" value="1" checked>High</input><input type="radio" class="highlow" name="highlow2" value="0">Low</input>.<br />
-						Input C: <input type="text" class="input_name" name="input3" id="input3" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow3" value="1" checked>High</input><input type="radio" class="highlow" name="highlow3" value="0">Low</input>.<br />
-						Input D: <input type="text" class="input_name" name="input4" id="input4" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow4" value="1" checked>High</input><input type="radio" class="highlow" name="highlow4" value="0">Low</input>.<br />
-						Input E: <input type="text" class="input_name" name="input5" id="input5" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow5" value="1" checked>High</input><input type="radio" class="highlow" name="highlow5" value="0">Low</input>.<br />
-						Input F: <input type="text" class="input_name" name="input6" id="input6" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow6" value="1" checked>High</input><input type="radio" class="highlow" name="highlow6" value="0">Low</input>.
+						Input A
+							<select class="input_threshold">
+								<option value="103">5V</option>
+								<option value="246">12V</option>
+								<option value="492">24V</option>
+							</select>:
+							<input type="text" class="input_name" name="input1" id="input1" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow1" value="1" checked>High</input><input type="radio" class="highlow" name="highlow1" value="0">Low</input>.<br />
+						Input B
+							<select class="input_threshold">
+								<option value="103">5V</option>
+								<option value="246">12V</option>
+								<option value="492">24V</option>
+							</select>:
+							<input type="text" class="input_name" name="input2" id="input2" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow2" value="1" checked>High</input><input type="radio" class="highlow" name="highlow2" value="0">Low</input>.<br />
+						Input C
+							<select class="input_threshold">
+								<option value="103">5V</option>
+								<option value="246">12V</option>
+								<option value="492">24V</option>
+							</select>:
+							<input type="text" class="input_name" name="input3" id="input3" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow3" value="1" checked>High</input><input type="radio" class="highlow" name="highlow3" value="0">Low</input>.<br />
+						Input D
+							<select class="input_threshold">
+								<option value="103">5V</option>
+								<option value="246">12V</option>
+								<option value="492">24V</option>
+							</select>:
+							<input type="text" class="input_name" name="input4" id="input4" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow4" value="1" checked>High</input><input type="radio" class="highlow" name="highlow4" value="0">Low</input>.<br />
+						Input E
+							<select class="input_threshold">
+								<option value="103">5V</option>
+								<option value="246">12V</option>
+								<option value="492">24V</option>
+							</select>:
+							<input type="text" class="input_name" name="input5" id="input5" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow5" value="1" checked>High</input><input type="radio" class="highlow" name="highlow5" value="0">Low</input>.<br />
+						Input F
+							<select class="input_threshold">
+								<option value="103">5V</option>
+								<option value="246">12V</option>
+								<option value="492">24V</option>
+							</select>:
+							<input type="text" class="input_name" name="input6" id="input6" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow6" value="1" checked>High</input><input type="radio" class="highlow" name="highlow6" value="0">Low</input>.
 					</div>
 					<br />
 					<h3>Outputs</h3>
 					<div class="outputs">
-						Output 1: <input type="text" class="output_name" name="output1" id="output1" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow1" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow1" value="0">Low</input>.<br />
-						Output 2: <input type="text" class="output_name" name="output2" id="output2" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow2" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow2" value="0">Low</input>.<br />
-						Output 3: <input type="text" class="output_name" name="output3" id="output3" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow3" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow3" value="0">Low</input>.<br />
-						Output 4: <input type="text" class="output_name" name="output4" id="output4" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow4" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow4" value="0">Low</input>.<br />
-						Output 5: <input type="text" class="output_name" name="output5" id="output5" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow5" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow5" value="0">Low</input>.<br />
-						Output 6: <input type="text" class="output_name" name="output6" id="output6" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow6" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow6" value="0">Low</input>.
+						Output 1
+							<select class="output_threshold">
+								<option value="103">5V</option>
+								<option value="246">12V</option>
+								<option value="492">24V</option>
+							</select>:
+							<input type="text" class="output_name" name="output1" id="output1" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow1" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow1" value="0">Low</input>.<br />
+						Output 2
+							<select class="output_threshold">
+								<option value="103">5V</option>
+								<option value="246">12V</option>
+								<option value="492">24V</option>
+							</select>:
+							<input type="text" class="output_name" name="output2" id="output2" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow2" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow2" value="0">Low</input>.<br />
+						Output 3
+							<select class="output_threshold">
+								<option value="103">5V</option>
+								<option value="246">12V</option>
+								<option value="492">24V</option>
+							</select>:
+							<input type="text" class="output_name" name="output3" id="output3" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow3" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow3" value="0">Low</input>.<br />
+						Output 4
+							<select class="output_threshold">
+								<option value="103">5V</option>
+								<option value="246">12V</option>
+								<option value="492">24V</option>
+							</select>:
+							<input type="text" class="output_name" name="output4" id="output4" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow4" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow4" value="0">Low</input>.<br />
+						Output 5
+							<select class="output_threshold">
+								<option value="103">5V</option>
+								<option value="246">12V</option>
+								<option value="492">24V</option>
+							</select>:
+							<input type="text" class="output_name" name="output5" id="output5" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow5" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow5" value="0">Low</input>.<br />
+						Output 6
+							<select class="output_threshold">
+								<option value="103">5V</option>
+								<option value="246">12V</option>
+								<option value="492">24V</option>
+							</select>:
+							<input type="text" class="output_name" name="output6" id="output6" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow6" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow6" value="0">Low</input>.
 
 					</div>
 					<button id="save_settings" name="save" type="button"><i class="icon-check"></i> Save Settings</button>
 					<button id="refresh_settings" name="refresh" type="button"><i class="icon-refresh"></i> Refresh</button>
-					<button id="export_settings"><i style="font-size:;" class="icon-download-alt"></i> Export</a></button>
 					<div id="status_settigns"></div>
 				</div>
 
@@ -858,5 +931,7 @@ $(function(){//shortcut for doc.ready
 </div><!--//end display_container -->
 </div><!--//end .container -->
 	<script src="hbscript.js"></script>
+	<script src="bootstrap_full/bootstrap_full.js" type="text/javascript" charset="utf-8"></script>
+
 </body>
 </html>
