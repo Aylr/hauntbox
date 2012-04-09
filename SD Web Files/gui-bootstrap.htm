@@ -159,6 +159,10 @@ $(function(){//shortcut for doc.ready
 		set_inputs("select.output_state",output_onoff);
 		set_inputs("input.output_duration",duration);
 		
+		set_inputs("input.highlow",pad_radio_array(io_definitions));	//be sure to pad the radio array with it's paired inversions before sending to the set_inputs function
+		set_inputs(".input_name",input_names);
+		set_inputs(".output_name",output_names);
+		
 		status_message(parseInt(temp[3]));		//update the status alert
 		ram_status(temp[4]);					//update the free ram display
 
@@ -353,6 +357,7 @@ $(function(){//shortcut for doc.ready
 			});//end each option
 			i = 0;											//reset i for next group of options
 		});//end each input
+		names.shift();										//delete the "-" added to the array (return it to how you got it)
 	};//end set_select_names()
 	
 	function set_inputs(selector,array){			//this takes a jQuery selector (an input or select) and sets it w/ values from an array
