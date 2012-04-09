@@ -124,7 +124,7 @@ $(function(){//shortcut for doc.ready
 		//"1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
 	
 		//LOAD THE ACTUAL SETTINGS HERE VIA AJAX REQUEST...
-		var dummy_settings_data = "1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;1;199;"
+		var dummy_settings_data = "0,1,0,1,0,1,0,1,0,1,0,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
 		var input_names = new Array(), output_names = new Array(), io_definitions = new Array(), io_voltage_thresholds = new Array();
 
 		var temp = dummy_settings_data.split(";");	//split into substrings
@@ -178,11 +178,20 @@ $(function(){//shortcut for doc.ready
 		$(this).val(parseInt(sanitize($(this).val())));		//update the input with sanitized
 	});
 
-
 	$("#save_program").click(function(){	//this function sets up the call to cupcake with the columns you want sent
 		//for instance, you could call this on a button press, or value change
 		//define the columns to submit via cupcake()
 		var column_names = ["select.sensor", "select.sensor_state", "input.wait_time", "select.output", "select.output_state", "input.output_duration"];
+		cupcake(column_names);
+	});
+	
+	$("#save_settings").click(function(){
+		//Data receiving protocol (Arduino --> Browser)
+		//inputs & outputs;input names;output names;
+		//"1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
+		
+		//define the columns to submit via cupcake()
+		var column_names = ["input[type='radio']:checked", "input.input_name", "input.output_name"];
 		cupcake(column_names);
 	});
 
@@ -257,32 +266,33 @@ $(function(){//shortcut for doc.ready
 		}
 	}
 	
-	function cupcake(column_names){			//cupcake acutally formats and sends the data to the Arduino
+	function cupcake(column_names){
 		var post_data = "";					//initialize the POST string
 		var counter = 0;					//use to insert commas after each row
-		var rows = $(".row").length;		//count how many rows, use for delimiters
-	
-		for (var i=0, tot=column_names.length; i < tot; i++) {	//loop through columns passed to cupcake
+
+		for (var i=0, tot=column_names.length; i < tot; i++) {
+			//console.log($(column_names[i]));			//log the current object
+		    //console.log($(column_names[i]).length);		//log the current object length
+		
 			$(column_names[i]).each(function(){	//loop through a single column
 				counter ++;						//increment counter
 				post_data += $(this).val();		//append value of input
-				if(counter == rows){			//append appropriate element or row delimiter
+				if(counter == $(column_names[i]).length){			//append appropriate element or row delimiter
 					post_data += ";";			//row delimiter
 					counter = 0;				//reset counter
 				}else{
 					post_data += ",";			//element delimiter
 				};
-			});//end each sensor loop
+			});//each element loop
 		};//loop through each column
-	
-		//console.log("rows: " + rows);
+
 		console.log(post_data);				//log to firebug
-	
+		alert("fix status return element!");
+		
 		$.post("/testget", post_data, function(data){ 	//the AJAX bit
 		//	console.log("posted " + post_data);
 			$("#status_program").hide().html(data).fadeIn();
 		});
-	
 	};//end cupcake()
 
 	function fast_plus_minus(input,direction){	//this increments and fast increments either + or - based on the direction
@@ -347,6 +357,17 @@ $(function(){//shortcut for doc.ready
 		}
 	}
 	
+	function pad_radio_array(array) {		//this function takes an array and adds the opposite 1/0 after each corresponding element
+											//it will double the size of the array ie: [1,1,0,0] --> [1,0,1,0,0,1,0,1]
+		var new_padded_array = new Array();
+		for (i in array){
+			new_padded_array.splice(new_padded_array.length,0,array[i],1-array[i]);	//add the orig and inverted to the end of the new array (1-array[i] does the actual inversion)
+		}
+		//console.log("pad_radio_array input:  " + array);
+		//console.log("pad_radio_array output: " + new_padded_array);
+		return new_padded_array;
+	};//end pad_radio_array()
+	
 	function set_io_names(select,names){					//this function sets the custom i/o names from the settings arrays
 		var i = 0;											//inititalize counter variable
 		names.unshift("-");									//add the "-" to the beginning for the default choice
@@ -366,7 +387,12 @@ $(function(){//shortcut for doc.ready
 			for (i in array){						//loop through each element in array
 				if (j == i){						//if this element # corresponds w/ this <select>
 					$(this).val(array[i]);			//set the value
-					
+
+					//if the selector is a radio (as on the settings page)
+					if ($(selector).attr("type") == "radio" && array[i] == 1){	//if radio and array value = 1
+						$(this).attr("checked", "checked"); //Check it (the browser unchecks the other)
+					};
+
 					//if the selector is the output duration, we have to do some fancy stuff about the hidden fields
 					if (selector == "input.output_duration") {
 						temp_selected = $(this).parent();							//reduce jquery calls
