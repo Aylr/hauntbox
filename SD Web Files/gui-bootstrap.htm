@@ -45,19 +45,36 @@ div.wait a, div.duration a {
 
 <script>
 $(function(){//shortcut for doc.ready
+	//##################################### Important Variables ##################################### 
 	
-	var increment_on_hold_speed = 50;	//auto ++ing value every n milliseconds
-	var increment_hold_delay = 1000;	//the delay in milliseconds (timeout) before auto ++ing
-	var interval = null;				//var for auto incrementing
-	var timeout = null;					//var for auto incrementing delay
-
-	function stop_auto(){				//this function is called whenever you want to stop auto incrementing
-		clearInterval(interval);
-		clearTimeout(timeout);
-		console.log("stopped");
-	};//end stop_auto
+	var increment_on_hold_speed = 50;		//auto ++ing value every n milliseconds
+	var increment_hold_delay = 1000;		//the delay in milliseconds (timeout) before auto ++ing
+	var interval = null, timeout = null;	//vars for auto incrementing and auto delay
+	
+	//ADC threshold values for inputs/outputs. Maths are done here to spare Arduino cycles
+	var threshold_5V = 103;				//(5V / 5)*1024 = 103
+	var threshold_12V = 246;			//(12V / 5)*1024 = 246
+	var threshold_24V = 492;			//(24V / 5)*1024 = 492
 
 
+	//##################################### Initial Page Load Stuff ##################################### 
+
+	$("#display_container").children().hide();			//load with all "tabs" hidden
+	$("div.program").show();							//...except the program div
+	$(".navbar .nav a").click(function(){
+		set_active_nav($(this));
+		//LOAD PROGRAM FROM ARDUINO VIA POST, THIS CAN ALSO BE DONE ON REFRESH CLICKED
+		
+		var chosen = $(this).attr("class");
+		if (chosen == "settings") {
+			//load settings
+			//SHOULD THERE BE SOME TIME LIMIT HERE IF THE PERSON JUST BOUNCES BACK TO A SCREEN AND EXPECTS THEIR UNSAVED CHANGES TO BE SAVED????
+			//or should a load NOT take place??????
+		}else if (chosen == "program"){
+			//load program
+		}
+	});
+	
 	function load_settings(){
 		//this should load values from the firmware...
 		//including intelligent defaults and populate the form correctly
@@ -74,25 +91,18 @@ $(function(){//shortcut for doc.ready
 		//4 = corruption or read/write problem --> NOT SURE WHAT TO DO
 		
 		//GET REAL DATA FROM THE ARDUINO VIA A GET REQUEST
-		var dummy_load_data = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;1;778"
+		var dummy_program_data = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;1;778"
 		
 		var input_array = new Array(), input_onoff = new Array(), on_delay = new Array(), output_array = new Array(), output_onoff = new Array(), duration = new Array();
 		
-		var incoming_program = dummy_load_data.split(";")		//split into substrings
-		
+		var incoming_program = dummy_program_data.split(";")		//split into substrings
 		var input_array = incoming_program[0].split(",");		//split substrings into arrays of strings "1,2,3,..." --> ["1","2","3",...]
 		var input_onoff = incoming_program[1].split(",");
 		var on_delay = incoming_program[2].split(",");
 		var output_array = incoming_program[3].split(",");
 		var output_onoff = incoming_program[4].split(",");
 		var duration = incoming_program[5].split(",");
-		
-		function array_of_strings_to_ints(dirty_array){					//converts arrays of strings into arrays of integers ie: ["1","2","3",...] --> [1,2,3,...]
-			for (i in dirty_array){								//for each element in the array
-				dirty_array[i] = parseInt(dirty_array[i]);		//convert strings to int "1" --> 1
-			}
-		};
-		
+				
 		array_of_strings_to_ints(input_array);							//run all the arrays through the integerizer
 		array_of_strings_to_ints(input_onoff);							//CONSIDER PUTTING THE SPLIT "," STUFF INTO THE CLEAN() FUNCTION
  		array_of_strings_to_ints(on_delay);
@@ -115,7 +125,7 @@ $(function(){//shortcut for doc.ready
 	
 		//LOAD THE ACTUAL SETTINGS HERE VIA AJAX REQUEST...
 		var dummy_settings_data = "1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;1;199;"
-		var input_names = new Array(), output_names = new Array(), io_definitions = new Array();
+		var input_names = new Array(), output_names = new Array(), io_definitions = new Array(), io_voltage_thresholds = new Array();
 
 		var temp = dummy_settings_data.split(";");	//split into substrings
 	
@@ -126,9 +136,9 @@ $(function(){//shortcut for doc.ready
 		io_definitions = temp[0].split(",");	//split substrings into arrays of strings "1,2,3,..." --> ["1","2","3",...]
 		input_names = temp[1].split(",");
 		output_names = temp[2].split(",");
+		io_voltage_thresholds = temp[3].split(",");
 		
 		array_of_strings_to_ints(io_definitions);
-		
 		
 		/*
 		console.log(io_definitions);
@@ -136,48 +146,11 @@ $(function(){//shortcut for doc.ready
 		console.log(output_names);
 		*/
 		
-		function set_io_names(select,names){					//this function sets the custom i/o names from the settings arrays
-			var i = 0;											//inititalize counter variable
-			names.unshift("-");									//add the "-" to the beginning for the default choice
-			$(select).each(function(){							//loop through each select.sensor
-				$(this).children().each(function(){				//loop through each dropdown option
-					$(this).html(names[i]);						//set the actual html names					
-					i ++;										//increment i
-				});//end each option
-				i = 0;											//reset i for next group of options
-			});//end each input
-		};//end set_select_names()
-		
 		set_io_names("select.sensor",input_names);				//call the set io name functions
 		set_io_names("select.output",output_names);
 	
 		//if definitions, names are blank, populate w/ intellegent defaults
 		//DECIDE WHAT THE DEFAULTS SHOULD BE AND LINK W/ FIRMWARE
-		
-		function set_inputs(selector,array){			//this takes a jQuery selector (an input or select) and sets it w/ values from an array
-			j = 0;										//init a counter var
-			$(selector).each(function(){				//loop through each <select>
-				for (i in array){						//loop through each element in array
-					if (j == i){						//if this element # corresponds w/ this <select>
-						$(this).val(array[i]);			//set the value
-						
-						//if the selector is the output duration, we have to do some fancy stuff about the hidden fields
-						if (selector == "input.output_duration") {
-							temp_selected = $(this).parent();							//reduce jquery calls
-							if (array[i] > 0) {											//if the duration is not zero
-								temp_selected.show();									//show the input field
-								temp_selected.prev().val("for");						//choose the "for" select
-								temp_selected.prev().children().last().html("for");		//and change the "for..." to "for"
-							}else{													//if it is 0
-								temp_selected.hide();									//hide the field
-								temp_selected.prev().val("constantly");					//and choose "constantly" to complete the sentence
-							}
-						};
-					};
-				};
-				j ++;									//increment counter
-			});
-		};//end set_inputs()
 		
 		set_inputs("select.sensor",input_array);			//set each input with the appropriate array
 		set_inputs("select.sensor_state",input_onoff);
@@ -190,22 +163,16 @@ $(function(){//shortcut for doc.ready
 		ram_status(temp[4]);					//update the free ram display
 
 	};//end load_settings()
+	
+	set_voltage_thresholds();			//setup the settings form with proper threshold values
+	load_settings();					//load the data and populate form
 
-	load_settings();
+
+	//##################################### General button stuff ##################################### 
 
 	$("input.wait_time").change(function(){					//whenever the wait field changes
 		$(this).val(parseInt(sanitize($(this).val())));		//update the input with sanitized
 	});
-
-	function sanitize(num) {
-		if(parseInt(num) >= 0){					//sanitize, filter out NaN and negative numbers
-			//console.log("OK: num = " + num + "  	parseInt(num) = " + parseInt(num));
-		    return parseInt(num);				//return the clean value
-		}else{
-			console.log("ERROR: num = " + num + "  	parseInt(num) = " + parseInt(num) + "   ==> 0");
-			return "0";							//if the user entered garbage, set to "0"
-		};
-	};//end sanitize()
 
 
 	$("#save_program").click(function(){	//this function sets up the call to cupcake with the columns you want sent
@@ -215,6 +182,77 @@ $(function(){//shortcut for doc.ready
 		cupcake(column_names);
 	});
 
+	$(".wait .up").mousedown(function(){					//call the "+" handler
+		fast_plus_minus($(this).parent().next(),"+");
+	});
+	$(".wait .down").mousedown(function(){					//call the "-" handler
+		fast_plus_minus($(this).parent().next(),"-");
+	});
+	$(".wait .up,.wait .down,.duration .up,.duration .down").mouseup(function(){			//stop when the mouse click stops
+		stop_auto();										//stop all value auto increments
+	});
+	$(".wait .up,.wait .down,.duration .up,.duration .down").mouseleave(function(){		//stop when the mouse leaves the button (in case you held down then left)
+		stop_auto();										//stop all value auto increments
+	});
+
+	$("input.output_duration").change(function(){					//on manual keybaord entry
+		var newval = 1;												//default new value
+		var current = sanitize($(this).val());						//get the sanitized value
+		if(current != 0){											//if sanitized not 0, then let it pass, otherwise use the default of 1
+			newval = current;
+		}
+		$(this).val(newval);										//update field with either 1 or clean value
+		console.log("changed, duration = " + newval);
+	});
+
+	$("select.output_duration").change(function(){					//when dropdown changes...
+		temp = $(this).val();										//get current value
+		var new_duration;											//initialize new duration
+		if(temp == "constantly"){									//if "constantly"
+			$(this).next(".duration_container").fadeOut(250);		//fade out buttons & field
+			$(this).children('option[value="for"]').html("for...")	//update grammar
+			new_duration = 0;										//set duration = 0
+		}else if(temp == "for"){									//if "for..".
+			$(this).next(".duration_container").fadeIn(250);		//show buttons & field
+			$(this).children('option[value="for"]').html("for");	//update grammar
+			new_duration = "1";										//set duration = 1
+		}
+		$(this).next().children('input[class="output_duration"]').val(new_duration);	//set the field to the new value	
+		console.log("output changed, value = " + $("#output_duration3").val());
+	});//output_duration.change()
+
+	$(".duration .up").mousedown(function(){				//call the "+" handler
+		fast_plus_minus($(this).parent().next(),"+");
+	});
+	$(".duration .down").mousedown(function(){				//call the "-" handler
+		fast_plus_minus($(this).parent().next(),"-");
+	});
+
+
+	//Update the form with data
+	// IE from the Arduino via AJAX
+	/*
+	$("#form #first").children().each(function(){
+		data = "5";						//this is just a test
+		if($(this).val() == data) {
+			$(this).prop("selected","selected");
+		};
+	});
+	*/
+	
+
+//##################################### Utility Functions ##################################### 
+	
+	function set_active_nav(selector){	//this function acts like a tab manager
+										//setting the clicked one to active, showing & hiding the appropriate content
+		if (selector.parent().attr("class") != "active") {	//if the clicked is not already active
+			to_show = "." + selector.attr("class");			//build a selector for the content to show ie "help" --> ".help"
+			$("#display_container").children().hide();		//hide all the other divs
+			$(to_show).show();								//show the right one
+			$(selector).parent().attr("class","active").siblings().attr("class","");	//change the active highlight in the navbar
+		}
+	}
+	
 	function cupcake(column_names){			//cupcake acutally formats and sends the data to the Arduino
 		var post_data = "";					//initialize the POST string
 		var counter = 0;					//use to insert commas after each row
@@ -242,7 +280,6 @@ $(function(){//shortcut for doc.ready
 		});
 	
 	};//end cupcake()
-
 
 	function fast_plus_minus(input,direction){	//this increments and fast increments either + or - based on the direction
 		//it is called by the delay field and the duration field
@@ -295,93 +332,64 @@ $(function(){//shortcut for doc.ready
 		};
 		return newval;
 	};//end input_limits
-
-	$(".wait .up").mousedown(function(){					//call the "+" handler
-		fast_plus_minus($(this).parent().next(),"+");
-	});
-	$(".wait .down").mousedown(function(){					//call the "-" handler
-		fast_plus_minus($(this).parent().next(),"-");
-	});
-	$(".wait .up,.wait .down").mouseup(function(){			//stop when the mouse click stops
-		stop_auto();										//stop all value auto increments
-	});
-	$(".wait .up,.wait .down").mouseleave(function(){		//stop when the mouse leaves the button (in case you held down then left)
-		stop_auto();										//stop all value auto increments
-	});
-
-
-	$("input.output_duration").change(function(){					//on manual keybaord entry
-		var newval = 1;												//default new value
-		var current = sanitize($(this).val());						//get the sanitized value
-		if(current != 0){											//if sanitized not 0, then let it pass, otherwise use the default of 1
-			newval = current;
-		}
-		$(this).val(newval);										//update field with either 1 or clean value
-		console.log("changed, duration = " + newval);
-	});
-
-	$("select.output_duration").change(function(){					//when dropdown changes...
-		temp = $(this).val();										//get current value
-		var new_duration;											//initialize new duration
-		if(temp == "constantly"){									//if "constantly"
-			$(this).next(".duration_container").fadeOut(250);		//fade out buttons & field
-			$(this).children('option[value="for"]').html("for...")	//update grammar
-			new_duration = 0;										//set duration = 0
-		}else if(temp == "for"){									//if "for..".
-			$(this).next(".duration_container").fadeIn(250);		//show buttons & field
-			$(this).children('option[value="for"]').html("for");	//update grammar
-			new_duration = "1";										//set duration = 1
-		}
-		$(this).next().children('input[class="output_duration"]').val(new_duration);	//set the field to the new value	
-		console.log("output changed, value = " + $("#output_duration3").val());
-	});//output_duration.change()
-
-	$(".duration .up").mousedown(function(){				//call the "+" handler
-		fast_plus_minus($(this).parent().next(),"+");
-	});
-	$(".duration .down").mousedown(function(){				//call the "-" handler
-		fast_plus_minus($(this).parent().next(),"-");
-	});
-	
-	$(".duration .up,.duration .down").mouseup(function(){	//stop when the mouse click stops
-		stop_auto();										//stop all value auto increments
-	});
-	$(".duration .up,.duration .down").mouseleave(function(){				//stop when the mouse leaves the button (in case you held down then left)
-		stop_auto();										//stop all value auto increments
-	});
-
-
-	//Update the form with data
-	// IE from the Arduino via AJAX
-	/*
-	$("#form #first").children().each(function(){
-		data = "5";						//this is just a test
-		if($(this).val() == data) {
-			$(this).prop("selected","selected");
-		};
-	});
-	*/
-	
-	$("#display_container").children().hide();			//load with all "tabs" hidden
-	$("div.program").show();								//...except the program div
-	$(".navbar .nav a").click(function(){
-		set_active_nav($(this));
-		//LOAD PROGRAM FROM ARDUINO VIA POST, THIS CAN ALSO BE DONE ON REFRESH CLICKED
-	});
-	
-	function set_active_nav(selector){	//this function acts like a tab manager
-										//setting the clicked one to active, showing & hiding the appropriate content
-		if (selector.parent().attr("class") != "active") {	//if the clicked is not already active
-			to_show = "." + selector.attr("class");			//build a selector for the content to show ie "help" --> ".help"
-			$("#display_container").children().hide();		//hide all the other divs
-			$(to_show).show();								//show the right one
-			$(selector).parent().attr("class","active").siblings().attr("class","");	//change the active highlight in the navbar
-		}
-	}
 	
 	function ram_status(ram){		//simply updates the display with the passed free ram
 		$(".navbar p.pull-right").fadeOut().html("Free RAM: " + ram + "K").fadeIn();
 	}
+	
+	function array_of_strings_to_ints(dirty_array){			//converts arrays of strings into arrays of integers ie: ["1","2","3",...] --> [1,2,3,...]
+		for (i in dirty_array){								//for each element in the array
+			dirty_array[i] = parseInt(dirty_array[i]);		//convert strings to int "1" --> 1
+		}
+	}
+	
+	function set_io_names(select,names){					//this function sets the custom i/o names from the settings arrays
+		var i = 0;											//inititalize counter variable
+		names.unshift("-");									//add the "-" to the beginning for the default choice
+		$(select).each(function(){							//loop through each select.sensor
+			$(this).children().each(function(){				//loop through each dropdown option
+				$(this).html(names[i]);						//set the actual html names					
+				i ++;										//increment i
+			});//end each option
+			i = 0;											//reset i for next group of options
+		});//end each input
+	};//end set_select_names()
+	
+	function set_inputs(selector,array){			//this takes a jQuery selector (an input or select) and sets it w/ values from an array
+		j = 0;										//init a counter var
+		$(selector).each(function(){				//loop through each <select>
+			for (i in array){						//loop through each element in array
+				if (j == i){						//if this element # corresponds w/ this <select>
+					$(this).val(array[i]);			//set the value
+					
+					//if the selector is the output duration, we have to do some fancy stuff about the hidden fields
+					if (selector == "input.output_duration") {
+						temp_selected = $(this).parent();							//reduce jquery calls
+						if (array[i] > 0) {											//if the duration is not zero
+							temp_selected.show();									//show the input field
+							temp_selected.prev().val("for");						//choose the "for" select
+							temp_selected.prev().children().last().html("for");		//and change the "for..." to "for"
+						}else{													//if it is 0
+							temp_selected.hide();									//hide the field
+							temp_selected.prev().val("constantly");					//and choose "constantly" to complete the sentence
+						}
+					};
+				};
+			};
+			j ++;									//increment counter
+		});
+	};//end set_inputs()
+		
+	function set_voltage_thresholds(){
+		//this funciton sets the values of the thresholds into the html of the form for submission
+		$("select.threshold").each(function(){	//select each select.threshold
+			//Set the html if you want
+			//$(this).children().first().html("5V").val(threshold_5V).next().html("12V").val(threshold_12V).next().html("24V").val(threshold_24V);
+			//Or just set the values base on tweakable variables
+			$(this).children().first().val(threshold_5V).next().val(threshold_12V).next().val(threshold_24V);
+		});
+	}//end set_voltage_threshold()
+		
 	function status_message(status_code) {
 		//switch 0,1,2,3,4,5
 		//plug in status codes here and trigger an event if needed
@@ -448,6 +456,22 @@ $(function(){//shortcut for doc.ready
 
 		console.log("status_code: " + status_code);
 	}//end status_message()
+	
+	function stop_auto(){				//this function is called whenever you want to stop auto incrementing
+		clearInterval(interval);
+		clearTimeout(timeout);
+		console.log("stopped");
+	};//end stop_auto
+	
+	function sanitize(num) {
+		if(parseInt(num) >= 0){					//sanitize, filter out NaN and negative numbers
+			//console.log("OK: num = " + num + "  	parseInt(num) = " + parseInt(num));
+		    return parseInt(num);				//return the clean value
+		}else{
+			console.log("ERROR: num = " + num + "  	parseInt(num) = " + parseInt(num) + "   ==> 0");
+			return "0";							//if the user entered garbage, set to "0"
+		};
+	};//end sanitize()
 	
 });//doc.ready
 </script>
@@ -822,45 +846,45 @@ $(function(){//shortcut for doc.ready
 					<h3>Inputs</h3>
 					<div class="inputs">
 						Input A
-							<select class="input_threshold">
-								<option value="103">5V</option>
-								<option value="246">12V</option>
-								<option value="492">24V</option>
+							<select class="threshold">
+								<option>5V</option>
+								<option>12V</option>
+								<option>24V</option>
 							</select>:
 							<input type="text" class="input_name" name="input1" id="input1" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow1" value="1" checked>High</input><input type="radio" class="highlow" name="highlow1" value="0">Low</input>.<br />
 						Input B
-							<select class="input_threshold">
-								<option value="103">5V</option>
-								<option value="246">12V</option>
-								<option value="492">24V</option>
+							<select class="threshold">
+								<option>5V</option>
+								<option>12V</option>
+								<option>24V</option>
 							</select>:
 							<input type="text" class="input_name" name="input2" id="input2" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow2" value="1" checked>High</input><input type="radio" class="highlow" name="highlow2" value="0">Low</input>.<br />
 						Input C
-							<select class="input_threshold">
-								<option value="103">5V</option>
-								<option value="246">12V</option>
-								<option value="492">24V</option>
+							<select class="threshold">
+								<option>5V</option>
+								<option>12V</option>
+								<option>24V</option>
 							</select>:
 							<input type="text" class="input_name" name="input3" id="input3" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow3" value="1" checked>High</input><input type="radio" class="highlow" name="highlow3" value="0">Low</input>.<br />
 						Input D
-							<select class="input_threshold">
-								<option value="103">5V</option>
-								<option value="246">12V</option>
-								<option value="492">24V</option>
+							<select class="threshold">
+								<option>5V</option>
+								<option>12V</option>
+								<option>24V</option>
 							</select>:
 							<input type="text" class="input_name" name="input4" id="input4" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow4" value="1" checked>High</input><input type="radio" class="highlow" name="highlow4" value="0">Low</input>.<br />
 						Input E
-							<select class="input_threshold">
-								<option value="103">5V</option>
-								<option value="246">12V</option>
-								<option value="492">24V</option>
+							<select class="threshold">
+								<option>5V</option>
+								<option>12V</option>
+								<option>24V</option>
 							</select>:
 							<input type="text" class="input_name" name="input5" id="input5" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow5" value="1" checked>High</input><input type="radio" class="highlow" name="highlow5" value="0">Low</input>.<br />
 						Input F
-							<select class="input_threshold">
-								<option value="103">5V</option>
-								<option value="246">12V</option>
-								<option value="492">24V</option>
+							<select class="threshold">
+								<option>5V</option>
+								<option>12V</option>
+								<option>24V</option>
 							</select>:
 							<input type="text" class="input_name" name="input6" id="input6" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow6" value="1" checked>High</input><input type="radio" class="highlow" name="highlow6" value="0">Low</input>.
 					</div>
@@ -868,45 +892,45 @@ $(function(){//shortcut for doc.ready
 					<h3>Outputs</h3>
 					<div class="outputs">
 						Output 1
-							<select class="output_threshold">
-								<option value="103">5V</option>
-								<option value="246">12V</option>
-								<option value="492">24V</option>
+							<select class="threshold">
+								<option>5V</option>
+								<option>12V</option>
+								<option>24V</option>
 							</select>:
 							<input type="text" class="output_name" name="output1" id="output1" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow1" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow1" value="0">Low</input>.<br />
 						Output 2
-							<select class="output_threshold">
-								<option value="103">5V</option>
-								<option value="246">12V</option>
-								<option value="492">24V</option>
+							<select class="threshold">
+								<option>5V</option>
+								<option>12V</option>
+								<option>24V</option>
 							</select>:
 							<input type="text" class="output_name" name="output2" id="output2" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow2" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow2" value="0">Low</input>.<br />
 						Output 3
-							<select class="output_threshold">
-								<option value="103">5V</option>
-								<option value="246">12V</option>
-								<option value="492">24V</option>
+							<select class="threshold">
+								<option>5V</option>
+								<option>12V</option>
+								<option>24V</option>
 							</select>:
 							<input type="text" class="output_name" name="output3" id="output3" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow3" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow3" value="0">Low</input>.<br />
 						Output 4
-							<select class="output_threshold">
-								<option value="103">5V</option>
-								<option value="246">12V</option>
-								<option value="492">24V</option>
+							<select class="threshold">
+								<option>5V</option>
+								<option>12V</option>
+								<option>24V</option>
 							</select>:
 							<input type="text" class="output_name" name="output4" id="output4" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow4" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow4" value="0">Low</input>.<br />
 						Output 5
-							<select class="output_threshold">
-								<option value="103">5V</option>
-								<option value="246">12V</option>
-								<option value="492">24V</option>
+							<select class="threshold">
+								<option>5V</option>
+								<option>12V</option>
+								<option>24V</option>
 							</select>:
 							<input type="text" class="output_name" name="output5" id="output5" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow5" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow5" value="0">Low</input>.<br />
 						Output 6
-							<select class="output_threshold">
-								<option value="103">5V</option>
-								<option value="246">12V</option>
-								<option value="492">24V</option>
+							<select class="threshold">
+								<option>5V</option>
+								<option>12V</option>
+								<option>24V</option>
 							</select>:
 							<input type="text" class="output_name" name="output6" id="output6" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow6" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow6" value="0">Low</input>.
 
