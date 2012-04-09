@@ -1,9 +1,10 @@
 # Read Me
 
 ## To do list
+- loading behavior.
+- finish merging old settings.htm js into new unified file
 - Please see Issues for details
-- bridge gap between jquery and arduino
-- figure out git
+
 
 
 ## Requirements
