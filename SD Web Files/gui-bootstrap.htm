@@ -50,6 +50,9 @@ $(function(){//shortcut for doc.ready
 	var increment_on_hold_speed = 50;		//auto ++ing value every n milliseconds
 	var increment_hold_delay = 1000;		//the delay in milliseconds (timeout) before auto ++ing
 	var interval = null, timeout = null;	//vars for auto incrementing and auto delay
+	var unsaved_changes = false;			//keep track if user has unsaved changes
+	var current_page = "program";			//keeps track of current page
+	var next_page = null;					//keeps track of next page
 	
 	//ADC threshold values for inputs/outputs. Maths are done here to spare Arduino cycles
 	var threshold_5V = 103;				//(5V / 5)*1024 = 103
@@ -58,23 +61,10 @@ $(function(){//shortcut for doc.ready
 
 
 	//##################################### Initial Page Load Stuff ##################################### 
-
+	$("#unsaved_modal").modal('hide');
 	$("#display_container").children().hide();			//load with all "tabs" hidden
 	$("div.program").show();							//...except the program div
-	$(".navbar .nav a").click(function(){
-		set_active_nav($(this));
-		//LOAD PROGRAM FROM ARDUINO VIA POST, THIS CAN ALSO BE DONE ON REFRESH CLICKED
-		
-		var chosen = $(this).attr("class");
-		if (chosen == "settings") {
-			//load settings
-			//SHOULD THERE BE SOME TIME LIMIT HERE IF THE PERSON JUST BOUNCES BACK TO A SCREEN AND EXPECTS THEIR UNSAVED CHANGES TO BE SAVED????
-			//or should a load NOT take place??????
-		}else if (chosen == "program"){
-			//load program
-		}
-	});
-	
+
 	function load_settings(){
 		//this should load values from the firmware...
 		//including intelligent defaults and populate the form correctly
@@ -173,26 +163,53 @@ $(function(){//shortcut for doc.ready
 
 
 	//##################################### General button stuff ##################################### 
+	$(".navbar .nav a").click(function(){
+		next_page = $(this);				//where are you navigating to?
+		
+		if (unsaved_changes) {				//check for change
+			unsaved_modal();					//yes: present dialog
 
+			//save: save settings, present success then navigate
+		}else{									//no: proceed with navigation change
+			var chosen = $(this).attr("class");
+			if (chosen == "settings") {
+			//load settings
+			}else if (chosen == "program"){
+			//load program
+			}
+			set_active_nav(next_page);
+		}
+	});
+	
+	$(".modal .save").click(function(){		//defines what happens when the modal "Save Changes" is clicked
+		save(current_page);					//try to save		
+		$(".modal").modal("hide");			//hide the modal
+		set_active_nav(next_page);			//go on with navigation
+	});
+	
+	$(".modal .discard").click(function(){		//defines what happens when the modal "Discard Changes" is clicked
+		unsaved_changes = false;		//reset unsaved_changes
+		$(".modal").modal('hide');		//hide the modal
+		set_active_nav(next_page);		//go to the requested page
+	});
+
+	$("input, select").change(function(){
+		if (unsaved_changes == false){
+			unsaved_changes = true;
+		}
+		console.log(unsaved_changes)
+	});
+	
 	$("input.wait_time").change(function(){					//whenever the wait field changes
 		$(this).val(parseInt(sanitize($(this).val())));		//update the input with sanitized
 	});
 
-	$("#save_program").click(function(){	//this function sets up the call to cupcake with the columns you want sent
-		//for instance, you could call this on a button press, or value change
-		//define the columns to submit via cupcake()
-		var column_names = ["select.sensor", "select.sensor_state", "input.wait_time", "select.output", "select.output_state", "input.output_duration"];
-		cupcake(column_names);
+	$(".save_program").click(function(){
+		save("program");
 	});
 	
-	$("#save_settings").click(function(){
-		//Data receiving protocol (Arduino --> Browser)
-		//inputs & outputs;input names;output names;
-		//"1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
-		
-		//define the columns to submit via cupcake()
-		var column_names = ["input[type='radio']:checked", "input.input_name", "input.output_name"];
-		cupcake(column_names);
+	$(".save_settings").click(function(){
+		save("settings");
 	});
 
 	$(".wait .up").mousedown(function(){					//call the "+" handler
@@ -240,33 +257,44 @@ $(function(){//shortcut for doc.ready
 	$(".duration .down").mousedown(function(){				//call the "-" handler
 		fast_plus_minus($(this).parent().next(),"-");
 	});
-
-
-	//Update the form with data
-	// IE from the Arduino via AJAX
-	/*
-	$("#form #first").children().each(function(){
-		data = "5";						//this is just a test
-		if($(this).val() == data) {
-			$(this).prop("selected","selected");
-		};
-	});
-	*/
 	
 
-//##################################### Utility Functions ##################################### 
+//##################################### Utility Functions #####################################
+	
+	function unsaved_modal(){
+		if (unsaved_changes) {
+			$('#unsaved_modal').modal({
+				keyboard: true,
+				show: true
+			});
+		}
+	}//end unsaved_modal()
 	
 	function set_active_nav(selector){	//this function acts like a tab manager
-										//setting the clicked one to active, showing & hiding the appropriate content
-		if (selector.parent().attr("class") != "active") {	//if the clicked is not already active
-			to_show = "." + selector.attr("class");			//build a selector for the content to show ie "help" --> ".help"
-			$("#display_container").children().hide();		//hide all the other divs
-			$(to_show).show();								//show the right one
+	//setting the clicked one to active, showing & hiding the appropriate content
+	
+		if (selector.parent().attr("class") != "active") {		//if the clicked is not already active
+			$("#display_container").children().hide();									//hide all the other divs
+			$("." + selector.attr("class")).show();										//show the right one
 			$(selector).parent().attr("class","active").siblings().attr("class","");	//change the active highlight in the navbar
+			current_page = selector.attr("class");										//save the current page into memory
 		}
+		next_page = null;			//reset the next_page
 	}
 	
-	function cupcake(column_names){
+	function save(type) {	//this function sets up the call to cupcake with the columns you want sent
+		var colum_names = null;
+		if (type == "program"){
+			column_names = ["div.program select.sensor", "div.program select.sensor_state", "div.program input.wait_time", "div.program select.output", "div.program select.output_state", "div.program input.output_duration"];
+		}else if (type == "settings"){
+			column_names = ["div.settings input[type='radio']:checked", "div.settings input.input_name", "div.settings input.output_name"];
+		}
+		cupcake(column_names);		//send the data!
+	}
+	
+	
+	
+	function cupcake(column_names){			//preps the post string and sends it like a nice box of cupcakes
 		var post_data = "";					//initialize the POST string
 		var counter = 0;					//use to insert commas after each row
 
@@ -287,16 +315,23 @@ $(function(){//shortcut for doc.ready
 		};//loop through each column
 
 		console.log(post_data);				//log to firebug
-		alert("fix status return element!");
+		alert("Simulating the save....");
+		
+		//ERROR HANDLING ********************************** PUT IN HERE ****************
+			//if failed
+			//unsaved_changes = true;
+			//alert --> take action
+			//if success
+		unsaved_changes = false;	//TEMPORARY HACK TO MIMIC SUCCESS OF POST
 		
 		$.post("/testget", post_data, function(data){ 	//the AJAX bit
-		//	console.log("posted " + post_data);
 			$("#status_program").hide().html(data).fadeIn();
 		});
 	};//end cupcake()
 
 	function fast_plus_minus(input,direction){	//this increments and fast increments either + or - based on the direction
 		//it is called by the delay field and the duration field
+		unsaved_changes = true;								//alerts the prog that something changed
 		stop_auto();										//stop all value auto increments
 		var current = sanitize(input.val());				//get sanitized current wait
 		if(direction == "+"){								//if "+" was passed to the function
@@ -523,7 +558,7 @@ $(function(){//shortcut for doc.ready
 					<ul class="nav">
 						<li class="active"><a href="#" class="program"><i style="font-size:18px;" class="icon-home"></i> Program</a></li>
 						<li><a href="#" class="settings"><i style="font-size:18px;" class="icon-cogs"></i> Settings</a></li>
-						<li><a href="#"><i style="font-size:18px;" class="icon-download-alt"></i> Export</a></li>
+						<li><a href="#" class="export"><i style="font-size:18px;" class="icon-download-alt"></i> Export</a></li>
 						<li><a href="#" class="help"><i style="font-size:18px;" class="icon-question-sign"></i> Help</a></li>
 					</ul>
 					<p class="nav pull-right">Free RAM: ?K</p>
@@ -861,7 +896,7 @@ $(function(){//shortcut for doc.ready
 				<span class="row_status"></span>
 			</div>
 			<!--end row3 -->
-			<button id="save_program" name="save" type="button"><i class="icon-check"></i> Save Program</button>
+			<button class="save_program" name="save" type="button"><i class="icon-check"></i> Save Program</button>
 			<button id="refresh_program" name="refresh" type="button"><i class="icon-refresh"></i> Refresh</button>
 			
 			<div id="status_program"></div>
@@ -870,106 +905,106 @@ $(function(){//shortcut for doc.ready
 	</div><!-- //end program -->
 	
 	<div class="settings">
-					<h2>Settings</h2>
-					<p>Feel free to rename your inputs and outputs here. You can also set whether
-						digital HIGH or LOW will trigger the input.</p>
+		<h2>Settings</h2>
+		<p>Feel free to rename your inputs and outputs here. You can also set whether
+			digital HIGH or LOW will trigger the input.</p>
 
-					<h3>Inputs</h3>
-					<div class="inputs">
-						Input A
-							<select class="threshold">
-								<option>5V</option>
-								<option>12V</option>
-								<option>24V</option>
-							</select>:
-							<input type="text" class="input_name" name="input1" id="input1" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow1" value="1" checked>High</input><input type="radio" class="highlow" name="highlow1" value="0">Low</input>.<br />
-						Input B
-							<select class="threshold">
-								<option>5V</option>
-								<option>12V</option>
-								<option>24V</option>
-							</select>:
-							<input type="text" class="input_name" name="input2" id="input2" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow2" value="1" checked>High</input><input type="radio" class="highlow" name="highlow2" value="0">Low</input>.<br />
-						Input C
-							<select class="threshold">
-								<option>5V</option>
-								<option>12V</option>
-								<option>24V</option>
-							</select>:
-							<input type="text" class="input_name" name="input3" id="input3" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow3" value="1" checked>High</input><input type="radio" class="highlow" name="highlow3" value="0">Low</input>.<br />
-						Input D
-							<select class="threshold">
-								<option>5V</option>
-								<option>12V</option>
-								<option>24V</option>
-							</select>:
-							<input type="text" class="input_name" name="input4" id="input4" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow4" value="1" checked>High</input><input type="radio" class="highlow" name="highlow4" value="0">Low</input>.<br />
-						Input E
-							<select class="threshold">
-								<option>5V</option>
-								<option>12V</option>
-								<option>24V</option>
-							</select>:
-							<input type="text" class="input_name" name="input5" id="input5" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow5" value="1" checked>High</input><input type="radio" class="highlow" name="highlow5" value="0">Low</input>.<br />
-						Input F
-							<select class="threshold">
-								<option>5V</option>
-								<option>12V</option>
-								<option>24V</option>
-							</select>:
-							<input type="text" class="input_name" name="input6" id="input6" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow6" value="1" checked>High</input><input type="radio" class="highlow" name="highlow6" value="0">Low</input>.
-					</div>
-					<br />
-					<h3>Outputs</h3>
-					<div class="outputs">
-						Output 1
-							<select class="threshold">
-								<option>5V</option>
-								<option>12V</option>
-								<option>24V</option>
-							</select>:
-							<input type="text" class="output_name" name="output1" id="output1" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow1" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow1" value="0">Low</input>.<br />
-						Output 2
-							<select class="threshold">
-								<option>5V</option>
-								<option>12V</option>
-								<option>24V</option>
-							</select>:
-							<input type="text" class="output_name" name="output2" id="output2" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow2" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow2" value="0">Low</input>.<br />
-						Output 3
-							<select class="threshold">
-								<option>5V</option>
-								<option>12V</option>
-								<option>24V</option>
-							</select>:
-							<input type="text" class="output_name" name="output3" id="output3" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow3" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow3" value="0">Low</input>.<br />
-						Output 4
-							<select class="threshold">
-								<option>5V</option>
-								<option>12V</option>
-								<option>24V</option>
-							</select>:
-							<input type="text" class="output_name" name="output4" id="output4" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow4" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow4" value="0">Low</input>.<br />
-						Output 5
-							<select class="threshold">
-								<option>5V</option>
-								<option>12V</option>
-								<option>24V</option>
-							</select>:
-							<input type="text" class="output_name" name="output5" id="output5" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow5" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow5" value="0">Low</input>.<br />
-						Output 6
-							<select class="threshold">
-								<option>5V</option>
-								<option>12V</option>
-								<option>24V</option>
-							</select>:
-							<input type="text" class="output_name" name="output6" id="output6" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow6" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow6" value="0">Low</input>.
+		<h3>Inputs</h3>
+		<div class="inputs">
+			Input A
+				<select class="threshold">
+					<option>5V</option>
+					<option>12V</option>
+					<option>24V</option>
+				</select>:
+				<input type="text" class="input_name" name="input1" id="input1" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow1" value="1" checked>High</input><input type="radio" class="highlow" name="highlow1" value="0">Low</input>.<br />
+			Input B
+				<select class="threshold">
+					<option>5V</option>
+					<option>12V</option>
+					<option>24V</option>
+				</select>:
+				<input type="text" class="input_name" name="input2" id="input2" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow2" value="1" checked>High</input><input type="radio" class="highlow" name="highlow2" value="0">Low</input>.<br />
+			Input C
+				<select class="threshold">
+					<option>5V</option>
+					<option>12V</option>
+					<option>24V</option>
+				</select>:
+				<input type="text" class="input_name" name="input3" id="input3" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow3" value="1" checked>High</input><input type="radio" class="highlow" name="highlow3" value="0">Low</input>.<br />
+			Input D
+				<select class="threshold">
+					<option>5V</option>
+					<option>12V</option>
+					<option>24V</option>
+				</select>:
+				<input type="text" class="input_name" name="input4" id="input4" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow4" value="1" checked>High</input><input type="radio" class="highlow" name="highlow4" value="0">Low</input>.<br />
+			Input E
+				<select class="threshold">
+					<option>5V</option>
+					<option>12V</option>
+					<option>24V</option>
+				</select>:
+				<input type="text" class="input_name" name="input5" id="input5" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow5" value="1" checked>High</input><input type="radio" class="highlow" name="highlow5" value="0">Low</input>.<br />
+			Input F
+				<select class="threshold">
+					<option>5V</option>
+					<option>12V</option>
+					<option>24V</option>
+				</select>:
+				<input type="text" class="input_name" name="input6" id="input6" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow6" value="1" checked>High</input><input type="radio" class="highlow" name="highlow6" value="0">Low</input>.
+		</div>
+		<br />
+		<h3>Outputs</h3>
+		<div class="outputs">
+			Output 1
+				<select class="threshold">
+					<option>5V</option>
+					<option>12V</option>
+					<option>24V</option>
+				</select>:
+				<input type="text" class="output_name" name="output1" id="output1" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow1" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow1" value="0">Low</input>.<br />
+			Output 2
+				<select class="threshold">
+					<option>5V</option>
+					<option>12V</option>
+					<option>24V</option>
+				</select>:
+				<input type="text" class="output_name" name="output2" id="output2" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow2" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow2" value="0">Low</input>.<br />
+			Output 3
+				<select class="threshold">
+					<option>5V</option>
+					<option>12V</option>
+					<option>24V</option>
+				</select>:
+				<input type="text" class="output_name" name="output3" id="output3" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow3" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow3" value="0">Low</input>.<br />
+			Output 4
+				<select class="threshold">
+					<option>5V</option>
+					<option>12V</option>
+					<option>24V</option>
+				</select>:
+				<input type="text" class="output_name" name="output4" id="output4" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow4" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow4" value="0">Low</input>.<br />
+			Output 5
+				<select class="threshold">
+					<option>5V</option>
+					<option>12V</option>
+					<option>24V</option>
+				</select>:
+				<input type="text" class="output_name" name="output5" id="output5" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow5" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow5" value="0">Low</input>.<br />
+			Output 6
+				<select class="threshold">
+					<option>5V</option>
+					<option>12V</option>
+					<option>24V</option>
+				</select>:
+				<input type="text" class="output_name" name="output6" id="output6" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow6" value="1" checked>High</input><input type="radio" class="highlow" name="output_highlow6" value="0">Low</input>.
 
-					</div>
-					<button id="save_settings" name="save" type="button"><i class="icon-check"></i> Save Settings</button>
-					<button id="refresh_settings" name="refresh" type="button"><i class="icon-refresh"></i> Refresh</button>
-					<div id="status_settigns"></div>
-				</div>
+		</div>
+		<button class="save_settings" name="save" type="button"><i class="icon-check"></i> Save Settings</button>
+		<button id="refresh_settings" name="refresh" type="button"><i class="icon-refresh"></i> Refresh</button>
+		<div id="status_settings"></div>
+	</div>
 
 	<div class="help">
 		<h2>Help</h2>
@@ -983,8 +1018,26 @@ $(function(){//shortcut for doc.ready
 		<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
 		</p>
 	</div>
-</div><!--//end display_container -->
+	
+	</div><!--//end display_container -->
+	
+	<div class="modal hide" id="unsaved_modal">
+		<div class="modal-header">
+			<a class="close" data-dismiss="modal">&times</a>
+			<h3>Unsaved Changes</h3>
+		</div>
+		<div class="modal-body">
+			<p>Would you like to save your changes?</p>
+		</div>
+		<div class="modal-footer">
+			<a href="#" class="discard btn">Discard changes</a>
+			<a href="#" class="save btn btn-primary">Yes! Save changes</a>
+		</div>
+	</div>
+	
 </div><!--//end .container -->
+
+	
 	<script src="hbscript.js"></script>
 	<script src="bootstrap_full/bootstrap_full.js" type="text/javascript" charset="utf-8"></script>
 
