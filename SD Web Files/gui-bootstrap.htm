@@ -111,16 +111,16 @@ $(function(){//shortcut for doc.ready
 		
 		//Settings receiving protocol (Arduino --> Browser)
 		//input defs;output defs;input names;output names;status code;Free RAM;
-		//"1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
+		//"1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;thresholds...;0;199;"
 	
 		//LOAD THE ACTUAL SETTINGS HERE VIA AJAX REQUEST...
-		var dummy_settings_data = "0,1,0,0,1,0,0,0,1,0,0,0;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;0;199;"
+		var dummy_settings_data = "0,1,0,0,1,0,0,0,1,0,0,0;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;103,246,492,103,246,492,103,246,492,103,246,492;0;199;"
 		var input_names = new Array(), output_names = new Array(), io_definitions = new Array(), io_voltage_thresholds = new Array();
 
 		var temp = dummy_settings_data.split(";");	//split into substrings
 	
-		if (temp[5].length == 0) {		//test for length == 0 then delete element
-			temp.splice(5,1);			//this trims off the junk after the last ";"
+		if (temp[6].length == 0) {		//test for length == 0 then delete element
+			temp.splice(6,1);			//this trims off the junk after the last ";"
 		};
 	
 		io_definitions = temp[0].split(",");	//split substrings into arrays of strings "1,2,3,..." --> ["1","2","3",...]
@@ -129,11 +129,14 @@ $(function(){//shortcut for doc.ready
 		io_voltage_thresholds = temp[3].split(",");
 		
 		array_of_strings_to_ints(io_definitions);
+		array_of_strings_to_ints(io_voltage_thresholds);
+		
 		
 		/*
 		console.log(io_definitions);
 		console.log(input_names);
 		console.log(output_names);
+		console.log(io_voltage_thresholds);
 		*/
 		
 		set_io_names("select.sensor",input_names);				//call the set io name functions
@@ -152,9 +155,10 @@ $(function(){//shortcut for doc.ready
 		set_inputs("input.highlow",pad_radio_array(io_definitions));	//be sure to pad the radio array with it's paired inversions before sending to the set_inputs function
 		set_inputs(".input_name",input_names);
 		set_inputs(".output_name",output_names);
+		set_inputs(".threshold",io_voltage_thresholds);
 		
-		status_message(parseInt(temp[3]));		//update the status alert
-		ram_status(temp[4]);					//update the free ram display
+		status_message(parseInt(temp[4]));		//update the status alert
+		ram_status(temp[5]);					//update the free ram display
 
 	};//end load_settings()
 	
@@ -191,6 +195,10 @@ $(function(){//shortcut for doc.ready
 		unsaved_changes = false;		//reset unsaved_changes
 		$(".modal").modal('hide');		//hide the modal
 		set_active_nav(next_page);		//go to the requested page
+	});
+	
+	$("#refresh_settings, #refresh_program").click(function(){
+		load_settings();
 	});
 
 	$("input, select").change(function(){
@@ -286,7 +294,7 @@ $(function(){//shortcut for doc.ready
 		if (type == "program"){
 			column_names = ["div.program select.sensor", "div.program select.sensor_state", "div.program input.wait_time", "div.program select.output", "div.program select.output_state", "div.program input.output_duration"];
 		}else if (type == "settings"){
-			column_names = ["div.settings input[type='radio']:checked", "div.settings input.input_name", "div.settings input.output_name"];
+			column_names = ["div.settings input[type='radio']:checked", "div.settings input.input_name", "div.settings input.output_name", "div.settings select.threshold"];
 		}
 		cupcake(column_names);		//send the data!
 	}
@@ -356,7 +364,7 @@ $(function(){//shortcut for doc.ready
 	};
 
 	function input_up(current){								//this increments the current value up to 999
-		console.log("input_up " + current);
+		//console.log("input_up " + current);
 		var newval;
 		if(current < 999){									//if less than 999
 			newval = current + 1;							//add 1
@@ -369,7 +377,7 @@ $(function(){//shortcut for doc.ready
 	};//end input_limits
 
 	function input_down(current){							//this increments the current down to 0
-		console.log("input_down " + current);
+		//console.log("input_down " + current);
 		var newval;
 		if(current <= 0){									//if 0 or negative
 			newval = 0;										//set to zero
@@ -420,7 +428,9 @@ $(function(){//shortcut for doc.ready
 		$(selector).each(function(){				//loop through each <select>
 			for (i in array){						//loop through each element in array
 				if (j == i){						//if this element # corresponds w/ this <select>
-					if ($(selector).attr("type") != "radio") {	//don't set the value of the radios, it messes them up!!!!
+					
+					//Do NOT set the value of the radios, it messes them up!!!!
+					if ($(selector).attr("type") != "radio") {
 						$(this).val(array[i]);			//set the value
 					}
 
@@ -527,7 +537,7 @@ $(function(){//shortcut for doc.ready
 	function stop_auto(){				//this function is called whenever you want to stop auto incrementing
 		clearInterval(interval);
 		clearTimeout(timeout);
-		console.log("stopped");
+		//console.log("stopped");
 	};//end stop_auto
 	
 	function sanitize(num) {
@@ -898,7 +908,7 @@ $(function(){//shortcut for doc.ready
 			</div>
 			<!--end row3 -->
 			<button class="save_program" name="save" type="button"><i class="icon-check"></i> Save Program</button>
-			<button id="refresh_program" name="refresh" type="button"><i class="icon-refresh"></i> Refresh</button>
+			<button id="refresh_program" name="refresh" type="button"><i class="icon-refresh"></i> Refresh Program</button>
 			
 			<div id="status_program"></div>
 
@@ -1003,10 +1013,15 @@ $(function(){//shortcut for doc.ready
 
 		</div>
 		<button class="save_settings" name="save" type="button"><i class="icon-check"></i> Save Settings</button>
-		<button id="refresh_settings" name="refresh" type="button"><i class="icon-refresh"></i> Refresh</button>
+		<button id="refresh_settings" name="refresh" type="button"><i class="icon-refresh"></i> Refresh Settings</button>
 		<div id="status_settings"></div>
 	</div>
 
+	<div class="export">
+		<h2>Export All</h2>
+		<p>To save your favorite HauntBox setups from time to time.</p>
+	</div>
+	
 	<div class="help">
 		<h2>Help</h2>
 		<p>Please visit our <a href="">website</a> for updated support</p>
