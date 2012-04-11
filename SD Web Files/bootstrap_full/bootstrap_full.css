@@ -919,7 +919,7 @@ textarea,
 select,
 .uneditable-input {
   display: inline-block;
-  width: 210px;
+  /*width: 210px;*/
   height: 18px;
   padding: 4px;
   margin-bottom: 9px;
@@ -993,7 +993,7 @@ input[type="file"] {
   line-height: 18px \9;
 }
 select {
-  width: 220px;
+  /*width: 220px;*/
   background-color: #ffffff;
 }
 select[multiple],

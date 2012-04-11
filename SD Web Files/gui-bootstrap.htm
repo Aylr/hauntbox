@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="fontawes.css" type="text/css" media="screen, projection" \>
 <style type="text/css">
 div.settings input[type="text"] {
-	width: 10em;
+	width: 8.5em;
 }
 input, div.settings input.retrigger { /*slim up the wide 999 second boxes */
 	width: 2em;
@@ -63,7 +63,7 @@ $(function(){//shortcut for doc.ready
 	//##################################### Initial Page Load Stuff ##################################### 
 	$("#unsaved_modal").modal('hide');
 	for (i=1;i<6;i++){						//dynamically build the program rows
-		$("div.row").first().clone({deepWithDataAndEvents: true}).appendTo(".row_container");
+		$("div.sentence").first().clone({deepWithDataAndEvents: true}).appendTo(".sentence_container");
 	}
 	$("#display_container").children().hide();			//load with all "tabs" hidden
 	$("div.program").show();							//...except the program div
@@ -602,8 +602,8 @@ $(function(){//shortcut for doc.ready
 	<div class="program">
 		<h2>Program</h2>
 		<p>Some kind of description here.</p>
-		<div class="row_container">
-			<div class="row">
+		<div class="sentence_container">
+			<div class="sentence">
 				When
 				<select class="sensor" name="sensor3">
 					<option value="0">-</option>
