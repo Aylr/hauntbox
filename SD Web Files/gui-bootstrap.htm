@@ -180,8 +180,6 @@ $(function(){//shortcut for doc.ready
 		
 		if (unsaved_changes) {				//check for change
 			unsaved_modal();					//yes: present dialog
-
-			//save: save settings, present success then navigate
 		}else{									//no: proceed with navigation change
 			var chosen = $(this).attr("class");
 			if (chosen == "settings") {
@@ -195,9 +193,15 @@ $(function(){//shortcut for doc.ready
 	
 	$(".modal .save").click(function(){		//defines what happens when the modal "Save Changes" is clicked
 		$(this).button('loading');			//set button to loading state
+		var modal_h3 = $(".modal h3");		//save the header
+		var modal_body = $(".modal p");		//save the body
+		modal_h3.html("Saving");			//change header to "saving"
+		modal_body.html("Please wait while saving...");
 		save(current_page);					//try to save
 		$(this).button('reset');			//reset button
 		$(".modal").modal("hide");			//hide the modal
+		modal_h3.html("Unsaved Changes");	//reset header
+		modal_body.html("Would you like to save your changes?")		//reset body
 		set_active_nav(next_page);			//go on with navigation
 	});
 	
@@ -310,8 +314,6 @@ $(function(){//shortcut for doc.ready
 		}
 		cupcake(column_names);		//send the data!
 	}
-	
-	
 	
 	function cupcake(column_names){			//preps the post string and sends it like a nice box of cupcakes
 		var post_data = "";					//initialize the POST string
