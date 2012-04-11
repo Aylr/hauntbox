@@ -6,12 +6,12 @@
 <link rel="stylesheet" href="bootstrap_full/bootstrap_full.css" type="text/css" media="screen" \>
 <link rel="stylesheet" href="fontawes.css" type="text/css" media="screen, projection" \>
 <style type="text/css">
-input { /*slim up the wide 999 second boxes */
-	width: 2em;
-	text-align:right;
-}
 div.settings input[type="text"] {
 	width: 10em;
+}
+input, div.settings input.retrigger { /*slim up the wide 999 second boxes */
+	width: 2em;
+	text-align:right;
 }
 .settings select, .sensor_state, .output_state {
 	width: 4.4em;
@@ -113,33 +113,37 @@ $(function(){//shortcut for doc.ready
 		*/
 		
 		//Settings receiving protocol (Arduino --> Browser)
-		//input defs;output defs;input names;output names;status code;Free RAM;
-		//"1,1,1,1,1,1,1,1,1,1,1,1;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;thresholds...;0;199;"
+		//input defs;output defs;input names;output names;thresholds;retrigger;status code;Free RAM;
+		//"1,1,1,1,1,1,1,1,1,1,1,1;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;thresholds...;retrigger;0;199;"
+		//
 	
 		//LOAD THE ACTUAL SETTINGS HERE VIA AJAX REQUEST...
-		var dummy_settings_data = "0,1,0,0,1,0,0,0,1,0,0,0;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;103,246,492,103,246,492,103,246,492,103,246,492;0;199;"
-		var input_names = new Array(), output_names = new Array(), io_definitions = new Array(), io_voltage_thresholds = new Array();
+		var dummy_settings_data = "0,1,0,0,1,0,0,0,1,0,0,0;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;103,246,492,103,246,492,103,246,492,103,246,492;1,2,3,4,5,6;0;199;"
+		var input_names = new Array(), output_names = new Array(), io_definitions = new Array(), io_voltage_thresholds = new Array(), retrigger_delays = new Array();
 
-		var temp = dummy_settings_data.split(";");	//split into substrings
-	
-		if (temp[6].length == 0) {		//test for length == 0 then delete element
-			temp.splice(6,1);			//this trims off the junk after the last ";"
+		var incoming_settings = dummy_settings_data.split(";");	//split into substrings
+		var temp_last_element = incoming_settings.length - 1;
+		
+		if (incoming_settings[temp_last_element].length == 0) {		//test for length == 0 then delete element
+			incoming_settings.splice(temp_last_element - 1,1);		//this trims off the junk after the last ";"
 		};
-	
-		io_definitions = temp[0].split(",");	//split substrings into arrays of strings "1,2,3,..." --> ["1","2","3",...]
-		input_names = temp[1].split(",");
-		output_names = temp[2].split(",");
-		io_voltage_thresholds = temp[3].split(",");
+		
+		io_definitions = incoming_settings[0].split(",");	//split substrings into arrays of strings "1,2,3,..." --> ["1","2","3",...]
+		input_names = incoming_settings[1].split(",");
+		output_names = incoming_settings[2].split(",");
+		io_voltage_thresholds = incoming_settings[3].split(",");
+		retrigger_delays = incoming_settings[4].split(",");
 		
 		array_of_strings_to_ints(io_definitions);
 		array_of_strings_to_ints(io_voltage_thresholds);
-		
+		array_of_strings_to_ints(retrigger_delays);
 		
 		/*
 		console.log(io_definitions);
 		console.log(input_names);
 		console.log(output_names);
 		console.log(io_voltage_thresholds);
+		console.log(retrigger_delays);
 		*/
 		
 		set_io_names("select.sensor",input_names);				//call the set io name functions
@@ -157,11 +161,12 @@ $(function(){//shortcut for doc.ready
 		
 		set_inputs("input.highlow",pad_radio_array(io_definitions));	//be sure to pad the radio array with it's paired inversions before sending to the set_inputs function
 		set_inputs(".input_name",input_names);
-		set_inputs(".output_name",output_names);
-		set_inputs(".threshold",io_voltage_thresholds);
+		set_inputs("div.settings .output_name",output_names);
+		set_inputs("div.settings .threshold",io_voltage_thresholds);
+		set_inputs("div.settings .retrigger",retrigger_delays);
 		
-		status_message(parseInt(temp[4]));		//update the status alert
-		ram_status(temp[5]);					//update the free ram display
+		status_message(parseInt(incoming_settings[5]));		//update the status alert
+		ram_status(incoming_settings[6]);					//update the free ram display
 
 	};//end load_settings()
 	
@@ -189,7 +194,9 @@ $(function(){//shortcut for doc.ready
 	});
 	
 	$(".modal .save").click(function(){		//defines what happens when the modal "Save Changes" is clicked
-		save(current_page);					//try to save		
+		$(this).button('loading');			//set button to loading state
+		save(current_page);					//try to save
+		$(this).button('reset');			//reset button
 		$(".modal").modal("hide");			//hide the modal
 		set_active_nav(next_page);			//go on with navigation
 	});
@@ -299,7 +306,7 @@ $(function(){//shortcut for doc.ready
 		if (type == "program"){
 			column_names = ["div.program select.sensor", "div.program select.sensor_state", "div.program input.wait_time", "div.program select.output", "div.program select.output_state", "div.program input.output_duration"];
 		}else if (type == "settings"){
-			column_names = ["div.settings input[type='radio']:checked", "div.settings input.input_name", "div.settings input.output_name", "div.settings select.threshold"];
+			column_names = ["div.settings input[type='radio']:checked", "div.settings input.input_name", "div.settings input.output_name", "div.settings select.threshold", "div.settings input.retrigger"];
 		}
 		cupcake(column_names);		//send the data!
 	}
@@ -327,7 +334,7 @@ $(function(){//shortcut for doc.ready
 		};//loop through each column
 
 		console.log(post_data);				//log to firebug
-		alert("Simulating the save....");
+		alert("Simulating save.... " + post_data);
 		
 		//ERROR HANDLING ********************************** PUT IN HERE ****************
 			//if failed
@@ -666,48 +673,78 @@ $(function(){//shortcut for doc.ready
 					<option>12V</option>
 					<option>24V</option>
 				</select>:
-				<input type="text" class="input_name" name="input1" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow1" value="1" checked />High<input type="radio" class="highlow" name="highlow1" value="0">Low. Wait
-					<div class="wait">
+				<input type="text" class="input_name" name="input1" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow1" value="1" checked />High<input type="radio" class="highlow" name="highlow1" value="0">Low.&nbsp;
+				Wait
+				<div class="wait">
 					<a href="#" class="up">+</a>
 					<a href="#" class="down">-</a>
 				</div>
-				<input type="text" class="wait_time" name="wait_time3" maxlength="3" value="0" />
- seconds before input can be retriggered.<br />
-			Input B
+				<input type="text" class="retrigger" maxlength="3" value="0" /> seconds before input can be re-triggered.<br />
+				Input B
 				<select class="threshold">
 					<option>5V</option>
 					<option>12V</option>
 					<option>24V</option>
 				</select>:
-				<input type="text" class="input_name" name="input2" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow2" value="1" checked />High<input type="radio" class="highlow" name="highlow2" value="0" />Low.<br />
+				<input type="text" class="input_name" name="input2" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow2" value="1" checked />High<input type="radio" class="highlow" name="highlow2" value="0" />Low.&nbsp;
+				Wait
+				<div class="wait">
+					<a href="#" class="up">+</a>
+					<a href="#" class="down">-</a>
+				</div>
+				<input type="text" class="retrigger" maxlength="3" value="0" /> seconds before input can be re-triggered.<br />
 			Input C
 				<select class="threshold">
 					<option>5V</option>
 					<option>12V</option>
 					<option>24V</option>
 				</select>:
-				<input type="text" class="input_name" name="input3" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow3" value="1" checked />High<input type="radio" class="highlow" name="highlow3" value="0" />Low.<br />
+				<input type="text" class="input_name" name="input3" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow3" value="1" checked />High<input type="radio" class="highlow" name="highlow3" value="0" />Low.&nbsp;
+				Wait
+				<div class="wait">
+					<a href="#" class="up">+</a>
+					<a href="#" class="down">-</a>
+				</div>
+				<input type="text" class="retrigger" maxlength="3" value="0" /> seconds before input can be re-triggered.<br />
 			Input D
 				<select class="threshold">
 					<option>5V</option>
 					<option>12V</option>
 					<option>24V</option>
 				</select>:
-				<input type="text" class="input_name" name="input4" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow4" value="1" checked />High<input type="radio" class="highlow" name="highlow4" value="0" />Low.<br />
+				<input type="text" class="input_name" name="input4" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow4" value="1" checked />High<input type="radio" class="highlow" name="highlow4" value="0" />Low.&nbsp;
+				Wait
+				<div class="wait">
+					<a href="#" class="up">+</a>
+					<a href="#" class="down">-</a>
+				</div>
+				<input type="text" class="retrigger" maxlength="3" value="0" /> seconds before input can be re-triggered.<br />
 			Input E
 				<select class="threshold">
 					<option>5V</option>
 					<option>12V</option>
 					<option>24V</option>
 				</select>:
-				<input type="text" class="input_name" name="input5" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow5" value="1" checked />High<input type="radio" class="highlow" name="highlow5" value="0" />Low.<br />
+				<input type="text" class="input_name" name="input5" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow5" value="1" checked />High<input type="radio" class="highlow" name="highlow5" value="0" />Low.&nbsp;
+				Wait
+				<div class="wait">
+					<a href="#" class="up">+</a>
+					<a href="#" class="down">-</a>
+				</div>
+				<input type="text" class="retrigger" maxlength="3" value="0" /> seconds before input can be re-triggered.<br />
 			Input F
 				<select class="threshold">
 					<option>5V</option>
 					<option>12V</option>
 					<option>24V</option>
 				</select>:
-				<input type="text" class="input_name" name="input6" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow6" value="1" checked />High<input type="radio" class="highlow" name="highlow6" value="0" />Low.
+				<input type="text" class="input_name" name="input6" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow6" value="1" checked />High<input type="radio" class="highlow" name="highlow6" value="0" />Low.&nbsp;
+				Wait
+				<div class="wait">
+					<a href="#" class="up">+</a>
+					<a href="#" class="down">-</a>
+				</div>
+				<input type="text" class="retrigger" maxlength="3" value="0" /> seconds before input can be re-triggered.<br />
 		</div>
 		<br />
 		<h3>Outputs</h3>
@@ -791,7 +828,7 @@ $(function(){//shortcut for doc.ready
 		</div>
 		<div class="modal-footer">
 			<a href="#" class="discard btn">Discard changes</a>
-			<a href="#" class="save btn btn-primary">Yes! Save changes</a>
+			<a href="#" class="save btn btn-primary" data-loading-text="Saving...">Yes! Save changes</a>
 		</div>
 	</div>
 	
