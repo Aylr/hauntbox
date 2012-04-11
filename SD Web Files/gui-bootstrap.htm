@@ -114,10 +114,10 @@ $(function(){//shortcut for doc.ready
 		
 		//Settings receiving protocol (Arduino --> Browser)
 		//input defs;output defs;input names;output names;status code;Free RAM;
-		//"1,1,1,1,1,1,1,1,1,1,1,1;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;thresholds...;0;199;"
+		//"1,1,1,1,1,1,1,1,1,1,1,1;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;thresholds...;0;199;"
 	
 		//LOAD THE ACTUAL SETTINGS HERE VIA AJAX REQUEST...
-		var dummy_settings_data = "0,1,0,0,1,0,0,0,1,0,0,0;input_name1,input_name2,input_name3,input_name4,input_name5,input_name6;output_name1,output_name2,output_name3,output_name4,output_name5,output_name6;103,246,492,103,246,492,103,246,492,103,246,492;0;199;"
+		var dummy_settings_data = "0,1,0,0,1,0,0,0,1,0,0,0;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;103,246,492,103,246,492,103,246,492,103,246,492;0;199;"
 		var input_names = new Array(), output_names = new Array(), io_definitions = new Array(), io_voltage_thresholds = new Array();
 
 		var temp = dummy_settings_data.split(";");	//split into substrings
@@ -666,7 +666,13 @@ $(function(){//shortcut for doc.ready
 					<option>12V</option>
 					<option>24V</option>
 				</select>:
-				<input type="text" class="input_name" name="input1" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow1" value="1" checked />High<input type="radio" class="highlow" name="highlow1" value="0">Low.<br />
+				<input type="text" class="input_name" name="input1" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow1" value="1" checked />High<input type="radio" class="highlow" name="highlow1" value="0">Low. Wait
+					<div class="wait">
+					<a href="#" class="up">+</a>
+					<a href="#" class="down">-</a>
+				</div>
+				<input type="text" class="wait_time" name="wait_time3" maxlength="3" value="0" />
+ seconds before input can be retriggered.<br />
 			Input B
 				<select class="threshold">
 					<option>5V</option>
