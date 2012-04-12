@@ -126,10 +126,9 @@ $(function(){//shortcut for doc.ready
 		var input_names = new Array(), output_names = new Array(), io_definitions = new Array(), io_voltage_thresholds = new Array(), retrigger_delays = new Array();
 
 		var incoming_settings = dummy_settings_data.split(";");	//split into substrings
-		var temp_last_element = incoming_settings.length - 1;
-		
-		if (incoming_settings[temp_last_element].length == 0) {		//test for length == 0 then delete element
-			incoming_settings.splice(temp_last_element - 1,1);		//this trims off the junk after the last ";"
+
+		if (incoming_settings[incoming_settings.length - 1].length == 0) {		//test for length == 0 then delete element
+			incoming_settings.splice(incoming_settings.length - 1,1);		//this trims off the junk after the last ";"
 		};
 		
 		io_definitions = incoming_settings[0].split(",");	//split substrings into arrays of strings "1,2,3,..." --> ["1","2","3",...]
@@ -170,6 +169,7 @@ $(function(){//shortcut for doc.ready
 		set_inputs("div.settings .retrigger",retrigger_delays);
 		
 		status_message(parseInt(incoming_settings[5]));		//update the status alert
+		console.log(incoming_settings);
 		ram_status(incoming_settings[6]);					//update the free ram display
 
 	};//end load_settings()
@@ -283,7 +283,7 @@ $(function(){//shortcut for doc.ready
 		fast_plus_minus($(this).parent().next(),"-");
 	});
 	
-	$(".input_name, output_name").alphanumeric();			//relies on the excellent work of https://github.com/treyhunner/jquery-formrestrict
+	$(".input_name, output_name").alphanumeric({allow:" -.!@"});			//relies on the excellent work of https://github.com/treyhunner/jquery-formrestrict
 	$(".wait_time").numeric();
 
 //##################################### Utility Functions #####################################
