@@ -53,6 +53,7 @@ $(function(){//shortcut for doc.ready
 	var unsaved_changes = false;			//keep track if user has unsaved changes
 	var current_page = "program";			//keeps track of current page
 	var next_page = null;					//keeps track of next page
+	var ABC = ["A","B","C","D","E","F"]		//used when naming the dynamically generated rows
 	
 	//ADC threshold values for inputs/outputs. Maths are done here to spare Arduino cycles
 	var threshold_5V = 103;				//(5V / 5)*1024 = 103
@@ -63,7 +64,10 @@ $(function(){//shortcut for doc.ready
 	//##################################### Initial Page Load Stuff ##################################### 
 	$("#unsaved_modal").modal('hide');
 	for (i=1;i<6;i++){						//dynamically build the program rows
-		$("div.sentence").first().clone({deepWithDataAndEvents: true}).appendTo(".sentence_container");
+		$("div.program .sentence").first().clone({deepWithDataAndEvents: true}).appendTo(".sentence_container");
+		//the settings rows are complicated by the radios that must be uniquely named
+		$("div.settings .inputs_container .sentence").first().clone({deepWithDataAndEvents: true}).appendTo("div.settings .inputs_container").children("span").html("Input " + ABC[i]).parent().children("input[type=radio]").attr("name","highlow" + (i+1));
+		$("div.settings .outputs_container .sentence").first().clone({deepWithDataAndEvents: true}).appendTo("div.settings .outputs_container").children("span").html("Output " + (i+1)).parent().children("input[type=radio]").attr("name","output_highlow" + (i+1));
 	}
 	$("#display_container").children().hide();			//load with all "tabs" hidden
 	$("div.program").show();							//...except the program div
@@ -667,134 +671,38 @@ $(function(){//shortcut for doc.ready
 		<p>Feel free to rename your inputs and outputs here. You can also set whether
 			digital HIGH or LOW will trigger the input.</p>
 
-		<h3>Inputs</h3>
-		<div class="inputs">
-			Input A
+		<div class="inputs_container">
+			<h3>Inputs</h3>
+			<div class="sentence">
+				<span class="input_title">Input A</span>
 				<select class="threshold">
 					<option>5V</option>
 					<option>12V</option>
 					<option>24V</option>
 				</select>:
 				<input type="text" class="input_name" name="input1" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow1" value="1" checked />High<input type="radio" class="highlow" name="highlow1" value="0">Low.&nbsp;
-				Wait
-				<div class="wait">
-					<a href="#" class="up">+</a>
-					<a href="#" class="down">-</a>
+					Wait
+					<div class="wait">
+						<a href="#" class="up">+</a>
+						<a href="#" class="down">-</a>
+					</div>
+					<input type="text" class="retrigger" maxlength="3" value="0" /> seconds before input can be re-triggered.
 				</div>
-				<input type="text" class="retrigger" maxlength="3" value="0" /> seconds before input can be re-triggered.<br />
-				Input B
-				<select class="threshold">
-					<option>5V</option>
-					<option>12V</option>
-					<option>24V</option>
-				</select>:
-				<input type="text" class="input_name" name="input2" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow2" value="1" checked />High<input type="radio" class="highlow" name="highlow2" value="0" />Low.&nbsp;
-				Wait
-				<div class="wait">
-					<a href="#" class="up">+</a>
-					<a href="#" class="down">-</a>
-				</div>
-				<input type="text" class="retrigger" maxlength="3" value="0" /> seconds before input can be re-triggered.<br />
-			Input C
-				<select class="threshold">
-					<option>5V</option>
-					<option>12V</option>
-					<option>24V</option>
-				</select>:
-				<input type="text" class="input_name" name="input3" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow3" value="1" checked />High<input type="radio" class="highlow" name="highlow3" value="0" />Low.&nbsp;
-				Wait
-				<div class="wait">
-					<a href="#" class="up">+</a>
-					<a href="#" class="down">-</a>
-				</div>
-				<input type="text" class="retrigger" maxlength="3" value="0" /> seconds before input can be re-triggered.<br />
-			Input D
-				<select class="threshold">
-					<option>5V</option>
-					<option>12V</option>
-					<option>24V</option>
-				</select>:
-				<input type="text" class="input_name" name="input4" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow4" value="1" checked />High<input type="radio" class="highlow" name="highlow4" value="0" />Low.&nbsp;
-				Wait
-				<div class="wait">
-					<a href="#" class="up">+</a>
-					<a href="#" class="down">-</a>
-				</div>
-				<input type="text" class="retrigger" maxlength="3" value="0" /> seconds before input can be re-triggered.<br />
-			Input E
-				<select class="threshold">
-					<option>5V</option>
-					<option>12V</option>
-					<option>24V</option>
-				</select>:
-				<input type="text" class="input_name" name="input5" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow5" value="1" checked />High<input type="radio" class="highlow" name="highlow5" value="0" />Low.&nbsp;
-				Wait
-				<div class="wait">
-					<a href="#" class="up">+</a>
-					<a href="#" class="down">-</a>
-				</div>
-				<input type="text" class="retrigger" maxlength="3" value="0" /> seconds before input can be re-triggered.<br />
-			Input F
-				<select class="threshold">
-					<option>5V</option>
-					<option>12V</option>
-					<option>24V</option>
-				</select>:
-				<input type="text" class="input_name" name="input6" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow6" value="1" checked />High<input type="radio" class="highlow" name="highlow6" value="0" />Low.&nbsp;
-				Wait
-				<div class="wait">
-					<a href="#" class="up">+</a>
-					<a href="#" class="down">-</a>
-				</div>
-				<input type="text" class="retrigger" maxlength="3" value="0" /> seconds before input can be re-triggered.<br />
 		</div>
-		<br />
-		<h3>Outputs</h3>
-		<div class="outputs">
-			Output 1
+		
+		<div class="outputs_container">
+			<h3>Outputs</h3>
+			<div class="sentence">
+				<span class="output_title">Output 1</span>
 				<select class="threshold">
 					<option>5V</option>
 					<option>12V</option>
 					<option>24V</option>
 				</select>:
-				<input type="text" class="output_name" name="output1" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow1" value="1" checked />High<input type="radio" class="highlow" name="output_highlow1" value="0" />Low.<br />
-			Output 2
-				<select class="threshold">
-					<option>5V</option>
-					<option>12V</option>
-					<option>24V</option>
-				</select>:
-				<input type="text" class="output_name" name="output2" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow2" value="1" checked />High<input type="radio" class="highlow" name="output_highlow2" value="0" />Low.<br />
-			Output 3
-				<select class="threshold">
-					<option>5V</option>
-					<option>12V</option>
-					<option>24V</option>
-				</select>:
-				<input type="text" class="output_name" name="output3" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow3" value="1" checked />High<input type="radio" class="highlow" name="output_highlow3" value="0" />Low.<br />
-			Output 4
-				<select class="threshold">
-					<option>5V</option>
-					<option>12V</option>
-					<option>24V</option>
-				</select>:
-				<input type="text" class="output_name" name="output4" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow4" value="1" checked />High<input type="radio" class="highlow" name="output_highlow4" value="0" />Low.<br />
-			Output 5
-				<select class="threshold">
-					<option>5V</option>
-					<option>12V</option>
-					<option>24V</option>
-				</select>:
-				<input type="text" class="output_name" name="output5" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow5" value="1" checked />High<input type="radio" class="highlow" name="output_highlow5" value="0" />Low.<br />
-			Output 6
-				<select class="threshold">
-					<option>5V</option>
-					<option>12V</option>
-					<option>24V</option>
-				</select>:
-				<input type="text" class="output_name" name="output6" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow6" value="1" checked />High<input type="radio" class="highlow" name="output_highlow6" value="0" />Low.
-
+				<input type="text" class="output_name" name="output1" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow1" value="1" checked />High<input type="radio" class="highlow" name="output_highlow1" value="0" />Low.
+			</div>
 		</div>
+		
 		<button class="save_settings" name="save" type="button"><i class="icon-check"></i> Save Settings</button>
 		<button id="refresh_settings" name="refresh" type="button"><i class="icon-refresh"></i> Refresh Settings</button>
 		<div id="status_settings"></div>
