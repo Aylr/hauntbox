@@ -26,11 +26,11 @@ static uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 //--------------------------- Define Handlers ----------------------------
 
 boolean file_handler(TinyWebServer& web_server);
+//boolean blink_led_handler(TinyWebServer& web_server);
+//boolean led_status_handler(TinyWebServer& web_server);
 boolean index_handler(TinyWebServer& web_server);
 boolean test_handler(TinyWebServer& web_server);
 boolean program_handler(TinyWebServer& web_server);
-boolean settings_handler(TinyWebServer& web_server);
-boolean export_handler(TinyWebServer& web_server);
 
 TinyWebServer::PathHandler handlers[] = {
   // Work around Arduino's IDE preprocessor bug in handling /* inside
@@ -38,11 +38,12 @@ TinyWebServer::PathHandler handlers[] = {
   //
   // `put_handler' is defined in TinyWebServer
 //  {"/", TinyWebServer::GET, &index_handler },
+  {"/testget", TinyWebServer::GET, &testget_handler },
   {"/program", TinyWebServer::GET, &program_handler },
   {"/testget", TinyWebServer::POST, &testget_handler },
-  {"/settings", TinyWebServer::GET, &settings_handler },
-  {"/export", TinyWebServer::GET, &export_handler },
 //  {"/upload/" "*", TinyWebServer::PUT, &TinyWebPutHandler::put_handler },
+//  {"/blinkled", TinyWebServer::POST, &blink_led_handler },
+//  {"/ledstatus" "*", TinyWebServer::GET, &led_status_handler },
   {"/" "*", TinyWebServer::GET, &file_handler },
   {NULL},
 };
@@ -371,30 +372,6 @@ boolean program_handler(TinyWebServer& web_server){
   }//while client.connected()
   return true; //exit the handler 
 }
-
-boolean settings_handler(TinyWebServer& web_server){
-  Client& client = web_server.get_client();
-  Serial.print("Free RAM: ");
-  Serial.println(FreeRam());
-	client.println("HTTP/1.0 200 OK\nContent-Type: text/html\n");  //2 line header w/ blank line to signify data below
-		client.print("0,1,0,0,1,0,0,0,1,0,0,0;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;103,246,492,103,246,492,103,246,492,103,246,492;1,2,3,4,5,6;0;");
-	client.print(FreeRam());
-	client.print(";");
-	client.print("\n");
-	client.stop();
-  return true; //exit the handler 
-}
-
-boolean export_handler(TinyWebServer& web_server) {
-	web_server.send_error_code(200);
-	web_server.send_content_type("text/plain");
-  web_server.end_headers();
-  Client& client = web_server.get_client();
-	client.print("Date, Description\nSettings:0,1,0,0,1,0,0,0,1,0,0,0;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;103,246,492,103,246,492,103,246,492,103,246,492;1,2,3,4,5,6;\nProgram: 0,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;$\n");
-	client.stop();
-	return true;
-}
-
 
 //boolean blink_led_handler(TinyWebServer& web_server) {
 //  web_server.send_error_code(200);
