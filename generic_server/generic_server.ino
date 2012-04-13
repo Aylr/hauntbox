@@ -13,9 +13,11 @@ const int SD_CS = 4;
 const int ETHER_CS = 10;
 
 // Don't forget to modify the IP to an available one on your home network
-//byte ip[] = { 192, 168, 1, 9 };
-byte ip[] = {10,0,0,10 };
+byte ip[] = { 192, 168, 1, 9 };
+//byte ip[] = {10,0,0,10 };
 int inputArray[6];
+
+char StorageString[100];
 
 /*********************************************/
 static uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
@@ -28,6 +30,7 @@ boolean file_handler(TinyWebServer& web_server);
 //boolean led_status_handler(TinyWebServer& web_server);
 boolean index_handler(TinyWebServer& web_server);
 boolean test_handler(TinyWebServer& web_server);
+boolean program_handler(TinyWebServer& web_server);
 
 TinyWebServer::PathHandler handlers[] = {
   // Work around Arduino's IDE preprocessor bug in handling /* inside
@@ -36,6 +39,7 @@ TinyWebServer::PathHandler handlers[] = {
   // `put_handler' is defined in TinyWebServer
 //  {"/", TinyWebServer::GET, &index_handler },
   {"/testget", TinyWebServer::GET, &testget_handler },
+  {"/program", TinyWebServer::GET, &program_handler },
   {"/testget", TinyWebServer::POST, &testget_handler },
 //  {"/upload/" "*", TinyWebServer::PUT, &TinyWebPutHandler::put_handler },
 //  {"/blinkled", TinyWebServer::POST, &blink_led_handler },
@@ -138,6 +142,7 @@ boolean testget_handler(TinyWebServer& web_server){
       //if (readString.length() < 100) {//need to find out what this limit does
       // Read a byte at a time and concatenate it onto the end of the character array.
       readString[i] = ch;
+      StorageString[i] = ch;
       i++;
       //}
           
@@ -148,6 +153,7 @@ boolean testget_handler(TinyWebServer& web_server){
       //Serial.println(client.available());
       
       Serial.println(readString);
+      //StorageString = readString;
       	
       // Split readString into columns with comma-separated values.  Columns
       // are separated by semicolons.  The first time you call strtok, you
@@ -315,6 +321,57 @@ boolean testget_handler(TinyWebServer& web_server){
 }
 
 
+
+boolean program_handler(TinyWebServer& web_server){
+  byte i;
+  
+  //char ch;
+  Client& client = web_server.get_client();
+  Serial.print("Free RAM: ");
+  Serial.println(FreeRam());
+
+  while (client.connected()) {
+
+    if (client.available() > 0) {      //if there are incoming bytes
+      
+      //ch = client.read();
+      
+      //if (readString.length() < 100) {//need to find out what this limit does
+      // Read a byte at a time and concatenate it onto the end of the character array.
+      //readString[i] = ch;
+      //i++;
+      //}
+          
+    }else if (client.available() == 0) {
+      //Serial.println(StorageString);
+
+      client.println("HTTP/1.0 200 OK\nContent-Type: text/html\n");  //2 line header including mandatory blank line to signify data below
+      //send some sample data back to the broswer
+      //client.print("Free RAM: ");
+      //client.print(FreeRam());
+      //client.print(", millis: ");
+      //client.println(millis());
+      
+      //Data sending protocol (Arduino --> Browser)
+      //Input array;Input on/off;On delay;Output array;Output on/off;Duration;status code;Free RAM;
+      //0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0;182;
+      //status codes
+      //0 = all good
+      //1 = 
+      //2 = 
+      //3 = 
+      //4 = 
+      //for (i = 0; i < 6; i++)
+      //  client.print(StorageString[i]);
+      client.print("0,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;0;");
+      client.print(FreeRam());
+      client.print(";");
+      client.print("\n");
+      client.stop();
+    }//client.available()
+  }//while client.connected()
+  return true; //exit the handler 
+}
 
 //boolean blink_led_handler(TinyWebServer& web_server) {
 //  web_server.send_error_code(200);
