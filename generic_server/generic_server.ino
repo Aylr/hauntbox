@@ -28,8 +28,8 @@ static uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 boolean file_handler(TinyWebServer& web_server);
 boolean index_handler(TinyWebServer& web_server);
 boolean test_handler(TinyWebServer& web_server);
-boolean program_handler(TinyWebServer& web_server);
-boolean settings_handler(TinyWebServer& web_server);
+//boolean program_handler(TinyWebServer& web_server);
+//boolean settings_handler(TinyWebServer& web_server);
 boolean export_handler(TinyWebServer& web_server);
 
 TinyWebServer::PathHandler handlers[] = {
@@ -37,11 +37,11 @@ TinyWebServer::PathHandler handlers[] = {
   // strings.
   //
   // `put_handler' is defined in TinyWebServer
-//  {"/", TinyWebServer::GET, &index_handler },
-  {"/program", TinyWebServer::GET, &program_handler },
+  {"/", TinyWebServer::GET, &index_handler },
+//  {"/program", TinyWebServer::GET, &program_handler },
   {"/testget", TinyWebServer::POST, &testget_handler },
-  {"/settings", TinyWebServer::GET, &settings_handler },
-  {"/export", TinyWebServer::GET, &export_handler },
+//  {"/settings", TinyWebServer::GET, &settings_handler },
+  //{"/export", TinyWebServer::GET, &export_handler },
 //  {"/upload/" "*", TinyWebServer::PUT, &TinyWebPutHandler::put_handler },
   {"/" "*", TinyWebServer::GET, &file_handler },
   {NULL},
@@ -321,54 +321,17 @@ boolean testget_handler(TinyWebServer& web_server){
 
 
 
-boolean program_handler(TinyWebServer& web_server){
-  byte i;
-  
-  //char ch;
+/*boolean program_handler(TinyWebServer& web_server){
+
   Client& client = web_server.get_client();
   Serial.print("Free RAM: ");
   Serial.println(FreeRam());
-
-  while (client.connected()) {
-
-    if (client.available() > 0) {      //if there are incoming bytes
-      
-      //ch = client.read();
-      
-      //if (readString.length() < 100) {//need to find out what this limit does
-      // Read a byte at a time and concatenate it onto the end of the character array.
-      //readString[i] = ch;
-      //i++;
-      //}
-          
-    }else if (client.available() == 0) {
-      //Serial.println(StorageString);
-
-      client.println("HTTP/1.0 200 OK\nContent-Type: text/html\n");  //2 line header including mandatory blank line to signify data below
-      //send some sample data back to the broswer
-      //client.print("Free RAM: ");
-      //client.print(FreeRam());
-      //client.print(", millis: ");
-      //client.println(millis());
-      
-      //Data sending protocol (Arduino --> Browser)
-      //Input array;Input on/off;On delay;Output array;Output on/off;Duration;status code;Free RAM;
-      //0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0;182;
-      //status codes
-      //0 = all good
-      //1 = 
-      //2 = 
-      //3 = 
-      //4 = 
-      //for (i = 0; i < 6; i++)
-      //  client.print(StorageString[i]);
-      client.print("0,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;0;");
-      client.print(FreeRam());
-      client.print(";");
-      client.print("\n");
-      client.stop();
-    }//client.available()
-  }//while client.connected()
+  client.println("HTTP/1.0 200 OK\nContent-Type: text/html\n");  //2 line header including mandatory blank line to signify data below
+  //client.print("0,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;0;");
+  client.print(FreeRam());
+  client.print(";");
+  client.print("\n");
+  client.stop();
   return true; //exit the handler 
 }
 
@@ -376,16 +339,16 @@ boolean settings_handler(TinyWebServer& web_server){
   Client& client = web_server.get_client();
   Serial.print("Free RAM: ");
   Serial.println(FreeRam());
-	client.println("HTTP/1.0 200 OK\nContent-Type: text/html\n");  //2 line header w/ blank line to signify data below
-		client.print("0,1,0,0,1,0,0,0,1,0,0,0;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;103,246,492,103,246,492,103,246,492,103,246,492;1,2,3,4,5,6;0;");
-	client.print(FreeRam());
-	client.print(";");
-	client.print("\n");
-	client.stop();
+  client.println("HTTP/1.0 200 OK\nContent-Type: text/html\n");  //2 line header w/ blank line to signify data below
+  client.print("0,1,0,0,1,0,0,0,1,0,0,0;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;103,246,492,103,246,492,103,246,492,103,246,492;1,2,3,4,5,6;0;");
+  client.print(FreeRam());
+  client.print(";");
+  client.print("\n");
+  client.stop();
   return true; //exit the handler 
-}
+}*/
 
-boolean export_handler(TinyWebServer& web_server) {
+/*boolean export_handler(TinyWebServer& web_server) {
 	web_server.send_error_code(200);
 	web_server.send_content_type("text/plain");
   web_server.end_headers();
@@ -393,7 +356,7 @@ boolean export_handler(TinyWebServer& web_server) {
 	client.print("Date, Description\nSettings:0,1,0,0,1,0,0,0,1,0,0,0;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;103,246,492,103,246,492,103,246,492,103,246,492;1,2,3,4,5,6;\nProgram: 0,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;$\n");
 	client.stop();
 	return true;
-}
+}*/
 
 
 //boolean blink_led_handler(TinyWebServer& web_server) {
@@ -424,52 +387,13 @@ boolean export_handler(TinyWebServer& web_server) {
 //  return true;
 //}
 
-/*
+
 boolean index_handler(TinyWebServer& web_server) {
-  send_file_name(web_server, "GUI.HTM");
+  send_file_name(web_server, "gui.htm");
   return true;
 }
 
 
-
-void file_uploader_handler(TinyWebServer& web_server,
-			   TinyWebPutHandler::PutAction action,
-			   char* buffer, int size) {
-  static uint32_t start_time;
-  static uint32_t total_size;
-
-  switch (action) {
-  case TinyWebPutHandler::START:
-    start_time = millis();
-    total_size = 0;
-    if (!file.isOpen()) {
-      // File is not opened, create it. First obtain the desired name
-      // from the request path.
-      char* fname = web_server.get_file_from_path(web_server.get_path());
-      if (fname) {
-	Serial << F("Creating ") << fname << "\n";
-	file.open(&root, fname, O_CREAT | O_WRITE | O_TRUNC);
-	free(fname);
-      }
-    }
-    break;
-
-  case TinyWebPutHandler::WRITE:
-    if (file.isOpen()) {
-      file.write(buffer, size);
-      total_size += size;
-    }
-    break;
-
-  case TinyWebPutHandler::END:
-    file.sync();
-    Serial << F("Wrote ") << file.fileSize() << F(" bytes in ")
-	   << millis() - start_time << F(" millis (received ")
-           << total_size << F(" bytes)\n");
-    file.close();
-  }
-}//upload handler
-*/
 
 
 void setup() {
