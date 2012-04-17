@@ -190,6 +190,44 @@ $(function(){//shortcut for doc.ready
 			//load settings
 			}else if (chosen == "program"){
 			//load program
+			}else if (chosen == "export"){
+				//load exports
+				$.ajax({
+					url: '/settings.txt',
+					type: 'GET',
+					beforeSend: function(){
+						//show loading alert
+						//$("div.alert").alert();
+					},
+					success: function(data){
+						//hide alert
+						//$("div.alert").alert('close');
+						$("div.export pre.settings").html(data);
+						console.log("file: " + data);
+					},
+					error: function(){
+						//alert: fail
+						$("div.export pre.settings").html("Please try again.");
+					}
+				});//end ajax
+				$.ajax({
+					url: '/program.txt',
+					type: 'GET',
+					beforeSend: function(){
+						//show loading alert
+						//$("div.alert").alert();
+					},
+					success: function(data){
+						//hide alert
+						//$("div.alert").alert('close');
+						$("div.export pre.program").html(data);
+						console.log("file: " + data);
+					},
+					error: function(){
+						//alert: fail
+						$("div.export pre.program").html("Please try again.");
+					}
+				});//end ajax
 			}
 			set_active_nav(next_page);
 		}
@@ -311,15 +349,17 @@ $(function(){//shortcut for doc.ready
 	
 	function save(type) {	//this function sets up the call to cupcake with the columns you want sent
 		var colum_names = null;
+		var file = type + ".txt"	//make a file name based on the save type
+		
 		if (type == "program"){
 			column_names = ["div.program select.sensor", "div.program select.sensor_state", "div.program input.wait_time", "div.program select.output", "div.program select.output_state", "div.program input.output_duration"];
 		}else if (type == "settings"){
 			column_names = ["div.settings input[type='radio']:checked", "div.settings input.input_name", "div.settings input.output_name", "div.settings select.threshold", "div.settings input.retrigger"];
-		}
-		cupcake(column_names);		//send the data!
+		}		
+		cupcake(column_names,file);		//send the data with the filename
 	}
 	
-	function cupcake(column_names){			//preps the post string and sends it like a nice box of cupcakes
+	function cupcake(column_names,file){	//preps the post string and sends it like a nice box of cupcakes
 		var post_data = "";					//initialize the POST string
 		var counter = 0;					//use to insert commas after each row
 
@@ -340,7 +380,7 @@ $(function(){//shortcut for doc.ready
 		};//loop through each column
 
 		console.log(post_data);				//log to firebug
-		alert("Simulating save.... " + post_data);
+		//alert("Simulating save.... " + post_data);
 		
 		//ERROR HANDLING ********************************** PUT IN HERE ****************
 			//if failed
@@ -349,9 +389,15 @@ $(function(){//shortcut for doc.ready
 			//if success
 		unsaved_changes = false;	//TEMPORARY HACK TO MIMIC SUCCESS OF POST
 		
-		$.post("/testget", post_data, function(data){ 	//the AJAX bit
+		/*$.post("/testget", post_data, function(data){ 	//the AJAX bit
 			$("#status_program").hide().html(data).fadeIn();
-		});
+		});*/
+		
+		$.ajax({
+			url: '/upload/' + file,		//uploads to a specific file
+			type: 'PUT',
+			data: post_data
+		})
 	};//end cupcake()
 
 	function fast_plus_minus(input,direction){	//this increments and fast increments either + or - based on the direction
@@ -408,7 +454,7 @@ $(function(){//shortcut for doc.ready
 	};//end input_limits
 	
 	function ram_status(ram){		//simply updates the display with the passed free ram
-		$(".navbar p.pull-right").fadeOut().html("Free RAM: " + ram + "K").fadeIn();
+		$(".navbar p.pull-right").fadeOut().html("Free RAM: " + ram).fadeIn();
 	}
 	
 	function array_of_strings_to_ints(dirty_array){			//converts arrays of strings into arrays of integers ie: ["1","2","3",...] --> [1,2,3,...]
@@ -713,7 +759,14 @@ $(function(){//shortcut for doc.ready
 		<p>To save your favorite HauntBox setups from time to time.</p>
 		<h3>Today's date: 4/12/12</h3>
 		<textarea>Description</textarea>
-		<pre>Settings string...........</pre>
+		<h3>Your currents settings</h3>
+		<p>Copy and paste these into a text file for safekeeping.</p>
+		<pre class="settings">Settings string...........</pre>
+		<h3>Your currents program</h3>
+		<p>Copy and paste these into a text file for safekeeping.</p>
+		<pre class="program">Program string...........</pre>
+		
+		
 		<pre>
 		URL Schema
 
