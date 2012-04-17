@@ -21,6 +21,7 @@ char StorageString[100];
 
 /*********************************************/
 static uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+hack_header = "HTTP/1.0 200 OK\nContent-Type: text/html\n";  //2 line header including mandatory blank line to signify data below
 
 
 //--------------------------- Define Handlers ----------------------------
@@ -28,8 +29,8 @@ static uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 boolean file_handler(TinyWebServer& web_server);
 boolean index_handler(TinyWebServer& web_server);
 boolean test_handler(TinyWebServer& web_server);
-//boolean program_handler(TinyWebServer& web_server);
-//boolean settings_handler(TinyWebServer& web_server);
+boolean program_handler(TinyWebServer& web_server);
+boolean settings_handler(TinyWebServer& web_server);
 boolean export_handler(TinyWebServer& web_server);
 
 TinyWebServer::PathHandler handlers[] = {
@@ -38,11 +39,11 @@ TinyWebServer::PathHandler handlers[] = {
   //
   // `put_handler' is defined in TinyWebServer
   {"/", TinyWebServer::GET, &index_handler },
-//  {"/program", TinyWebServer::GET, &program_handler },
+  {"/program", TinyWebServer::GET, &program_handler },
   {"/testget", TinyWebServer::POST, &testget_handler },
-//  {"/settings", TinyWebServer::GET, &settings_handler },
-  //{"/export", TinyWebServer::GET, &export_handler },
-//  {"/upload/" "*", TinyWebServer::PUT, &TinyWebPutHandler::put_handler },
+  {"/settings", TinyWebServer::GET, &settings_handler },
+  {"/export", TinyWebServer::GET, &export_handler },
+  {"/upload/" "*", TinyWebServer::PUT, &TinyWebPutHandler::put_handler },
   {"/" "*", TinyWebServer::GET, &file_handler },
   {NULL},
 };
@@ -319,15 +320,14 @@ boolean testget_handler(TinyWebServer& web_server){
   return true; //exit the handler 
 }
 
-
-
-/*boolean program_handler(TinyWebServer& web_server){
+boolean program_handler(TinyWebServer& web_server){
 
   Client& client = web_server.get_client();
   Serial.print("Free RAM: ");
   Serial.println(FreeRam());
-  client.println("HTTP/1.0 200 OK\nContent-Type: text/html\n");  //2 line header including mandatory blank line to signify data below
-  //client.print("0,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;0;");
+  prep_browser();
+
+  client.print("0,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;0;");
   client.print(FreeRam());
   client.print(";");
   client.print("\n");
@@ -336,56 +336,32 @@ boolean testget_handler(TinyWebServer& web_server){
 }
 
 boolean settings_handler(TinyWebServer& web_server){
-  Client& client = web_server.get_client();
   Serial.print("Free RAM: ");
   Serial.println(FreeRam());
-  client.println("HTTP/1.0 200 OK\nContent-Type: text/html\n");  //2 line header w/ blank line to signify data below
+  
+  web_server.send_error_code(200);
+  web_server.send_content_type("text/html");
+  web_server.end_headers();
+  Client& client = web_server.get_client();
+  
   client.print("0,1,0,0,1,0,0,0,1,0,0,0;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;103,246,492,103,246,492,103,246,492,103,246,492;1,2,3,4,5,6;0;");
   client.print(FreeRam());
   client.print(";");
   client.print("\n");
   client.stop();
   return true; //exit the handler 
-}*/
+}
 
-/*boolean export_handler(TinyWebServer& web_server) {
-	web_server.send_error_code(200);
-	web_server.send_content_type("text/plain");
+boolean export_handler(TinyWebServer& web_server) {
+  web_server.send_error_code(200);
+  web_server.send_content_type("text/plain");
   web_server.end_headers();
   Client& client = web_server.get_client();
-	client.print("Date, Description\nSettings:0,1,0,0,1,0,0,0,1,0,0,0;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;103,246,492,103,246,492,103,246,492,103,246,492;1,2,3,4,5,6;\nProgram: 0,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;$\n");
-	client.stop();
-	return true;
-}*/
-
-
-//boolean blink_led_handler(TinyWebServer& web_server) {
-//  web_server.send_error_code(200);
-//  web_server.send_content_type("text/plain");
-//  web_server.end_headers();
-  // Reverse the state of the LED.
-//  setLedEnabled(!getLedState());
-//  Client& client = web_server.get_client();
-//  if (client.available()) {
-//    char ch = (char)client.read();
-//    if (ch == '0') {
-//      setLedEnabled(false);
-//    } else if (ch == '1') {
-//      setLedEnabled(true);
-//    }
-//  }
-//  return true;
-//}
-
-
-//boolean led_status_handler(TinyWebServer& web_server) {
-//  web_server.send_error_code(200);
-//  web_server.send_content_type("text/plain");
-//  web_server.end_headers();
-//  Client& client = web_server.get_client();
-//  client.println(getLedState(), DEC);
-//  return true;
-//}
+  
+  client.print("Date, Description\nSettings:0,1,0,0,1,0,0,0,1,0,0,0;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;103,246,492,103,246,492,103,246,492,103,246,492;1,2,3,4,5,6;\nProgram: 0,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;\n");
+  client.stop();
+  return true;
+}
 
 
 boolean index_handler(TinyWebServer& web_server) {
@@ -393,6 +369,43 @@ boolean index_handler(TinyWebServer& web_server) {
   return true;
 }
 
+void file_uploader_handler(TinyWebServer& web_server,
+			   TinyWebPutHandler::PutAction action,
+			   char* buffer, int size) {
+  static uint32_t start_time;
+  static uint32_t total_size;
+
+  switch (action) {
+  case TinyWebPutHandler::START:
+    start_time = millis();
+    total_size = 0;
+    if (!file.isOpen()) {
+      // File is not opened, create it. First obtain the desired name
+      // from the request path.
+      char* fname = web_server.get_file_from_path(web_server.get_path());
+      if (fname) {
+	Serial << F("Creating ") << fname << "\n";
+	file.open(&root, fname, O_CREAT | O_WRITE | O_TRUNC);
+	free(fname);
+      }
+    }
+    break;
+
+  case TinyWebPutHandler::WRITE:
+    if (file.isOpen()) {
+      file.write(buffer, size);
+      total_size += size;
+    }
+    break;
+
+  case TinyWebPutHandler::END:
+    file.sync();
+    Serial << F("Wrote ") << file.fileSize() << F(" bytes in ")
+	   << millis() - start_time << F(" millis (received ")
+           << total_size << F(" bytes)\n");
+    file.close();
+  }
+}
 
 
 
@@ -437,7 +450,7 @@ void setup() {
 
   if (has_filesystem) {
     // Assign our function to `upload_handler_fn'.
-   // TinyWebPutHandler::put_handler_fn = file_uploader_handler;
+   TinyWebPutHandler::put_handler_fn = file_uploader_handler;
   }
 
   // Initialize the Ethernet.
