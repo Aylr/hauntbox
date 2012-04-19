@@ -88,90 +88,119 @@ $(function(){//shortcut for doc.ready
 		
 		//GET REAL DATA FROM THE ARDUINO VIA A GET REQUEST
 		
-		var dummy_program_data = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;1;778"
+		var default_program = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;1;778"
+		$.ajax({
+			url: '/program.txt',
+			type: 'GET',
+			success: function(data){
+				populate_program(data);
+				update_status_and_ram(data);
+			},
+			error: function(data){
+				//failure ALERT HERE..............
+				populate_program(default_program);
+				alert("default program used");
+			}
+		});
 		
-		var input_array = new Array(), input_onoff = new Array(), on_delay = new Array(), output_array = new Array(), output_onoff = new Array(), duration = new Array();
+		function populate_program(string){
+			var input_array = new Array(), input_onoff = new Array(), on_delay = new Array(), output_array = new Array(), output_onoff = new Array(), duration = new Array();
 		
-		var incoming_program = dummy_program_data.split(";")		//split into substrings
-		var input_array = incoming_program[0].split(",");		//split substrings into arrays of strings "1,2,3,..." --> ["1","2","3",...]
-		var input_onoff = incoming_program[1].split(",");
-		var on_delay = incoming_program[2].split(",");
-		var output_array = incoming_program[3].split(",");
-		var output_onoff = incoming_program[4].split(",");
-		var duration = incoming_program[5].split(",");
+			var incoming_program = string.split(";")		//split into substrings
+			var input_array = incoming_program[0].split(",");		//split substrings into arrays of strings "1,2,3,..." --> ["1","2","3",...]
+			var input_onoff = incoming_program[1].split(",");
+			var on_delay = incoming_program[2].split(",");
+			var output_array = incoming_program[3].split(",");
+			var output_onoff = incoming_program[4].split(",");
+			var duration = incoming_program[5].split(",");
 				
-		array_of_strings_to_ints(input_array);							//run all the arrays through the integerizer
-		array_of_strings_to_ints(input_onoff);							//CONSIDER PUTTING THE SPLIT "," STUFF INTO THE CLEAN() FUNCTION
- 		array_of_strings_to_ints(on_delay);
-		array_of_strings_to_ints(output_array);
-		array_of_strings_to_ints(output_onoff);
-		array_of_strings_to_ints(duration);
+			array_of_strings_to_ints(input_array);							//run all the arrays through the integerizer
+			array_of_strings_to_ints(input_onoff);							//CONSIDER PUTTING THE SPLIT "," STUFF INTO THE CLEAN() FUNCTION
+	 		array_of_strings_to_ints(on_delay);
+			array_of_strings_to_ints(output_array);
+			array_of_strings_to_ints(output_onoff);
+			array_of_strings_to_ints(duration);
 		
-		/*
-		console.log(input_array);
-		console.log(input_onoff);
-		console.log(on_delay);
-		console.log(output_array);
-		console.log(output_onoff);
-		console.log(duration);
-		*/
+			/*
+			console.log(input_array);
+			console.log(input_onoff);
+			console.log(on_delay);
+			console.log(output_array);
+			console.log(output_onoff);
+			console.log(duration);
+			*/
+			
+			set_inputs("select.sensor",input_array);			//set each input with the appropriate array
+			set_inputs("select.sensor_state",input_onoff);
+			set_inputs("input.wait_time",on_delay);
+			set_inputs("select.output",output_array);
+			set_inputs("select.output_state",output_onoff);
+			set_inputs("input.output_duration",duration);
+		}//end populate_program()
 		
 		//Settings receiving protocol (Arduino --> Browser)
 		//input defs;output defs;input names;output names;thresholds;retrigger;status code;Free RAM;
 		//"1,1,1,1,1,1,1,1,1,1,1,1;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;thresholds...;retrigger;0;199;"
-		//
 	
-		//LOAD THE ACTUAL SETTINGS HERE VIA AJAX REQUEST...
-		var dummy_settings_data = "0,1,0,0,1,0,0,0,1,0,0,0;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;103,246,492,103,246,492,103,246,492,103,246,492;1,2,3,4,5,6;0;199;"
-		var input_names = new Array(), output_names = new Array(), io_definitions = new Array(), io_voltage_thresholds = new Array(), retrigger_delays = new Array();
+		var default_settings = "1,1,1,1,1,1,1,1,1,1,1,1;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;" + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + ";1,1,1,1,1,1;0;111111;"
+		
+		$.ajax({						//load the settings via AJAX
+			url: '/settings.txt',
+			type: 'GET',
+			success: function(data){
+				populate_settings(data);				//if successful, populate the settings
+				update_status_and_ram(data);
+			},
+			error: function(data){
+				//failure ALERT HERE..............
+				populate_settings(default_settings);	//if failed, use default settings
+				update_status_and_ram(default_settings);
+				alert("default settings used");
+			}
+		});
 
-		var incoming_settings = dummy_settings_data.split(";");	//split into substrings
+		function populate_settings(string){
+			var input_names = new Array(), output_names = new Array(), io_definitions = new Array(), io_voltage_thresholds = new Array(), retrigger_delays = new Array();
+			var incoming_settings = string.split(";");	//split into substrings
 
-		if (incoming_settings[incoming_settings.length - 1].length == 0) {		//test for length == 0 then delete element
-			incoming_settings.splice(incoming_settings.length - 1,1);		//this trims off the junk after the last ";"
-		};
+			if (incoming_settings[incoming_settings.length - 1].length == 0) {		//test for length == 0 then delete element
+				incoming_settings.splice(incoming_settings.length - 1,1);		//this trims off the junk after the last ";"
+			};
 		
-		io_definitions = incoming_settings[0].split(",");	//split substrings into arrays of strings "1,2,3,..." --> ["1","2","3",...]
-		input_names = incoming_settings[1].split(",");
-		output_names = incoming_settings[2].split(",");
-		io_voltage_thresholds = incoming_settings[3].split(",");
-		retrigger_delays = incoming_settings[4].split(",");
+			io_definitions = incoming_settings[0].split(",");	//split substrings into arrays of strings "1,2,3,..." --> ["1","2","3",...]
+			input_names = incoming_settings[1].split(",");
+			output_names = incoming_settings[2].split(",");
+			io_voltage_thresholds = incoming_settings[3].split(",");
+			retrigger_delays = incoming_settings[4].split(",");
 		
-		array_of_strings_to_ints(io_definitions);
-		array_of_strings_to_ints(io_voltage_thresholds);
-		array_of_strings_to_ints(retrigger_delays);
+			array_of_strings_to_ints(io_definitions);
+			array_of_strings_to_ints(io_voltage_thresholds);
+			array_of_strings_to_ints(retrigger_delays);
 		
-		/*
-		console.log(io_definitions);
-		console.log(input_names);
-		console.log(output_names);
-		console.log(io_voltage_thresholds);
-		console.log(retrigger_delays);
-		*/
+			/*
+			console.log(io_definitions);
+			console.log(input_names);
+			console.log(output_names);
+			console.log(io_voltage_thresholds);
+			console.log(retrigger_delays);
+			*/
 		
-		set_io_names("select.sensor",input_names);				//call the set io name functions
-		set_io_names("select.output",output_names);
-	
-		//if definitions, names are blank, populate w/ intellegent defaults
-		//DECIDE WHAT THE DEFAULTS SHOULD BE AND LINK W/ FIRMWARE
+			set_io_names("select.sensor",input_names);				//call the set io name functions
+			set_io_names("select.output",output_names);
+			
+			set_inputs("input.highlow",pad_radio_array(io_definitions));	//be sure to pad the radio array with it's paired inversions before sending to the set_inputs function
+			set_inputs(".input_name",input_names);
+			set_inputs("div.settings .output_name",output_names);
+			set_inputs("div.settings .threshold",io_voltage_thresholds);
+			set_inputs("div.settings .retrigger",retrigger_delays);
+		}//end populate_settings()
 		
-		set_inputs("select.sensor",input_array);			//set each input with the appropriate array
-		set_inputs("select.sensor_state",input_onoff);
-		set_inputs("input.wait_time",on_delay);
-		set_inputs("select.output",output_array);
-		set_inputs("select.output_state",output_onoff);
-		set_inputs("input.output_duration",duration);
 		
-		set_inputs("input.highlow",pad_radio_array(io_definitions));	//be sure to pad the radio array with it's paired inversions before sending to the set_inputs function
-		set_inputs(".input_name",input_names);
-		set_inputs("div.settings .output_name",output_names);
-		set_inputs("div.settings .threshold",io_voltage_thresholds);
-		set_inputs("div.settings .retrigger",retrigger_delays);
-		
-		status_message(parseInt(incoming_settings[5]));		//update the status alert
-		console.log(incoming_settings);
-		ram_status(incoming_settings[6]);					//update the free ram display
-
+		function update_status_and_ram(data){
+			data = data.split(";");									//parse the incoming string on ";"
+			ram_status(data[data.length - 2]);						//update the free ram display (the 2nd to last element)
+			status_message(parseInt(data[data.length - 3]));		//update the status alert (the 3rd to last element)
+		}
 	};//end load_settings()
 	
 	set_voltage_thresholds();			//setup the settings form with proper threshold values
@@ -187,9 +216,10 @@ $(function(){//shortcut for doc.ready
 		}else{									//no: proceed with navigation change
 			var chosen = $(this).attr("class");
 			if (chosen == "settings") {
-			//load settings
+				//load settings
+				load_settings();					//load the data and populate form
 			}else if (chosen == "program"){
-			//load program
+				load_settings();					//load the data and populate form
 			}else if (chosen == "export"){
 				//load exports
 				$.ajax({
@@ -209,7 +239,8 @@ $(function(){//shortcut for doc.ready
 						//alert: fail
 						$("div.export pre.settings").html("Please try again.");
 					}
-				});//end ajax
+				});
+				
 				$.ajax({
 					url: '/program.txt',
 					type: 'GET',
@@ -244,6 +275,7 @@ $(function(){//shortcut for doc.ready
 		$(".modal").modal("hide");			//hide the modal
 		modal_h3.html("Unsaved Changes");	//reset header
 		modal_body.html("Would you like to save your changes?")		//reset body
+		load_settings();					//reload the new settings and update the form
 		set_active_nav(next_page);			//go on with navigation
 	});
 	
@@ -636,7 +668,7 @@ $(function(){//shortcut for doc.ready
 						<li><a href="#" class="export"><i style="font-size:18px;" class="icon-download-alt"></i> Export</a></li>
 						<li><a href="#" class="help"><i style="font-size:18px;" class="icon-question-sign"></i> Help</a></li>
 					</ul>
-					<p class="nav pull-right">Free RAM: ?K</p>
+					<p class="nav pull-right">Free RAM: ?</p>
 				</div><!--/.nav-collapse -->
 			</div>
 		</div>
@@ -759,17 +791,16 @@ $(function(){//shortcut for doc.ready
 		<p>To save your favorite HauntBox setups from time to time.</p>
 		<h3>Today's date: 4/12/12</h3>
 		<textarea>Description</textarea>
-		<h3>Your currents settings</h3>
+		<h3>Your current settings</h3>
 		<p>Copy and paste these into a text file for safekeeping.</p>
+		
 		<pre class="settings">Settings string...........</pre>
-		<h3>Your currents program</h3>
+		<h3>Your current program</h3>
 		<p>Copy and paste these into a text file for safekeeping.</p>
 		<pre class="program">Program string...........</pre>
 		
-		
+		<h3>URL schema</h3>
 		<pre>
-		URL Schema
-
 		/program		current program
 		/settings		current settings
 		/updtprog		update program

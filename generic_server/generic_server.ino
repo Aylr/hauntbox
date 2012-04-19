@@ -21,7 +21,7 @@ char StorageString[100];
 
 /*********************************************/
 static uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-hack_header = "HTTP/1.0 200 OK\nContent-Type: text/html\n";  //2 line header including mandatory blank line to signify data below
+char* browser_header = "HTTP/1.0 200 OK\nContent-Type: text/html\n";  //2 line header including mandatory blank line to signify data below
 
 
 //--------------------------- Define Handlers ----------------------------
@@ -254,7 +254,7 @@ boolean testget_handler(TinyWebServer& web_server){
       for (i = 0; i < 6; i++)
         Serial.print(duration[i]); Serial.print(" ");
       
-      client.println("HTTP/1.0 200 OK\nContent-Type: text/html\n");  //2 line header including mandatory blank line to signify data below
+      client.println(browser_header);
       //send some sample data back to the broswer
       client.print("Free RAM: ");
       client.print(FreeRam());
@@ -320,12 +320,13 @@ boolean testget_handler(TinyWebServer& web_server){
   return true; //exit the handler 
 }
 
+
 boolean program_handler(TinyWebServer& web_server){
 
   Client& client = web_server.get_client();
   Serial.print("Free RAM: ");
   Serial.println(FreeRam());
-  prep_browser();
+  client.println(browser_header);
 
   client.print("0,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;0;");
   client.print(FreeRam());
@@ -339,10 +340,9 @@ boolean settings_handler(TinyWebServer& web_server){
   Serial.print("Free RAM: ");
   Serial.println(FreeRam());
   
-  web_server.send_error_code(200);
-  web_server.send_content_type("text/html");
-  web_server.end_headers();
+
   Client& client = web_server.get_client();
+  client.println(browser_header);
   
   client.print("0,1,0,0,1,0,0,0,1,0,0,0;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;103,246,492,103,246,492,103,246,492,103,246,492;1,2,3,4,5,6;0;");
   client.print(FreeRam());
@@ -353,10 +353,8 @@ boolean settings_handler(TinyWebServer& web_server){
 }
 
 boolean export_handler(TinyWebServer& web_server) {
-  web_server.send_error_code(200);
-  web_server.send_content_type("text/plain");
-  web_server.end_headers();
   Client& client = web_server.get_client();
+  client.println(browser_header);
   
   client.print("Date, Description\nSettings:0,1,0,0,1,0,0,0,1,0,0,0;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;103,246,492,103,246,492,103,246,492,103,246,492;1,2,3,4,5,6;\nProgram: 0,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;\n");
   client.stop();
