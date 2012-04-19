@@ -9,6 +9,9 @@
 div.settings input[type="text"] {
 	width: 8.5em;
 }
+div.alert{
+	display:none;
+}
 input, div.settings input.retrigger { /*slim up the wide 999 second boxes */
 	width: 2em;
 	text-align:right;
@@ -58,17 +61,22 @@ $(function(){//shortcut for doc.ready
 	var threshold_5V = 103;				//(5V / 5)*1024 = 103
 	var threshold_12V = 246;			//(12V / 5)*1024 = 246
 	var threshold_24V = 492;			//(24V / 5)*1024 = 492
+	
+	var default_program = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,10,50,300;1,2,3,4,5,6;0,1,0,1,0,1;0,1,3,5,10,30;0;00"
+	var default_settings = "1,1,1,1,1,1,1,1,1,1,1,1;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;" + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + ";1,1,1,1,1,1;0;00;"
 
 
 	//##################################### Initial Page Load Stuff ##################################### 
-	$("#unsaved_modal").modal('hide');
+	$("#unsaved_modal").modal('hide');		//hide the unsaved changes modal
+	$("div.alert").hide();					//hide the alerts
+	$("#display_container").children().hide();			//load with all "tabs" hidden
+	
 	for (i=1;i<6;i++){						//dynamically build the program rows
 		$("div.program .sentence").first().clone({deepWithDataAndEvents: true}).appendTo(".sentence_container");
 		//the settings rows are complicated by the radios that must be uniquely named
 		$("div.settings .inputs_container .sentence").first().clone({deepWithDataAndEvents: true}).appendTo("div.settings .inputs_container").children("span").html("Input " + ABC[i]).parent().children("input[type=radio]").attr("name","highlow" + (i+1));
 		$("div.settings .outputs_container .sentence").first().clone({deepWithDataAndEvents: true}).appendTo("div.settings .outputs_container").children("span").html("Output " + (i+1)).parent().children("input[type=radio]").attr("name","output_highlow" + (i+1));
 	}
-	$("#display_container").children().hide();			//load with all "tabs" hidden
 	$("div.program").show();							//...except the program div
 
 	function load_settings(){
@@ -85,10 +93,7 @@ $(function(){//shortcut for doc.ready
 		//2 = no SD card --> insert valid one and reset Arduino
 		//3 = file opening problem --> NOT SURE WHAT TO DO
 		//4 = corruption or read/write problem --> NOT SURE WHAT TO DO
-		
-		//GET REAL DATA FROM THE ARDUINO VIA A GET REQUEST
-		
-		var default_program = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;1;778"
+				
 		$.ajax({
 			url: '/program.txt',
 			type: 'GET',
@@ -141,9 +146,7 @@ $(function(){//shortcut for doc.ready
 		//Settings receiving protocol (Arduino --> Browser)
 		//input defs;output defs;input names;output names;thresholds;retrigger;status code;Free RAM;
 		//"1,1,1,1,1,1,1,1,1,1,1,1;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;thresholds...;retrigger;0;199;"
-	
-		var default_settings = "1,1,1,1,1,1,1,1,1,1,1,1;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;" + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + ";1,1,1,1,1,1;0;111111;"
-		
+			
 		$.ajax({						//load the settings via AJAX
 			url: '/settings.txt',
 			type: 'GET',
@@ -355,7 +358,18 @@ $(function(){//shortcut for doc.ready
 	
 	$(".input_name, output_name").alphanumeric({allow:" -.!@"});			//relies on the excellent work of https://github.com/treyhunner/jquery-formrestrict
 	$(".wait_time").numeric();
+	
+	$("a.brand").click(function(){
+		$("div.alert").toggle();
+	});
+	
+	$("div.alert .close").click(function(){				//hide the alert when closed	
+		$(this).parent().fadeOut();
+	});
 
+	$("div.help a.factory_defaults").click(function(){
+		factory_defaults()
+		});
 //##################################### Utility Functions #####################################
 	
 	function unsaved_modal(){
@@ -412,7 +426,6 @@ $(function(){//shortcut for doc.ready
 		};//loop through each column
 
 		console.log(post_data);				//log to firebug
-		//alert("Simulating save.... " + post_data);
 		
 		//ERROR HANDLING ********************************** PUT IN HERE ****************
 			//if failed
@@ -432,6 +445,25 @@ $(function(){//shortcut for doc.ready
 		})
 	};//end cupcake()
 
+	function factory_defaults(){
+		console.log("resetting to defaults");
+		$.ajax({
+			url: '/upload/program.txt',		//uploads to a specific file
+			type: 'PUT',
+			data: default_program,
+			success: function(){
+				console.log("reset program")
+			}
+		})
+		$.ajax({
+			url: '/upload/settings.txt',		//uploads to a specific file
+			type: 'PUT',
+			data: default_settings,
+			success: function(){
+				console.log("reset settings")
+			}
+		})
+	}
 	function fast_plus_minus(input,direction){	//this increments and fast increments either + or - based on the direction
 		//it is called by the delay field and the duration field
 		unsaved_changes = true;								//alerts the prog that something changed
@@ -624,8 +656,9 @@ $(function(){//shortcut for doc.ready
 				break;
 		}//end case
 		
-		//var alert = $("div.alert");
-		$("div.alert").attr("class","alert " + type).children("h4").html(header).next().html(message);
+		var alert = $("div.alert");
+		alert.attr("class","alert " + type).children("h4").html(header).next().html(message);
+		alert.fadeIn();
 
 		console.log("status_code: " + status_code);
 	}//end status_message()
@@ -675,9 +708,9 @@ $(function(){//shortcut for doc.ready
 	</div><!--//.navbar -->
 	
 	<div class="alert">
-		<a class="close" data-dismiss="alert">&times;</a>
-		<h4 class="alert-heading">HTML alert header</h4>
-		<p>html text</p>
+		<a class="close">&times;</a>
+		<h4 class="alert-heading">Alert</h4>
+		<p>Alert Info</p>
 	</div>
 
 <div id="display_container">    
@@ -812,6 +845,9 @@ $(function(){//shortcut for doc.ready
 	<div class="help">
 		<h2>Help</h2>
 		<p>Please visit our <a href="">website</a> for updated support</p>
+		
+		<a href="#" class="factory_defaults btn btn-danger">Reset to factory defaults</a>
+		
 		<p>kickstarter</p>
 		<p>email</p>
 		<p><a href="https://twitter.com/hauntbox" class="twitter-follow-button" data-show-count="false">Follow @hauntbox</a>
