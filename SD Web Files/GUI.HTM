@@ -95,7 +95,7 @@ $(function(){//shortcut for doc.ready
 		//4 = corruption or read/write problem --> NOT SURE WHAT TO DO
 				
 		$.ajax({
-			url: '/program.txt',
+			url: '/program',
 			type: 'GET',
 			success: function(data){
 				populate_program(data);
@@ -148,7 +148,7 @@ $(function(){//shortcut for doc.ready
 		//"1,1,1,1,1,1,1,1,1,1,1,1;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;thresholds...;retrigger;0;199;"
 			
 		$.ajax({						//load the settings via AJAX
-			url: '/settings.txt',
+			url: '/settings',
 			type: 'GET',
 			success: function(data){
 				populate_settings(data);				//if successful, populate the settings
@@ -834,11 +834,14 @@ $(function(){//shortcut for doc.ready
 		
 		<h3>URL schema</h3>
 		<pre>
-		/program		current program
-		/settings		current settings
-		/updtprog		update program
-		/updtsett		update settings
+		/program		current program + status + ram
+		/settings		current settings + status + ram
+		/program.txt	current program file
+		/settings.txt	current settings file
 		/export			export
+		
+		/updprog
+		/updsett
 		</pre>
 	</div>
 	

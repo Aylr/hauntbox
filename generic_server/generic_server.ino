@@ -322,13 +322,15 @@ boolean testget_handler(TinyWebServer& web_server){
 
 
 boolean program_handler(TinyWebServer& web_server){
-
+  send_file_name(web_server, "program.txt");
+  
   Client& client = web_server.get_client();
-  Serial.print("Free RAM: ");
-  Serial.println(FreeRam());
-  client.println(browser_header);
+  //Serial.print("Free RAM: ");
+  //Serial.println(FreeRam());
+  //client.println(browser_header);
 
-  client.print("0,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;0;");
+  //client.print("0,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;0;");
+  client.print(";0;");
   client.print(FreeRam());
   client.print(";");
   client.print("\n");
@@ -337,14 +339,13 @@ boolean program_handler(TinyWebServer& web_server){
 }
 
 boolean settings_handler(TinyWebServer& web_server){
-  Serial.print("Free RAM: ");
-  Serial.println(FreeRam());
-  
+  send_file_name(web_server, "settings.txt");
 
   Client& client = web_server.get_client();
-  client.println(browser_header);
+  //client.println(browser_header);
   
-  client.print("0,1,0,0,1,0,0,0,1,0,0,0;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;103,246,492,103,246,492,103,246,492,103,246,492;1,2,3,4,5,6;0;");
+  //client.print("0,1,0,0,1,0,0,0,1,0,0,0;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;103,246,492,103,246,492,103,246,492,103,246,492;1,2,3,4,5,6;0;");
+  client.print(";0;");    //send status code = 0
   client.print(FreeRam());
   client.print(";");
   client.print("\n");
@@ -402,6 +403,8 @@ void file_uploader_handler(TinyWebServer& web_server,
 	   << millis() - start_time << F(" millis (received ")
            << total_size << F(" bytes)\n");
     file.close();
+    
+    //IF PROGRAM.TXT WAS UPDATED, TRIGGER UPDATE TO PROGRAM ARRAYS
   }
 }
 
