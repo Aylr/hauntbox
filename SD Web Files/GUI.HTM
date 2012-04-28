@@ -198,7 +198,6 @@ $(function(){//shortcut for doc.ready
 			set_inputs("div.settings .retrigger",retrigger_delays);
 		}//end populate_settings()
 		
-		
 		function update_status_and_ram(data){
 			data = data.split(";");									//parse the incoming string on ";"
 			ram_status(data[data.length - 2]);						//update the free ram display (the 2nd to last element)
@@ -238,6 +237,12 @@ $(function(){//shortcut for doc.ready
 						$("div.export pre.settings").html(data);
 						console.log("file: " + data);
 					},
+					statusCode: {
+						404: function(){
+							$("div.export pre.settings").html("File not found");
+							status_message(99);
+						}
+					},
 					error: function(){
 						//alert: fail
 						$("div.export pre.settings").html("Please try again.");
@@ -265,7 +270,11 @@ $(function(){//shortcut for doc.ready
 			}
 			set_active_nav(next_page);
 		}
-	});
+		
+		function four_o_four(file){
+			
+		}
+	});//navbar.click()
 	
 	$(".modal .save").click(function(){		//defines what happens when the modal "Save Changes" is clicked
 		$(this).button('loading');			//set button to loading state
@@ -357,6 +366,7 @@ $(function(){//shortcut for doc.ready
 	});
 	
 	$(".input_name, output_name").alphanumeric({allow:" -.!@"});			//relies on the excellent work of https://github.com/treyhunner/jquery-formrestrict
+	
 	$(".wait_time").numeric();
 	
 	$("a.brand").click(function(){
@@ -368,8 +378,9 @@ $(function(){//shortcut for doc.ready
 	});
 
 	$("div.help a.factory_defaults").click(function(){
-		factory_defaults()
-		});
+		factory_defaults();
+	});
+	
 //##################################### Utility Functions #####################################
 	
 	function unsaved_modal(){
@@ -427,43 +438,72 @@ $(function(){//shortcut for doc.ready
 
 		console.log(post_data);				//log to firebug
 		
-		//ERROR HANDLING ********************************** PUT IN HERE ****************
-			//if failed
-			//unsaved_changes = true;
-			//alert --> take action
-			//if success
-		unsaved_changes = false;	//TEMPORARY HACK TO MIMIC SUCCESS OF POST
-		
 		/*$.post("/testget", post_data, function(data){ 	//the AJAX bit
 			$("#status_program").hide().html(data).fadeIn();
 		});*/
 		
 		$.ajax({
+			//ERROR HANDLING ********************************** PUT IN HERE ****************
+				//if failed
+				//unsaved_changes = true;
+				//alert --> take action
+				//if success
 			url: '/upload/' + file,		//uploads to a specific file
 			type: 'PUT',
-			data: post_data
+			data: post_data,
+			success: function(){
+				unsaved_changes = false;
+				status_message(0);
+				console.log("changes saved");
+				alert("put modal save success here");
+			},
+			error: function(){
+				//alert which file failed --> take action
+				status_message(7);
+			}
 		})
 	};//end cupcake()
 
 	function factory_defaults(){
+		var ajax_status = 0;				//used to count if both .ajax calls succeeded for alerts
 		console.log("resetting to defaults");
 		$.ajax({
-			url: '/upload/program.txt',		//uploads to a specific file
+			url: '/upload/program.txt',		//uploads program file
 			type: 'PUT',
 			data: default_program,
 			success: function(){
 				console.log("reset program")
+				ajax_status += 1;
+				succeeded(ajax_status);
+			},
+			error: function(){
+				failed();
 			}
 		})
 		$.ajax({
-			url: '/upload/settings.txt',		//uploads to a specific file
+			url: '/upload/settings.txt',		//uploads settings file
 			type: 'PUT',
 			data: default_settings,
 			success: function(){
 				console.log("reset settings")
+				ajax_status += 1;
+				succeeded(ajax_status);
+			},
+			error: function(){
+				failed();
 			}
 		})
+		
+		function failed(){
+			status_message(6);
+		}
+		function succeeded(status){	//only display success alert if both .ajax succeeded
+			if (status == 2){
+				status_message(5);
+			}
+		}
 	}
+	
 	function fast_plus_minus(input,direction){	//this increments and fast increments either + or - based on the direction
 		//it is called by the delay field and the duration field
 		unsaved_changes = true;								//alerts the prog that something changed
@@ -646,6 +686,30 @@ $(function(){//shortcut for doc.ready
 				button2 = "button2";
 				type = "alert-error";
 				break;
+			case 5:
+				//5 = Factory Defaults Loaded
+				header = "Hauntbox reset to factory defaults";
+				message = "Factory defaults loaded";
+				button1 = "button1";
+				button2 = "button2";
+				type = "alert-info";
+				break;
+			case 6:
+				//6 = Factory Defaults Failed
+				header = "Reset Failed";
+				message = "Factory defaults failed to load. --> NOT SURE WHAT TO DO";
+				button1 = "button1";
+				button2 = "button2";
+				type = "alert-error";
+				break;
+			case 7:
+				//7 = Save failed
+				header = "Save failed";
+				message = "Saving the file failed. --> NOT SURE WHAT TO DO";
+				button1 = "button1";
+				button2 = "button2";
+				type = "alert-error";
+				break;
 			default:
 				//if no error code or garbled --> NO CLUE WHAT SHOULD HAPPEN HERE
 				header = "Unknown Error";
@@ -657,6 +721,7 @@ $(function(){//shortcut for doc.ready
 		}//end case
 		
 		var alert = $("div.alert");
+		alert.hide();
 		alert.attr("class","alert " + type).children("h4").html(header).next().html(message);
 		alert.fadeIn();
 

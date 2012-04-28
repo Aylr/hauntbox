@@ -80,6 +80,7 @@ void send_file_name(TinyWebServer& web_server, const char* filename) {
       web_server.send_file(file);
       file.close();
     } else {
+      web_server.send_error_code(404);        //TESTING 404 CODES FOR JQUERY SAVE ERRORS
       web_server << F("Could not find file: ") << filename << "\n";
     }
   }
