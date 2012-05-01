@@ -82,6 +82,7 @@ $(function(){//shortcut for doc.ready
 	function load_settings(){
 		//this should load values from the firmware...
 		//including intelligent defaults and populate the form correctly
+		tempStatus = 0;
 
 		//Data receiving protocol (Arduino --> Browser)
 		//Input array;Input on/off;On delay;Output array;Output on/off;Duration;status code;Free RAM;
@@ -99,7 +100,11 @@ $(function(){//shortcut for doc.ready
 			type: 'GET',
 			success: function(data){
 				populate_program(data);
-				update_status_and_ram(data);
+				tempStatus ++;			//increment for one status message, not 2 flashy ones
+				console.log("tempStatus = " + tempStatus);
+				if (tempStatus == 2){
+					update_status_and_ram(data);
+				}
 			},
 			error: function(data){
 				//failure ALERT HERE..............
@@ -152,7 +157,11 @@ $(function(){//shortcut for doc.ready
 			type: 'GET',
 			success: function(data){
 				populate_settings(data);				//if successful, populate the settings
-				update_status_and_ram(data);
+				tempStatus ++;			//increment for one status message, not 2 flashy ones
+				console.log("tempStatus = " + tempStatus);
+				if (tempStatus == 2){
+					update_status_and_ram(data);
+				};
 			},
 			error: function(data){
 				//failure ALERT HERE..............
@@ -276,24 +285,24 @@ $(function(){//shortcut for doc.ready
 		}
 	});//navbar.click()
 	
-	$(".modal .save").click(function(){		//defines what happens when the modal "Save Changes" is clicked
+	$("#unsaved_modal .save").click(function(){		//defines what happens when the modal "Save Changes" is clicked
 		$(this).button('loading');			//set button to loading state
-		var modal_h3 = $(".modal h3");		//save the header
-		var modal_body = $(".modal p");		//save the body
+		var modal_h3 = $("#unsaved_modal h3");		//save the header
+		var modal_body = $("#unsaved_modal p");		//save the body
 		modal_h3.html("Saving");			//change header to "saving"
 		modal_body.html("Please wait while saving...");
 		save(current_page);					//try to save
 		$(this).button('reset');			//reset button
-		$(".modal").modal("hide");			//hide the modal
+		$("#unsaved_modal").modal("hide");			//hide the modal
 		modal_h3.html("Unsaved Changes");	//reset header
 		modal_body.html("Would you like to save your changes?")		//reset body
 		load_settings();					//reload the new settings and update the form
 		set_active_nav(next_page);			//go on with navigation
 	});
 	
-	$(".modal .discard").click(function(){		//defines what happens when the modal "Discard Changes" is clicked
+	$("#unsaved_modal .discard").click(function(){		//defines what happens when the modal "Discard Changes" is clicked
 		unsaved_changes = false;		//reset unsaved_changes
-		$(".modal").modal('hide');		//hide the modal
+		$("#unsaved_modal").modal('hide');		//hide the modal
 		set_active_nav(next_page);		//go to the requested page
 	});
 	
@@ -312,6 +321,7 @@ $(function(){//shortcut for doc.ready
 	});
 
 	$(".save_program").click(function(){
+		$(this).html("<i class=\"icon-time\"></i> Saving...")
 		save("program");
 	});
 
@@ -392,6 +402,18 @@ $(function(){//shortcut for doc.ready
 		}
 	}//end unsaved_modal()
 	
+	function saved_successfully(type){
+		var modal = $("#successful_save_modal");							//select the modal
+		type = type.charAt(0).toUpperCase() + type.slice(1);				//capitalize first letter (program --> Program)
+		modal.children().first().children("h3").html(type + " saved");		//change the modal h3 header
+		modal.children().last().children("p").html(type + " saved");		//change the modal body
+		modal.modal('show');												//show the modal
+		timeout = setTimeout(function(){									//do stuff in... 2 seconds
+				$(".save_program").html("<i class=\"icon-check\"></i> Save Program");	//reset the Save button
+				modal.modal('hide');										//hide the modal
+			},2000);														//2 seconds
+	}
+	
 	function set_active_nav(selector){	//this function acts like a tab manager
 	//setting the clicked one to active, showing & hiding the appropriate content
 	
@@ -413,10 +435,10 @@ $(function(){//shortcut for doc.ready
 		}else if (type == "settings"){
 			column_names = ["div.settings input[type='radio']:checked", "div.settings input.input_name", "div.settings input.output_name", "div.settings select.threshold", "div.settings input.retrigger"];
 		}		
-		cupcake(column_names,file);		//send the data with the filename
+		cupcake(column_names,file,type);		//send the data with the filename
 	}
 	
-	function cupcake(column_names,file){	//preps the post string and sends it like a nice box of cupcakes
+	function cupcake(column_names,file,type){	//preps the post string and sends it like a nice box of cupcakes
 		var post_data = "";					//initialize the POST string
 		var counter = 0;					//use to insert commas after each row
 
@@ -455,9 +477,10 @@ $(function(){//shortcut for doc.ready
 				unsaved_changes = false;
 				status_message(0);
 				console.log("changes saved");
-				alert("put modal save success here");
+				saved_successfully(type);
+				
 			},
-			error: function(){
+			error: function(){		//keep unsaved_changes = true
 				//alert which file failed --> take action
 				status_message(7);
 			}
@@ -649,10 +672,13 @@ $(function(){//shortcut for doc.ready
 			case 0:
 				//0 = all good
 				header = "All systems good";
-				message = "Everything appears normal, captian.";
+				message = "Everything appears normal, sir.";
 				button1 = "button1";
 				button2 = "button2";
 				type = "alert-success";
+				setTimeout(function(){
+					$(".alert").fadeOut();
+				},2000);
 				break;
 			case 1:
 				//1 = program doesn't make sense --> reload or use defaults
@@ -900,13 +926,11 @@ $(function(){//shortcut for doc.ready
 		<h3>URL schema</h3>
 		<pre>
 		/program		current program + status + ram
-		/settings		current settings + status + ram
+		/settings	current settings + status + ram
 		/program.txt	current program file
 		/settings.txt	current settings file
-		/export			export
-		
-		/updprog
-		/updsett
+		/export		export
+		/ram		free ram
 		</pre>
 	</div>
 	
@@ -939,6 +963,16 @@ $(function(){//shortcut for doc.ready
 		<div class="modal-footer">
 			<a href="#" class="discard btn">Discard changes</a>
 			<a href="#" class="save btn btn-primary" data-loading-text="Saving...">Yes! Save changes</a>
+		</div>
+	</div>
+	
+	<div class="modal hide" id="successful_save_modal">
+		<div class="modal-header">
+			<a class="close" data-dismiss="modal">&times</a>
+			<h3>Saved</h3>
+		</div>
+		<div class="modal-body">
+			<p>Program saved successfully.</p>
 		</div>
 	</div>
 	
