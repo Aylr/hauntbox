@@ -16,18 +16,18 @@ int d = 0;  //Delay used in testing of code.  Set to 0 if not testing code.
 int guiFlag = 0;  //GUI Flag tells us when there are new definitions from the GUI
 
 //THESE VALUES ARE SET ARBITRARILY TO TEST CODE.  WILL NEED TO CHANGE IN FINAL VERSION!
-int inputArray[] =       {1, 6, 6, 6, 6, 6};    //which input (0-6) is read by which row ({row0, row1, ...})
+byte inputArray[] =       {1, 6, 6, 6, 6, 6};    //which input (0-6) is read by which row ({row0, row1, ...})
                                                 //0 = no input, 1 = input #1, 2 = input #2, etc
 
-int inputHiLowArray[] =  {1, 1, 1, 1, 1, 0};    //What signal level is considered "on" for input # ({input1, input2, ...})
+byte inputHiLowArray[] =  {1, 1, 1, 1, 1, 0};    //What signal level is considered "on" for input # ({input1, input2, ...})
                                                 //1 = High, 0 = Low 
                                                 
-int outputArray[] =      {1, 2, 3, 4, 5, 6};    //which outputs (0-6) are controlled by which row ({row0, row1, ...})
+byte outputArray[] =      {1, 2, 3, 4, 5, 6};    //which outputs (0-6) are controlled by which row ({row0, row1, ...})
                                                 //0 = no output, 1 = output #1, 2 = output #2, etc
                                                 
-int outputHiLowArray[] = {1, 1, 1, 1, 1, 1};    //Output considered on when High (1) or Low (0)
-int DelayRow[] = {0, 2000, 3000, 4000, 5000, 6000};     //Time in millis  
-int DurationRow[] = {1000, 6000, 6000, 6000, 6000, 6000};  //Time in millis  //TURN INTO AN ARRAY FOR FINAL CODE
+byte outputHiLowArray[] = {1, 1, 1, 1, 1, 1};    //Output considered on when High (1) or Low (0)
+unsigned int DelayRow[] = {0, 2000, 3000, 4000, 5000, 6000};     //Time in millis  
+unsigned int DurationRow[] = {1000, 6000, 6000, 6000, 6000, 6000};  //Time in millis  //TURN INTO AN ARRAY FOR FINAL CODE
 
 
 //----------------------Define variables in code-----------------------------
@@ -50,7 +50,7 @@ int pinIn4 = 3;  //Analog pin
 int pinIn5 = 4;  //Analog pin
 int pinIn6 = 5;  //Analog pin
 
-int CS_pin = 4;  //Pin to SD card  IS THIS THE SAME AS PIN 10, BUT FOR THE SHIELD?
+//int CS_pin = 4;  //Pin to SD card  IS THIS THE SAME AS PIN 10, BUT FOR THE SHIELD?
 int pinOut1 = 7; //Digital pin
 int pinOut2 = 6; //Digital pin
 int pinOut3 = 5; //Digital pin
@@ -393,14 +393,8 @@ boolean testget_handler(TinyWebServer& web_server){
 
 boolean program_handler(TinyWebServer& web_server){
   send_file_name(web_server, "program.txt");
-  
   Client& client = web_server.get_client();
-  //Serial.print("Free RAM: ");
-  //Serial.println(FreeRam());
-  //client.println(browser_header);
-
-  //client.print("0,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;0;");
-  client.print(";0;");
+  client.print("0;");    //send status code = 0
   client.print(FreeRam());
   client.print(";");
   client.print("\n");
@@ -410,12 +404,8 @@ boolean program_handler(TinyWebServer& web_server){
 
 boolean settings_handler(TinyWebServer& web_server){
   send_file_name(web_server, "settings.txt");
-
   Client& client = web_server.get_client();
-  //client.println(browser_header);
-  
-  //client.print("0,1,0,0,1,0,0,0,1,0,0,0;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;103,246,492,103,246,492,103,246,492,103,246,492;1,2,3,4,5,6;0;");
-  client.print(";0;");    //send status code = 0
+  client.print("0;");    //send status code = 0
   client.print(FreeRam());
   client.print(";");
   client.print("\n");
@@ -725,7 +715,7 @@ void loop(){
     else if(stateRow[z] == 3) {             //STATE 3 = Delay vs. timeStamp
       nowTime = millis();
       netTime = nowTime - timeStampDelayRow[z];
-      if(netTime >= DelayRow[z]) {          //Tests to see if time > delay
+      if(netTime >= DelayRow[z] * 1000) {          //Tests to see if time > delay
         stateRow[z] = 4;                    //If we've met our delay, go to next state
       }
     }
@@ -737,7 +727,7 @@ void loop(){
     else if(stateRow[z] == 5) {             //STATE 5 = Duration of output "on"
       nowTime = millis();
       netTime = nowTime - timeStampDurationRow[z];
-      if(netTime >= DurationRow[z]) {      
+      if(netTime >= DurationRow[z] * 1000) {      
         outputSelectFunction(z, 0);        //Turn output off after duration is over
         stateRow[z] = 1;                   //Moves on to trigger-waiting state
       }
@@ -772,65 +762,38 @@ void loop(){
   if(guiFlag == 0) {  //No new GUI definitions
     //return;  //break out of main funtion if no new definitions have come in.  POSSIBLY REMOVE THE HARD RETURN?
   }
-  if(guiFlag == 1) {  //New GUI definitions
+  if(guiFlag == 1) {  //If there are new GUI definitions...
     Serial.println("Program.txt updated");
-    char* newvar = open_file("program.txt");
-
-    Serial.println(newvar);
-    convert(newvar);
     
-  //----- Section AB1 -----
-  // PUT FUNCTION HERE TO READ GUI DEFINITIONS
-  //  int inputArray[] =       
-  //  int inputHiLowArray[] =                     
-  //  int outputArray[] =                          
-  //  int outputHiLowArray[] = 
-  //  int DelayRow[] = 
-  //  int DurationRow[] = 
-  
-  
-  
-  //----- Section AB2 -----
-  //FUNCTION TO MAKE SURE GUI DEFINITIONS MAKE SENSE
- 
- 
- 
- //----- Section AB3 -----
- //FUNCTION TO SAVE DEFINITIONS TO SD CARD
+    //----- Section AB1 -----
+    // PUT FUNCTION HERE TO READ GUI DEFINITIONS
+    char* newvar = open_file("program.txt");    //store the file in a var
+    
+    Serial.println(newvar);                      //print the file out
+    convert(newvar);                            //convert the file to arrays
+    
+    //----- Section AB2 -----
+    //FUNCTION TO MAKE SURE GUI DEFINITIONS MAKE SENSE
+     
+    //----- Section AB3 -----
+    //FUNCTION TO SAVE DEFINITIONS TO SD CARD
 
-
- 
-  
-  //CHECK TO SEE IF SD CARD IS THERE
-  
-  //Open file to write to
- // File dataFile = SD.open("definitions.csv", FILE_WRITE);
- // if (dataFile) {
- //   //FUNCTION HERE TO WRITE TO FILE
- //   dataFile.close();
- //   guiMess(6);  //GUI message #6 
- // }
- // else {         //If unable to open SD file.
- //   guiMess(3);  //GUI message #3
- // }
-  
-  
-  
-  
-  //----- Section AB4 -----
-  //FUNCTION TO READ DEFINITIONS ON SD CARD
-  
-  //COMPARE TO VALUES FROM AB1
-  
-  //Sends GUI confirmation message
-  guiMess(5);  //GUI message #5
-  
-  guiFlag = 0;
-}  
+    //CHECK TO SEE IF SD CARD IS THERE 
+    
+    //----- Section AB4 -----
+    //FUNCTION TO READ DEFINITIONS ON SD CARD
+    
+    //COMPARE TO VALUES FROM AB1
+    
+    //Sends GUI confirmation message
+    guiMess(5);  //GUI message #5
+    
+    guiFlag = 0;                                //reset guiFlag
+  }
   
  
  
-   if (has_filesystem) {
+   if (has_filesystem) {  //This tiny section runs the entire web server. Must be in void loop()
     web.process();
   }
 }// end void loop
@@ -843,14 +806,27 @@ char* open_file(char* input_file){
   byte i = 0;                           //used as counter for building string
   char* fail = "";                      //the failure return
   
-  //if (!SD.begin(4)) {
-  if (!has_filesystem){                  //hijack the already check SD from TinyWebServer library
-    Serial.println("failed");
-    return fail;          
-  }
+  Serial.print("SD.begin = ");
+  Serial.print(SD.begin(SD_CS));
+  Serial.print(" ,has_filesystem = ");
+  Serial.println(has_filesystem);
+  
+  //THIS BOTHERSOME SECTION SEEMS TO BEHAVE INCONSISTENTLY AT BEST. COMMENTING OUT TO KEEP THE BRIDGE WORKING. IT IS ASSUMED THAT THE SD CARD IS WORKING AT THIS POINT.
+  //if (!SD.begin(SD_CS)) {
+  //if (!has_filesystem){                  //hijack the already check SD from TinyWebServer library
+  //  Serial.println("SD.begin failed");
+  //  return fail;          
+  //}
   //Serial.println("ready");
+
   
   File file = SD.open(input_file);
+  
+  Serial.print("input_file = ");
+  Serial.print(input_file);
+  Serial.print(", file read = ");
+  Serial.println(file);
+  
   if (file) {                           //if there's a file
     Serial.println(input_file);
     while (file.available()) {          //if there are unread bytes in the file
@@ -871,12 +847,12 @@ char* open_file(char* input_file){
 char convert(char* readString){
   char* col[6];
   char* tok;
-  byte input_arr[6];
-  byte in_onoff[6];
-  unsigned int ondelay[6];
-  byte out_arr[6];
-  byte out_onoff[6];
-  unsigned int duration[6];
+  //byte input_arr[6]; inputArray
+  //byte in_onoff[6];
+  //unsigned int ondelay[6];
+  //byte out_arr[6];
+  //byte out_onoff[6];
+  //unsigned int duration[6];
   
   byte i = 0;
  
@@ -918,7 +894,7 @@ char convert(char* readString){
       for (i = 0; i < 6; i++) {
         if (tok == NULL)
           break;
-        input_arr[i] = (byte)atoi(tok);
+        inputArray[i] = (byte)atoi(tok);
         tok = strtok(NULL, ",");
       }
       // in_onoff
@@ -926,7 +902,7 @@ char convert(char* readString){
       for (i = 0; i < 6; i++) {
         if (tok == NULL)
           break;
-        in_onoff[i] = (byte)atoi(tok);
+        inputHiLowArray[i] = (byte)atoi(tok);
         tok = strtok(NULL, ",");
       }
       // ondelay
@@ -934,7 +910,7 @@ char convert(char* readString){
       for (i = 0; i < 6; i++) {
         if (tok == NULL)
           break;
-        ondelay[i] = (unsigned int)atoi(tok);
+        DelayRow[i] = (unsigned int)atoi(tok);
         tok = strtok(NULL, ",");
       }
       // out_arr
@@ -942,7 +918,7 @@ char convert(char* readString){
       for (i = 0; i < 6; i++) {
         if (tok == NULL)
           break;
-        out_arr[i] = (byte)atoi(tok);
+        outputArray[i] = (byte)atoi(tok);
         tok = strtok(NULL, ",");
       }
       // out_onoff
@@ -950,7 +926,7 @@ char convert(char* readString){
       for (i = 0; i < 6; i++) {
         if (tok == NULL)
           break;
-        out_onoff[i] = (byte)atoi(tok);
+        outputHiLowArray[i] = (byte)atoi(tok);
         tok = strtok(NULL, ",");
       }
       // duration
@@ -958,44 +934,44 @@ char convert(char* readString){
       for (i = 0; i < 6; i++) {
         if (tok == NULL)
           break;
-        duration[i] = (unsigned int)atoi(tok);
+        DurationRow[i] = (unsigned int)atoi(tok);
         tok = strtok(NULL, ",");
       }
       
       // Now print out all the values to make sure it all worked
       Serial.print("Input array: ");
       for (i = 0; i < 6; i++){
-        Serial.print(input_arr[i]);
+        Serial.print(inputArray[i]);
         Serial.print(" ");
       }
       
-      Serial.print("\nInput on/off: ");
+      Serial.print("\ninputHiLowArray: ");
       for (i = 0; i < 6; i++){
-        Serial.print(in_onoff[i]);
+        Serial.print(inputHiLowArray[i]);
         Serial.print(" ");
       }
       
       Serial.print("\nOn delay: ");
       for (i = 0; i < 6; i++){
-        Serial.print(ondelay[i]);
+        Serial.print(DelayRow[i]);
         Serial.print(" ");
       }
       
       Serial.print("\nOutput array: ");
       for (i = 0; i < 6; i++){
-        Serial.print(out_arr[i]);
+        Serial.print(outputArray[i]);
         Serial.print(" ");
       }
       
       Serial.print("\nOutput on/off: ");
       for (i = 0; i < 6; i++){
-        Serial.print(out_onoff[i]);
+        Serial.print(outputHiLowArray[i]);
         Serial.print(" ");
       }
       
       Serial.print("\nDuration: ");
       for (i = 0; i < 6; i++){
-        Serial.print(duration[i]);
+        Serial.print(DurationRow[i]);
         Serial.print(" ");
       }
 }//end convert cupcake string to arrays function
