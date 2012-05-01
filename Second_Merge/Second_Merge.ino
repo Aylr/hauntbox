@@ -470,6 +470,7 @@ boolean status_handler(TinyWebServer& web_server) {
 
 
 // -------------------- file uploader -------------------- 
+byte tempGuiFlag = 0;
 
 void file_uploader_handler(TinyWebServer& web_server,
 			   TinyWebPutHandler::PutAction action,
@@ -477,7 +478,7 @@ void file_uploader_handler(TinyWebServer& web_server,
   static uint32_t start_time;
   static uint32_t total_size;
   char* fname;
-  byte tempGuiFlag = 0;
+
 
   switch (action) {
   case TinyWebPutHandler::START:
@@ -493,10 +494,13 @@ void file_uploader_handler(TinyWebServer& web_server,
 
         //IF PROGRAM.TXT WAS UPDATED, TRIGGER UPDATE TO PROGRAM ARRAYS
         Serial.println(fname);
-        if (fname == "PROGRAM.TXT"){
+        if (strcmp(fname,"PROGRAM.TXT") == 0){    //strcmp compares the pointer to the string 0 means equal.
           tempGuiFlag = 1;
         }
-
+        Serial.println("case START");
+        Serial.print("tempGuiFlag = ");
+        Serial.println(tempGuiFlag);
+        
 	free(fname);
       }
     }
@@ -518,6 +522,9 @@ void file_uploader_handler(TinyWebServer& web_server,
     if (tempGuiFlag == 1){
       guiFlag = 1;
       tempGuiFlag = 0;
+      Serial.println("case END");
+      Serial.print("tempGuiFlag = ");
+      Serial.println(tempGuiFlag);
     }
   }
 }
@@ -634,12 +641,12 @@ int inputSelectFunction(int rowNumber) {
 
 //  Function to write messages to gui            CURRENTLY WRITTEN FOR SERIAL, NOT GUI!
 void guiMess(int n) {
-//m  if (n==1) {Serial.println("Definitions don't make sense");}
-//m  if (n==2) {Serial.println("No SD Card anymore");}
-//m  if (n==3) {Serial.println("Problem opening file on SD card");}
-//m  if (n==4) {Serial.println("Corrupted SD file -Read/Write fail");}
-//m  if (n==5) {Serial.println("Successfully updated definitions");}
-//m  if (n==6) {Serial.println("Finished writing to .csv file");}
+  if (n==1) {Serial.println("Definitions don't make sense");}
+  if (n==2) {Serial.println("No SD Card anymore");}
+  if (n==3) {Serial.println("Problem opening file on SD card");}
+  if (n==4) {Serial.println("Corrupted SD file -Read/Write fail");}
+  if (n==5) {Serial.println("Successfully updated definitions");}
+  if (n==6) {Serial.println("Finished writing to .csv file");}
   
 }
 
@@ -766,7 +773,12 @@ void loop(){
     //return;  //break out of main funtion if no new definitions have come in.  POSSIBLY REMOVE THE HARD RETURN?
   }
   if(guiFlag == 1) {  //New GUI definitions
-  Serial.println("Program.txt updated");
+    Serial.println("Program.txt updated");
+    char* newvar = open_file("program.txt");
+
+    Serial.println(newvar);
+    convert(newvar);
+    
   //----- Section AB1 -----
   // PUT FUNCTION HERE TO READ GUI DEFINITIONS
   //  int inputArray[] =       
@@ -792,15 +804,15 @@ void loop(){
   //CHECK TO SEE IF SD CARD IS THERE
   
   //Open file to write to
-  File dataFile = SD.open("definitions.csv", FILE_WRITE);
-  if (dataFile) {
-    //FUNCTION HERE TO WRITE TO FILE
-    dataFile.close();
-    guiMess(6);  //GUI message #6 
-  }
-  else {         //If unable to open SD file.
-    guiMess(3);  //GUI message #3
-  }
+ // File dataFile = SD.open("definitions.csv", FILE_WRITE);
+ // if (dataFile) {
+ //   //FUNCTION HERE TO WRITE TO FILE
+ //   dataFile.close();
+ //   guiMess(6);  //GUI message #6 
+ // }
+ // else {         //If unable to open SD file.
+ //   guiMess(3);  //GUI message #3
+ // }
   
   
   
@@ -821,4 +833,169 @@ void loop(){
    if (has_filesystem) {
     web.process();
   }
-}
+}// end void loop
+
+
+//----- Section open SD file for conversion to arrays -----
+char* open_file(char* input_file){
+  char storage[150];                    //used to store read stuff
+  char ch;                              //used to store incoming byte
+  byte i = 0;                           //used as counter for building string
+  char* fail = "";                      //the failure return
+  
+  //if (!SD.begin(4)) {
+  if (!has_filesystem){                  //hijack the already check SD from TinyWebServer library
+    Serial.println("failed");
+    return fail;          
+  }
+  //Serial.println("ready");
+  
+  File file = SD.open(input_file);
+  if (file) {                           //if there's a file
+    Serial.println(input_file);
+    while (file.available()) {          //if there are unread bytes in the file
+      ch = file.read();                 //read one
+      storage[i] = ch;                  //append it to storage
+      i ++;                             //inc counter
+    }
+    file.close();                      //close the file
+    return storage;                    //return the read bytes
+  }else{                              //no file
+    Serial.print("no file");          //error
+    return fail;                      //return w/ fail
+  }
+}//end open_file
+
+
+//----- Section Convert cupcake string from SD/Web to arrays -----
+char convert(char* readString){
+  char* col[6];
+  char* tok;
+  byte input_arr[6];
+  byte in_onoff[6];
+  unsigned int ondelay[6];
+  byte out_arr[6];
+  byte out_onoff[6];
+  unsigned int duration[6];
+  
+  byte i = 0;
+ 
+  // We're using a character array instead of the built-in String class because
+  // that's what the strtok function needs.  Plus, using Strings in this case
+  // wouldn't provide us a lot of benefit anyway.
+  // You need to decide how many bytes your server could possibly send.  This
+  // is a nice round number as a placeholder.  Also note that this is the
+  // maximum size that the variable "byte i" will index.  If you need a bigger
+  // array, make i an int.  
+  
+// Split readString into columns with comma-separated values.  Columns
+      // are separated by semicolons.  The first time you call strtok, you
+      // pass the string (char array) you want to work on.  It returns a
+      // a string with everything up to the delimiter you set.  For
+      // subsequent calls, you pass NULL, and the function keeps working on
+      // the original string.  Since we've set up the client to send 6
+      // columns, we call the function 6 times.  The check for tok == NULL is
+      // there in case there's a problem and we don't get the full packet.
+      // This may help it fail more gracefully.
+      tok = strtok(readString, ";");
+      col[0] = tok;
+      for (i = 1; i < 6; i++) {
+        if (tok == NULL)
+          break;
+        tok = strtok(NULL, ";");
+        col[i] = tok;
+      }
+      
+      // Now turn the array of strings into arrays of numbers.  Each array is
+      // named for the column it represents.  The values are separated by
+      // commas.  atoi is used to convert the stringified numbers back into
+      // integers.  The values returned by atoi, which are ints, are cast
+      // into the appropriate data type.  (That's what the (byte) before
+      // atoi(tok) is doing.)  It would be more graceful to create a function
+      // to do this, rather than repeat it 6 times.
+      // input_arr
+      tok = strtok(col[0], ",");
+      for (i = 0; i < 6; i++) {
+        if (tok == NULL)
+          break;
+        input_arr[i] = (byte)atoi(tok);
+        tok = strtok(NULL, ",");
+      }
+      // in_onoff
+      tok = strtok(col[1], ",");
+      for (i = 0; i < 6; i++) {
+        if (tok == NULL)
+          break;
+        in_onoff[i] = (byte)atoi(tok);
+        tok = strtok(NULL, ",");
+      }
+      // ondelay
+      tok = strtok(col[2], ",");
+      for (i = 0; i < 6; i++) {
+        if (tok == NULL)
+          break;
+        ondelay[i] = (unsigned int)atoi(tok);
+        tok = strtok(NULL, ",");
+      }
+      // out_arr
+      tok = strtok(col[3], ",");
+      for (i = 0; i < 6; i++) {
+        if (tok == NULL)
+          break;
+        out_arr[i] = (byte)atoi(tok);
+        tok = strtok(NULL, ",");
+      }
+      // out_onoff
+      tok = strtok(col[4], ",");
+      for (i = 0; i < 6; i++) {
+        if (tok == NULL)
+          break;
+        out_onoff[i] = (byte)atoi(tok);
+        tok = strtok(NULL, ",");
+      }
+      // duration
+      tok = strtok(col[5], ",");
+      for (i = 0; i < 6; i++) {
+        if (tok == NULL)
+          break;
+        duration[i] = (unsigned int)atoi(tok);
+        tok = strtok(NULL, ",");
+      }
+      
+      // Now print out all the values to make sure it all worked
+      Serial.print("Input array: ");
+      for (i = 0; i < 6; i++){
+        Serial.print(input_arr[i]);
+        Serial.print(" ");
+      }
+      
+      Serial.print("\nInput on/off: ");
+      for (i = 0; i < 6; i++){
+        Serial.print(in_onoff[i]);
+        Serial.print(" ");
+      }
+      
+      Serial.print("\nOn delay: ");
+      for (i = 0; i < 6; i++){
+        Serial.print(ondelay[i]);
+        Serial.print(" ");
+      }
+      
+      Serial.print("\nOutput array: ");
+      for (i = 0; i < 6; i++){
+        Serial.print(out_arr[i]);
+        Serial.print(" ");
+      }
+      
+      Serial.print("\nOutput on/off: ");
+      for (i = 0; i < 6; i++){
+        Serial.print(out_onoff[i]);
+        Serial.print(" ");
+      }
+      
+      Serial.print("\nDuration: ");
+      for (i = 0; i < 6; i++){
+        Serial.print(duration[i]);
+        Serial.print(" ");
+      }
+}//end convert cupcake string to arrays function
