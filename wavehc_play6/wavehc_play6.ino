@@ -5,6 +5,12 @@
 #include "WaveHC.h"
 
 
+// Variables
+char* background_wav = "break.wav";
+char* trigger_wav = "alarm.wav";
+int trigger_pin = 0;
+
+
 SdReader card;    // This object holds the information for the card
 FatVolume vol;    // This holds the information for the partition on the card
 FatReader root;   // This holds the information for the filesystem on the card
@@ -57,13 +63,13 @@ void setup() {
   pinMode(13, OUTPUT);
  
   // enable pull-up resistors on switch pins (analog inputs)
-  digitalWrite(14, HIGH);
+ /* digitalWrite(14, HIGH);
   digitalWrite(15, HIGH);
   digitalWrite(16, HIGH);
   digitalWrite(17, HIGH);
   digitalWrite(18, HIGH);
   digitalWrite(19, HIGH);
- 
+ */
   //  if (!card.init(true)) { //play with 4 MHz spi if 8MHz isn't working for you
   if (!card.init()) {         //play with 8 MHz spi (default faster!)  
     putstring_nl("Card init. failed!");  // Something went wrong, lets print out why
@@ -103,8 +109,14 @@ void setup() {
 }
 
 void loop() {
-  //putstring(".");            // uncomment this to see if the loop isnt running
-  switch (check_switches()) {
+  putstring(".");            // uncomment this to see if the loop isnt running
+  
+  Serial.println(analogRead(trigger_pin));
+  playbackground(background_wav);
+  //delay(100);
+  
+  
+  /*switch (check_switches()) {
     case 1:
       playcomplete("1.WAV");
       break;
@@ -122,7 +134,7 @@ void loop() {
       break;
     case 6:
       playcomplete("6.WAV");
-  }
+  }*/
 }
 
 byte check_switches()
@@ -156,6 +168,19 @@ void playcomplete(char *name) {
   playfile(name);
   while (wave.isplaying) {
   // do nothing while its playing
+  }
+  // now its done playing
+}
+
+// Plays a full file from beginning to end with no pause.
+void playbackground(char *name) {
+  // call our helper to find and play this name
+  playfile(name);
+  while (wave.isplaying) {
+  // do nothing while its playing
+    if (analogRead(trigger_pin) > 800) {
+      playcomplete(trigger_wav);
+    }
   }
   // now its done playing
 }
