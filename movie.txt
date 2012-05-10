@@ -1,0 +1,57 @@
+## Intro
+
+What is the hauntbox?
+- 
+
+Why did we make the HauntBox?
+- to bridge the gap between the world of Arduino microcontrollers that require programming knowledge with th
+- and sound
+
+## Macro
+- a system of parts
+- the core/soul/body/brain is a unified device that plugs into you network to control....
+- the brain takes inputs and based on your rules/program/thingies controls the outputs
+- GUI demo of one line of program. This can of course be done from any computer, tablet, iPad or smartphone.
+
+## Micro
+
+### Hauntbox
+- now that you've seen how easy it is to "control"... 
+- ethernet, power
+- screw terminals avoid any nasty soldering and make lighting quick changes
+- handles standard 5/12 with the option of 24V power inputs/outputs
+- clearly labeled with indicator LEDS when an input/output is active
+- all wrapped in a conveniently mountable protective enclosure...
+
+### Inputs
+- PIR, housing
+	- wall mount
+	- shroud vision changer
+	- ABS option
+- Magnetic door switch
+- push button
+- pressure pad
+
+### Outputs
+- low power devices using relays
+	- wiper motor
+- high power devices (120V) PowerTail
+	- fog machine
+	- strobe light
+- solenoid
+- Sound module
+	- with no programming whatsoever
+	- play optional background ambient track
+	- play a single triggered sound
+	- or a shuffle sounds
+	- simply by uploading files to an SD card
+
+## Exploratory Applications Demo
+- a few 5 second vignettes to show functionality, sequential cascade and sound to show 1 input is not bound to 1 output. 
+- prop showing all outputs
+
+## Open Source
+- 
+
+## Why we need your help
+- to get the custom PCBs made and fabricated, 
