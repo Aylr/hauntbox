@@ -854,7 +854,7 @@ $(function(){//shortcut for doc.ready
 					<a href="#" class="down">-</a>
 				</div>
 				<input type="text" class="wait_time" name="wait_time3" maxlength="3" value="0" />
-				second(s) then keep
+				second(s) then turn
 				<select class="output" name="output3">
 					<option value="0">-</option>
 					<option value="1">output 1</option>
@@ -867,9 +867,11 @@ $(function(){//shortcut for doc.ready
 				<select class="output_state" name="output_state3">
 					<option value="1">on</option>
 					<option value="0">off</option>
+					<option value="2">toggled</option>
 				</select>
 				<select class="output_duration">
-					<option value="constantly">constantly.</option>
+					<option value="x">until further notice.</option>
+					<option value="constantly">while input is triggered.</option>
 					<option value="for">for...</option>
 				</select>
 				<div class="duration_container">
