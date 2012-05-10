@@ -166,6 +166,8 @@ boolean index_handler(TinyWebServer& web_server) {
 }
 
 
+// -------------------- testing the bridge handler -------------------- 
+
 boolean testget_handler(TinyWebServer& web_server){
   
   char* col[6];
@@ -391,6 +393,8 @@ boolean testget_handler(TinyWebServer& web_server){
 }
 
 
+// -------------------- send program + status handler -------------------- 
+
 boolean program_handler(TinyWebServer& web_server){
   send_file_name(web_server, "program.txt");
   Client& client = web_server.get_client();
@@ -402,6 +406,7 @@ boolean program_handler(TinyWebServer& web_server){
   return true; //exit the handler 
 }
 
+// -------------------- send settings + status handler -------------------- 
 boolean settings_handler(TinyWebServer& web_server){
   send_file_name(web_server, "settings.txt");
   Client& client = web_server.get_client();
@@ -413,6 +418,7 @@ boolean settings_handler(TinyWebServer& web_server){
   return true; //exit the handler 
 }
 
+// -------------------- export handler -------------------- 
 boolean export_handler(TinyWebServer& web_server) {
   Client& client = web_server.get_client();
   client.println(browser_header);
