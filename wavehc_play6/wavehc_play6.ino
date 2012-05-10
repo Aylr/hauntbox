@@ -9,6 +9,8 @@
 char* background_wav = "break.wav";
 char* trigger_wav = "alarm.wav";
 int trigger_pin = 0;
+int trigger_threshold = 800;
+byte background_exists = 0;
 
 
 SdReader card;    // This object holds the information for the card
@@ -104,6 +106,13 @@ void setup() {
     while(1);                             // then 'halt' - do nothing!
   }
   
+  //Test for background wav and set mode appropriately
+  if (background_wav exists){
+    background = 1;
+  }
+  
+  
+  
   // Whew! We got past the tough parts.
   putstring_nl("Ready!");
 }
@@ -113,7 +122,7 @@ void loop() {
   
   Serial.println(analogRead(trigger_pin));
   playbackground(background_wav);
-  //delay(100);
+  
   
   
   /*switch (check_switches()) {
@@ -178,7 +187,7 @@ void playbackground(char *name) {
   playfile(name);
   while (wave.isplaying) {
   // do nothing while its playing
-    if (analogRead(trigger_pin) > 800) {
+    if (analogRead(trigger_pin) > trigger_threshold) {
       playcomplete(trigger_wav);
     }
   }
