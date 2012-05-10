@@ -42,6 +42,24 @@ div.wait a, div.duration a {
 	height: 16px;
 	margin: 0 0 -1px 0;
 }
+div.outputs_container, div.button_container {
+	margin-top: 2em;
+}
+.headings h3 {
+	text-align: center;
+	border-bottom: 1px solid #aaa;
+}
+.headings .inputs {
+	width: 180px;
+	float: left;
+}
+.headings .outputs {
+	margin-left: 205px;
+}
+div.sentence {
+	padding: 10px 0;
+	border-bottom: 1px solid #dcdcdc;
+}
 </style>
 <script src="jqry171.js"></script>
 
@@ -807,7 +825,11 @@ $(function(){//shortcut for doc.ready
 <div id="display_container">    
 	<div class="program">
 		<h2>Program</h2>
-		<p>Some kind of description here.</p>
+		<p>This is where the magic happens. Complete the sentences to control your HauntBox.</p>
+		<div class="headings">
+			<h3 class="inputs">Inputs</h3>
+			<h3 class="outputs">Outputs</h3>
+		</div>
 		<div class="sentence_container">
 			<div class="sentence">
 				When
@@ -863,15 +885,16 @@ $(function(){//shortcut for doc.ready
 
 		</div>
 		
-		<button class="save_program" name="save" type="button"><i class="icon-check"></i> Save Program</button>
-		<button id="refresh_program" name="refresh" type="button"><i class="icon-refresh"></i> Refresh Program</button>	
+		<div class="button_container">
+			<button class="save_program" name="save" type="button"><i class="icon-check"></i> Save Program</button>
+			<button id="refresh_program" name="refresh" type="button"><i class="icon-refresh"></i> Refresh Program</button>
+		</div>
 		<div id="status_program"></div>
 	</div><!-- //end program -->
 	
 	<div class="settings">
 		<h2>Settings</h2>
-		<p>Feel free to rename your inputs and outputs here. You can also set whether
-			digital HIGH or LOW will trigger the input.</p>
+		<p>These are the guts of the HauntBox. You can rename your inputs and outputs here, set whether digital HIGH or LOW will trigger the input, and set the minimum time between triggers.</p>
 
 		<div class="inputs_container">
 			<h3>Inputs</h3>
@@ -904,9 +927,10 @@ $(function(){//shortcut for doc.ready
 				<input type="text" class="output_name" name="output1" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow1" value="1" checked />High<input type="radio" class="highlow" name="output_highlow1" value="0" />Low.
 			</div>
 		</div>
-		
-		<button class="save_settings" name="save" type="button"><i class="icon-check"></i> Save Settings</button>
-		<button id="refresh_settings" name="refresh" type="button"><i class="icon-refresh"></i> Refresh Settings</button>
+		<div class="button_container">
+			<button class="save_settings" name="save" type="button"><i class="icon-check"></i> Save Settings</button>
+			<button id="refresh_settings" name="refresh" type="button"><i class="icon-refresh"></i> Refresh Settings</button>
+		</div>
 		<div id="status_settings"></div>
 	</div>
 
