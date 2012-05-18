@@ -1,57 +1,112 @@
-## Intro
+# Intro
+1. Hi
+2. I am Tom
+3. I am Taylor
+4. and we are the designers of the HauntBox
+5. [lightning/logo]
 
 What is the hauntbox?
-- 
+6. What is the HauntBox?
+7. The HauntBox is an 
+8. [words pop up on screen]
+open source
+Arduino based
+hardware
+sensors
+actuators
+programmable  logic
+input platform to make doing 
 
-Why did we make the HauntBox?
-- to bridge the gap between the world of Arduino microcontrollers that require programming knowledge with th
-- and sound
+##Why
+9. Why did we make the HauntBox?
+10. to bridge the gap between the world of Arduino microcontrollers that require programming knowledge with with people who want to control things and trigger sound effects easily,
+11. without tedious programming
+we wanted to be able to easily trigger sound effects, props and lighting.. all without tedious coding and specialized knoweledge.
 
-## Macro
+## Macro / How
+11.1 How does it work?
+12. 
 - a system of parts
-- the core/soul/body/brain is a unified device that plugs into you network to control....
-- the brain takes inputs and based on your rules/program/thingies controls the outputs
-- GUI demo of one line of program. This can of course be done from any computer, tablet, iPad or smartphone.
+- Sensors and peripherals plug into your hauntbox and the hauntbox plugs into your network.
+- then simply open a browser and set an instruction like this:
+	- For example, 
+		- When a motion is sensed in my room, wait 2 seconds then turn the lamp on for 20 seconds.
+- This can of course be done from any smartphone, tablet, iPad or computer on your network.
 
-## Micro
-
-### Hauntbox
-- now that you've seen how easy it is to "control"... 
-- ethernet, power
-- screw terminals avoid any nasty soldering and make lighting quick changes
-- handles standard 5/12 with the option of 24V power inputs/outputs
-- clearly labeled with indicator LEDS when an input/output is active
-- all wrapped in a conveniently mountable protective enclosure...
+### HauntBox / Micro
+13. now that you've seen how easy it is to configure, let's take a look at the components
+14-16. [words and titles appear over drawing]
+The HB has
+and ethernet port, power plug, SD card, and screw terminals for easily connecting and changing the inputs and outputs without any nasty soldering
+It is compatible with 5, 12, and 24V inputs/outputs for maximum flexibility and compatibility with your existing devices.  
+The inputs and outputs are clearly labeled and each have LEDs that show their status
+All of this, wrapped in a conveniently mountable protective enclosure...
+For you open-source hackers, it has unused header pins to accept Arduino shields.
 
 ### Inputs
-- PIR, housing
-	- wall mount
-	- shroud vision changer
-	- ABS option
+17. What about the inputs?
+
+#### PIR
+18 Our favorite input is a infrared motion sensor whose custom designed housing will be manufactured on cutting-edge, open-source, 3D printers like the Maker Bot [bing?]
+This manufacturing technology enables us to get these into your hands by avoiding a huge investment in injection molding tooling. [with machine audio]
+19. our unique mounting design allows for mounting on any surface [show wall mount]
+20/21. and for more weather resistant applications, it can be mounted inside a 2 inch ABS pipe fitting
+
+22. Add a section of pipe as a shroud to narrow the beam
+
+23 Can also be used with other inputs like
+
 - Magnetic door switch
-- push button
-- pressure pad
+- push button [zombie hand push]
+- floor mat switch [zombie foot]
+26. [Sensor universe screen]
+ -toggle switch
+ -break-beam sensor
 
 ### Outputs
-- low power devices using relays
-	- wiper motor
-- high power devices (120V) PowerTail
-	- fog machine
-	- strobe light
-- solenoid
-- Sound module
-	- with no programming whatsoever
-	- play optional background ambient track
+27. What about outputs?
+
+28. Our favorite output stems from our frustration of trying to incorporate triggered sound without crappy CD kluges 
+
+we wanted something as simple as throwing some audio files onto an SD card, sliding it into the module, and having it work.
+So in the true open-source spirit, we designed an all-in-one, Arduino compatible sound module based on the amazing work of Lady Ada
+31. [picture of Lady Ada with angelic “Ah”]
+
+32. [Big words appearing on screen:]  The sound module:
+	- plays optional background ambient track
 	- play a single triggered sound
 	- or a shuffle sounds
-	- simply by uploading files to an SD card
+	All with no programming whatsoever
 
-## Exploratory Applications Demo
-- a few 5 second vignettes to show functionality, sequential cascade and sound to show 1 input is not bound to 1 output. 
-- prop showing all outputs
+33. The outputs can also control low power devices using relays
+	- wiper motor or creepy crawler lady
+34. Or high power devices (120V) using a Power Tail
+[something happening in background, not sure what it is]
+[shows peoples' feet scurrying in background]
 
-## Open Source
-- 
+35. or solenoids
+[something with compressed air?]
+-air muscle
+
+36. [universe of possibilities] or any other device as limited by your imagination
+	- fog machine
+	- strobe light
+
+## Exploratory Applications Demo/Review
+37. [background/foreground talking heads]
+In summary, the HauntBox allows you to control your world  blah blah blah
+with an easy to use interface blah blah blah
+
+38. [person using iPad (GUI)  shot from over the shoulder]
+39. [tight shot on iPad showing them programming haunt box]
+40. [person walks in room, water dumps on them, blast of flour in face, Price Is Right “losing horns” audio clip plays.
+ 
 
 ## Why we need your help
-- to get the custom PCBs made and fabricated, 
+41. Here is why we need your help
+
+42. [panning over prototypes]
+We have spent the last year designing and prototyping and with your help we can
+Turn these proven prototypes into an affordable finished product through custom manufacturing and competing the SW engineering
+
+43. [Logo]
