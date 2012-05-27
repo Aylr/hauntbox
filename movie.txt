@@ -56,7 +56,7 @@ This manufacturing technology enables us to get these into your hands by avoidin
 
 23 Can also be used with other inputs like
 
-- Magnetic door switch
+- Magnetic reed switch
 - push button [zombie hand push]
 - floor mat switch [zombie foot]
 26. [Sensor universe screen]
@@ -66,7 +66,7 @@ This manufacturing technology enables us to get these into your hands by avoidin
 ### Outputs
 27. What about outputs?
 
-28. Our favorite output stems from our frustration of trying to incorporate triggered sound without crappy CD kluges 
+28. Our favorite output stems from our frustration of trying to incorporate triggered sound without crappy CD kloooges 
 
 we wanted something as simple as throwing some audio files onto an SD card, sliding it into the module, and having it work.
 So in the true open-source spirit, we designed an all-in-one, Arduino compatible sound module based on the amazing work of Lady Ada
@@ -78,15 +78,16 @@ So in the true open-source spirit, we designed an all-in-one, Arduino compatible
 	- or a shuffle sounds
 	All with no programming whatsoever
 
-33. The outputs can also control low power devices using relays
+33. The HB outputs can also drive relays for controlling your props or other devices
 	- wiper motor or creepy crawler lady
-34. Or high power devices (120V) using a Power Tail
+	
+35. Solenoids
+	[something with compressed air?]
+	-air muscle
+	
+34. 120V AC devices using a Power Tail
 [something happening in background, not sure what it is]
 [shows peoples' feet scurrying in background]
-
-35. or solenoids
-[something with compressed air?]
--air muscle
 
 36. [universe of possibilities] or any other device as limited by your imagination
 	- fog machine
@@ -94,19 +95,20 @@ So in the true open-source spirit, we designed an all-in-one, Arduino compatible
 
 ## Exploratory Applications Demo/Review
 37. [background/foreground talking heads]
-In summary, the HauntBox allows you to control your world  blah blah blah
-with an easy to use interface blah blah blah
+In summary, the HauntBox is a browser-configured sensor actuated prop controller that brings sound and automation to your creations all without needing a computer science degree.
 
 38. [person using iPad (GUI)  shot from over the shoulder]
 39. [tight shot on iPad showing them programming haunt box]
-40. [person walks in room, water dumps on them, blast of flour in face, Price Is Right “losing horns” audio clip plays.
+40. [person walks in room, water dumps on them, blast of flour in face, Price Is Right "losing horns" audio clip plays.
  
 
 ## Why we need your help
 41. Here is why we need your help
 
 42. [panning over prototypes]
-We have spent the last year designing and prototyping and with your help we can
-Turn these proven prototypes into an affordable finished product through custom manufacturing and competing the SW engineering
+We have spent the last year designing and prototyping and with your help we can complete the SW engineering and 
+turn these proven prototypes into an affordable finished product through custom manufacturing
+
+tahnks for you time and pelase consider pledgeing to make the hauntbox a reality
 
 43. [Logo]
