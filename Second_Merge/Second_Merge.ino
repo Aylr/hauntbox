@@ -20,7 +20,8 @@ byte inputArray[] =       {1, 6, 6, 6, 6, 6};    //which input (0-6) is read by 
                                                 //0 = no input, 1 = input #1, 2 = input #2, etc
 
 byte inputHiLowArray[] =  {1, 1, 1, 1, 1, 0};    //What signal level is considered "on" for input # ({input1, input2, ...})
-                                                //1 = High, 0 = Low 
+                                                //1 = High, 0 = Low
+byte inputLEDArray [] = {23,25,27,29,31,33};
                                                 
 byte outputArray[] =      {1, 2, 3, 4, 5, 6};    //which outputs (0-6) are controlled by which row ({row0, row1, ...})
                                                 //0 = no output, 1 = output #1, 2 = output #2, etc
@@ -592,6 +593,24 @@ void setup() {
    pinMode(pinOut4, OUTPUT);
    pinMode(pinOut5, OUTPUT);
    pinMode(pinOut6, OUTPUT);
+   
+   //---------indicator LEDs
+   //1:23, 2:25, 3:27, 4:29, 5:31, 6:33
+   //A:22, B:24, C:26, D:28, E:30, F:32
+   // temporarlily disable a few to prevent overcurrent
+   
+   pinMode(22, OUTPUT);
+   //1: pinMode(23, OUTPUT);
+   pinMode(24, OUTPUT);
+   pinMode(25, OUTPUT);
+   pinMode(26, OUTPUT);
+   pinMode(27, OUTPUT);
+   pinMode(28, OUTPUT);
+   pinMode(29, OUTPUT);
+   pinMode(30, OUTPUT);
+   pinMode(31, OUTPUT);
+   //pinMode(32, OUTPUT);
+   //6: pinMode(33, OUTPUT);
 }
 //----- AA1b -- Initialize Output Function -----
 // Function that initializes the outputs states to "off"
@@ -647,6 +666,9 @@ void guiMess(int n) {
 }
 
 //----- Section AA4c -----
+   //---------indicator LEDs
+   //1:23, 2:25, 3:27, 4:29, 5:31, 6:33
+   //A:22, B:24, C:26, D:28, E:30, F:32
 // Function that pairs the output pins to the row that is controlling for it
 void outputSelectFunction(int rowNumber, int onOff) {
   int x;      //local variable
@@ -656,39 +678,39 @@ void outputSelectFunction(int rowNumber, int onOff) {
   if(onOff == 1) {         // turn output on
     if(y == 1) {           // "on" means turn output high
       if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
-      if(x == 1) {digitalWrite(pinOut1, HIGH);}
-      if(x == 2) {digitalWrite(pinOut2, HIGH);}
-      if(x == 3) {digitalWrite(pinOut3, HIGH);}
-      if(x == 4) {digitalWrite(pinOut4, HIGH);}
-      if(x == 5) {digitalWrite(pinOut5, HIGH);}
-      if(x == 6) {digitalWrite(pinOut6, HIGH);} 
+      if(x == 1) {digitalWrite(pinOut1, HIGH); }//digitalWrite(23, HIGH); }
+      if(x == 2) {digitalWrite(pinOut2, HIGH); digitalWrite(25, HIGH); }
+      if(x == 3) {digitalWrite(pinOut3, HIGH); digitalWrite(27, HIGH); }
+      if(x == 4) {digitalWrite(pinOut4, HIGH); digitalWrite(29, HIGH); }
+      if(x == 5) {digitalWrite(pinOut5, HIGH); digitalWrite(31, HIGH); }
+      if(x == 6) {digitalWrite(pinOut6, HIGH); digitalWrite(33, HIGH); } 
       }
     if(y == 0) {           // "on" means turn output low
       if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
-      if(x == 1) {digitalWrite(pinOut1, LOW);}
-      if(x == 2) {digitalWrite(pinOut2, LOW);}
-      if(x == 3) {digitalWrite(pinOut3, LOW);}
-      if(x == 4) {digitalWrite(pinOut4, LOW);}
-      if(x == 5) {digitalWrite(pinOut5, LOW);}
-      if(x == 6) {digitalWrite(pinOut6, LOW);} }
+      if(x == 1) {digitalWrite(pinOut1, LOW); digitalWrite(23, LOW);}
+      if(x == 2) {digitalWrite(pinOut2, LOW); digitalWrite(25, LOW);}
+      if(x == 3) {digitalWrite(pinOut3, LOW); digitalWrite(27, LOW);}
+      if(x == 4) {digitalWrite(pinOut4, LOW); digitalWrite(29, LOW);}
+      if(x == 5) {digitalWrite(pinOut5, LOW); digitalWrite(31, LOW);}
+      if(x == 6) {digitalWrite(pinOut6, LOW); digitalWrite(33, LOW);} }
     return; }
   if(onOff == 0) {         //turn output off
     if(y == 1) {           // "off" means turn output low
       if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
-      if(x == 1) {digitalWrite(pinOut1, LOW);}
-      if(x == 2) {digitalWrite(pinOut2, LOW);}
-      if(x == 3) {digitalWrite(pinOut3, LOW);}
-      if(x == 4) {digitalWrite(pinOut4, LOW);}
-      if(x == 5) {digitalWrite(pinOut5, LOW);}
-      if(x == 6) {digitalWrite(pinOut6, LOW);} }
+      if(x == 1) {digitalWrite(pinOut1, LOW); digitalWrite(23, LOW);}
+      if(x == 2) {digitalWrite(pinOut2, LOW); digitalWrite(25, LOW);}
+      if(x == 3) {digitalWrite(pinOut3, LOW); digitalWrite(27, LOW);}
+      if(x == 4) {digitalWrite(pinOut4, LOW); digitalWrite(29, LOW);}
+      if(x == 5) {digitalWrite(pinOut5, LOW); digitalWrite(31, LOW);}
+      if(x == 6) {digitalWrite(pinOut6, LOW); digitalWrite(33, LOW);} }
     if(y == 0) {           // "off" means turn output high
       if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
-      if(x == 1) {digitalWrite(pinOut1, HIGH);}
-      if(x == 2) {digitalWrite(pinOut2, HIGH);}
-      if(x == 3) {digitalWrite(pinOut3, HIGH);}
-      if(x == 4) {digitalWrite(pinOut4, HIGH);}
-      if(x == 5) {digitalWrite(pinOut5, HIGH);}
-      if(x == 6) {digitalWrite(pinOut6, HIGH);} }
+      if(x == 1) {digitalWrite(pinOut1, HIGH); }//digitalWrite(23, HIGH); }
+      if(x == 2) {digitalWrite(pinOut2, HIGH); digitalWrite(25, HIGH); }
+      if(x == 3) {digitalWrite(pinOut3, HIGH); digitalWrite(27, HIGH); }
+      if(x == 4) {digitalWrite(pinOut4, HIGH); digitalWrite(29, HIGH); }
+      if(x == 5) {digitalWrite(pinOut5, HIGH); digitalWrite(31, HIGH); }
+      if(x == 6) {digitalWrite(pinOut6, HIGH); digitalWrite(33, HIGH); } }
     return; }
   }
 
@@ -747,7 +769,14 @@ void loop(){
   }
     
   //----- Section AA5 ----- Update the Status LEDs on shield -----
-  
+  for(int z = 0; z < rn; z++) {              //runs loop for each row
+      if(inputSelectFunction(z) == 1) {                //If input is "on"
+        digitalWrite(inputLEDArray[z],HIGH);  //turn on appropriate LED array
+      }
+      if(inputSelectFunction(z) == 0) {               //If input is off
+        digitalWrite(inputLEDArray[z],LOW);  //turn off appropriate LED array
+      }
+  }
   
   
   
