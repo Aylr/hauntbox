@@ -21,7 +21,7 @@ byte inputArray[] =       {1, 6, 6, 6, 6, 6};    //which input (0-6) is read by 
 
 byte inputHiLowArray[] =  {1, 1, 1, 1, 1, 0};    //What signal level is considered "on" for input # ({input1, input2, ...})
                                                 //1 = High, 0 = Low
-byte inputLEDArray [] = {23,25,27,29,31,33};
+byte inputLEDArray [] =  {23,25,27,29,31,33};
                                                 
 byte outputArray[] =      {1, 2, 3, 4, 5, 6};    //which outputs (0-6) are controlled by which row ({row0, row1, ...})
                                                 //0 = no output, 1 = output #1, 2 = output #2, etc
@@ -770,10 +770,11 @@ void loop(){
     
   //----- Section AA5 ----- Update the Status LEDs on shield -----
   for(int z = 0; z < rn; z++) {              //runs loop for each row
-      if(inputSelectFunction(z) == 1) {                //If input is "on"
+    trigState[z] = inputSelectFunction(z); //Call function and pass(Row number) to see if input is on or off
+      if(trigState[z] == 1) {                //If input is "on"
         digitalWrite(inputLEDArray[z],HIGH);  //turn on appropriate LED array
       }
-      if(inputSelectFunction(z) == 0) {               //If input is off
+      if(trigState[z] == 0) {               //If input is off
         digitalWrite(inputLEDArray[z],LOW);  //turn off appropriate LED array
       }
   }
