@@ -4,38 +4,29 @@
 	<!--<meta name="viewport" content="width=device-width, initial-scale=1.0">-->
     <title>HauntBox</title>
 <link rel="stylesheet" href="bs_full.css" type="text/css" media="screen" \>
-<link rel="stylesheet" href="fontawes.css" type="text/css" media="screen, projection" \>
 <link href='http://fonts.googleapis.com/css?family=Chango' rel='stylesheet' type='text/css'>
 <link href='http://fonts.googleapis.com/css?family=Reenie+Beanie' rel='stylesheet' type='text/css'>
 <style type="text/css">
+/*	dark grey background: rgb(34,34,34);*/
+
 body {
-	background: url(navbg_s.png);
+	background: url(navbg.png);
 	background-repeat:repeat-x;
 }
 .body_container {
-	background: url(nav_s.png);
+	background: url(nav_.png);
 	bacground-attachment: fixed;
 	background-position: 11px 0px;
 	background-repeat: no-repeat;
 }
-.navbar, .subheader, alert, .settings {
-	display: none;
+.navbar {
+	margin-top: 107px; /* puts the navbar where it should be */
+	margin-left: 12px;	/* lines up everything left except checkboxes */
 }
-#display_container {
-	margin-top: 265px;
-	width: 1200px;
-}
-input[name="enable_disable"] {
-	margin: 0 2px 0 0;
-}
-.sentence_headings {
-	margin-left: 23px;/*enough room for a checkbox*/
-}
-.inner_sentence {
-	display: inline;
-}
-
-.navbar a {
+.navbar .nav > li > a {
+	/* puts the | spacer between the nav 
+	border-right: 1px solid rgb(88,89,91); */
+	padding-right: 15px;
 	font-family: Chango;
 	text-transform: lowercase;
 	color: rgb(88,89,91);
@@ -43,13 +34,32 @@ input[name="enable_disable"] {
 .navbar li.active a {
 	color: rgb(214,222,35);
 }
+.navbar .logo {
+	position: fixed;
+	top: 20px;
+	left: 900px;
+}
+input[name="enable_disable"] {
+	/* the checkbox on each row */
+	margin: 0 2px 0 0;
+}
+.sentence_headings, div.export .container, div.help .container {
+	margin-left: 23px;/*enough room for a checkbox*/
+/*	margin-top: 23px; /* white space! */
+}
+.inner_sentence {
+	display: inline;
+}
+#display_container {
+	margin-top: 155px;
+	width: 1200px;
+}
 .subheader {
 	clear: both;
-	background: rgb(34,34,34);
 	width: 100%;
 	padding: 22px 0 24px 0;
 	color: #fff;
-	margin-bottom: 44px;
+	margin-bottom:22px; /* white space! */
 }
 h2 {
 	font-family: Chango;
@@ -57,6 +67,7 @@ h2 {
 	font-weight: normal;
 	text-transform: uppercase;
 	margin-right: 12px;
+	margin-left:21px; /* lines up with everything left except checkboxes */
 	float: left;
 }
 .subheader p{
@@ -66,6 +77,7 @@ h2 {
 	font-family: arial, sans-serif;
 	color: rgb(204,204,204);
 }
+
 div.settings input[type="text"] {
 	width: 8.5em;
 }
@@ -443,7 +455,7 @@ $(function(){//shortcut for doc.ready
 	});
 
 	$(".save_program").click(function(){
-		$(this).html("<i class=\"icon-time\"></i> Saving...")
+		$(this).html("Saving...")
 		save("program");
 	});
 
@@ -531,7 +543,7 @@ $(function(){//shortcut for doc.ready
 		modal.children().last().children("p").html(type + " saved");		//change the modal body
 		modal.modal('show');												//show the modal
 		timeout = setTimeout(function(){									//do stuff in... 2 seconds
-				$(".save_program").html("<i class=\"icon-check\"></i> Save Program");	//reset the Save button
+				$(".save_program").html("Save Program");	//reset the Save button
 				modal.modal('hide');										//hide the modal
 			},2000);														//2 seconds
 	}
@@ -900,15 +912,15 @@ $(function(){//shortcut for doc.ready
 		}
 	});
 	
-	$("div.program, div.subheader").hide();
-	$("div.settings").show();
+	//$("div.program, div.subheader").hide();
+	//$("div.settings").show();
 });//doc.ready
 </script>
 </head>
 
 <body>
 	<div class="container body_container">
-	<div class="navbar">
+	<!--<div class="navbar">
 		<div class="navbar-inner">
 			<div class="container">
 				<a class="brand" href="#">HauntBox</a>
@@ -925,10 +937,10 @@ $(function(){//shortcut for doc.ready
 						<li><a href="#" class="help"><i style="font-size:18px;" class="icon-question-sign"></i> Help</a></li>
 					</ul>
 					<p class="nav pull-right">Free RAM: ?</p>
-				</div><!--/.nav-collapse -->
+				</div>
 			</div>
 		</div>
-	</div><!--//.navbar -->
+	</div>--><!--//.navbar -->
 	
 <div class="navbar">
 	<ul class="nav">
@@ -937,6 +949,7 @@ $(function(){//shortcut for doc.ready
 		<li><a href="#" class="export">Export</a></li>
 		<li><a href="#" class="help">Help</a></li>
 	</ul>
+	<p class="logo"><img src="hblogo.png" /></p>
 	<p class="nav pull-right">Free RAM: ?</p>
 </div><!--//.navbar -->
 	
@@ -950,7 +963,7 @@ $(function(){//shortcut for doc.ready
 	<div class="program">
 		<div class="subheader">
 			<h2>Program</h2>
-			<p>This is where the magic happens.<br />Complete the sentences to control your HauntBox.</p>
+			<p>This is where the magic happens.<br />Complete the sentences to control your Hauntbox.</p>
 		</div>
 		<div class="sentence_headings">
 			<h3 class="input">Input</h3>
@@ -1023,8 +1036,8 @@ $(function(){//shortcut for doc.ready
 		</div>
 		
 		<div class="button_container">
-			<button class="save_program" name="save" type="button"><i class="icon-check"></i> Save Program</button>
-			<button id="refresh_program" name="refresh" type="button"><i class="icon-refresh"></i> Refresh Program</button>
+			<button class="save_program" name="save" type="button">Save Program</button>
+			<button id="refresh_program" name="refresh" type="button">Refresh Program</button>
 		</div>
 		<div id="status_program"></div>
 	</div><!-- //end program -->
@@ -1032,7 +1045,7 @@ $(function(){//shortcut for doc.ready
 	<div class="settings">
 		<div class="subheader">
 			<h2>Settings</h2>
-			<p>These are the guts of the HauntBox. You can rename your inputs and outputs here, set whether digital HIGH or LOW will trigger the input, and set the minimum time between triggers.</p>
+			<p>These are the guts of the HauntBox. You can rename your inputs &amp; outputs.<br />Also set whether digital HIGH or LOW will trigger the input, and set the minimum time between triggers.</p>
 		</div>
 
 		<div class="inputs_container">
@@ -1079,15 +1092,18 @@ $(function(){//shortcut for doc.ready
 			</div>
 		</div>
 		<div class="button_container">
-			<button class="save_settings" name="save" type="button"><i class="icon-check"></i> Save Settings</button>
-			<button id="refresh_settings" name="refresh" type="button"><i class="icon-refresh"></i> Refresh Settings</button>
+			<button class="save_settings" name="save" type="button">Save Settings</button>
+			<button id="refresh_settings" name="refresh" type="button">Refresh Settings</button>
 		</div>
 		<div id="status_settings"></div>
 	</div>
 
 	<div class="export">
-		<h2>Export All</h2>
-		<p>To save your favorite HauntBox setups from time to time.</p>
+		<div class="subheader">
+			<h2>Export</h2>
+			<p>Have an awesome Hauntbox gig setup?<br />Export it for use later.</p>
+		</div>
+		<div class="container">
 		<h3>Today's date: 4/12/12</h3>
 		<textarea>Description</textarea>
 		<h3>Your current settings</h3>
@@ -1107,10 +1123,15 @@ $(function(){//shortcut for doc.ready
 		/export		export
 		/ram		free ram
 		</pre>
+		</div>
 	</div>
 	
 	<div class="help">
-		<h2>Help</h2>
+		<div class="subheader">
+			<h2>Help</h2>
+			<p>Stumped?<br />Find some answers.</p>
+		</div>
+		<div class="container">
 		<p>Please visit our <a href="">website</a> for updated support</p>
 		
 		<a href="#" class="factory_defaults btn btn-danger">Reset to factory defaults</a>
@@ -1123,6 +1144,7 @@ $(function(){//shortcut for doc.ready
 		<a href="https://twitter.com/intent/tweet?screen_name=hauntbox" class="twitter-mention-button" data-size="large" data-related="hauntbox">Tweet to @hauntbox</a>
 		<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
 		</p>
+		</div>
 	</div>
 	
 	</div><!--//end display_container -->
