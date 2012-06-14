@@ -1,11 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!--<meta name="viewport" content="width=device-width, initial-scale=1.0">-->
     <title>HauntBox</title>
 <link rel="stylesheet" href="bs_full.css" type="text/css" media="screen" \>
 <link rel="stylesheet" href="fontawes.css" type="text/css" media="screen, projection" \>
+<link href='http://fonts.googleapis.com/css?family=Chango' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Reenie+Beanie' rel='stylesheet' type='text/css'>
 <style type="text/css">
+body {
+	background: url(navbg_s.png);
+	background-repeat:repeat-x;
+}
+.body_container {
+	background: url(nav_s.png);
+	bacground-attachment: fixed;
+	background-position: 11px 0px;
+	background-repeat: no-repeat;
+}
+.navbar, .subheader, alert, .settings {
+	display: none;
+}
+#display_container {
+	margin-top: 265px;
+	width: 1200px;
+}
+input[name="enable_disable"] {
+	margin: 0 2px 0 0;
+}
+.sentence_headings {
+	margin-left: 23px;/*enough room for a checkbox*/
+}
+.inner_sentence {
+	display: inline;
+}
+
+.navbar a {
+	font-family: Chango;
+	text-transform: lowercase;
+	color: rgb(88,89,91);
+}
+.navbar li.active a {
+	color: rgb(214,222,35);
+}
+.subheader {
+	clear: both;
+	background: rgb(34,34,34);
+	width: 100%;
+	padding: 22px 0 24px 0;
+	color: #fff;
+	margin-bottom: 44px;
+}
+h2 {
+	font-family: Chango;
+	font-size: 30px;
+	font-weight: normal;
+	text-transform: uppercase;
+	margin-right: 12px;
+	float: left;
+}
+.subheader p{
+	font-size: 8pt;
+	line-height: 15px;
+	padding-top: 4px;
+	font-family: arial, sans-serif;
+	color: rgb(204,204,204);
+}
 div.settings input[type="text"] {
 	width: 8.5em;
 }
@@ -45,20 +105,62 @@ div.wait a, div.duration a {
 div.outputs_container, div.button_container {
 	margin-top: 2em;
 }
-.headings h3 {
-	text-align: center;
-	border-bottom: 1px solid #aaa;
+.sentence_headings {
+	width: 1200px;
 }
-.headings .inputs {
-	width: 180px;
+.sentence_headings h3 {
+	color: rgb(34,34,34);
+	font-family: Chango;
+	font-size: 10pt;
+	text-transform: uppercase;
+	border-bottom: 2px solid rgb(200,200,200);
 	float: left;
+	margin-right: 10px;
 }
-.headings .outputs {
-	margin-left: 205px;
+.sentence_headings .input {
+	width: 259px;
+}
+.sentence_headings .delay {
+	width: 300px;
+}
+.sentence_headings .output {
+	width: 155px;
+}
+.sentence_headings .duration {
+	width: 340px;
+}
+.sentence_headings .voltage {
+	width: 105px;
+}
+.sentence_headings .io_name {
+	width: 120px;
+}
+.sentence_headings .high_or_low {
+	width: 376px;
+}
+.sentence_headings .retrigger {
+	width: 350px;
+}
+div.sentence_container, .sentence {
+	clear: both;
+	color: rgb(88,89,91);
+	font-family: 'Reenie Beanie';
+	font-size: 26px;
+}
+div.settings div.sentence {
+	color: rgb(88,89,91);
+	font-family: 'Reenie Beanie';
+	font-size: 22px;
 }
 div.sentence {
-	padding: 10px 0;
-	border-bottom: 1px solid #dcdcdc;
+	height: 60px;
+	padding: 2px 0 0 0;
+}
+span.input, span.output, span.duration, span.delay {
+	display: inline-block;
+	margin: 0 10px 0 0;
+	padding: 0 5px 5px 5px;
+	border-bottom: 1px solid rgb(225,225,225);
 }
 </style>
 <script src="jqry171.js"></script>
@@ -80,14 +182,16 @@ $(function(){//shortcut for doc.ready
 	var threshold_12V = 246;			//(12V / 5)*1024 = 246
 	var threshold_24V = 492;			//(24V / 5)*1024 = 492
 	
-	var default_program = "1,2,3,4,5,6;0,1,0,1,0,1;0,1,10,10,50,300;1,2,3,4,5,6;0,1,0,1,0,1;0,1,3,5,10,30;0;00"
-	var default_settings = "1,1,1,1,1,1,1,1,1,1,1,1;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;" + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + ";1,1,1,1,1,1;0;00;"
+	var default_program = "0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0,0,0,0,0,0;1,1,1,1,1,1;0,1,3,5,10,30;0;00"
+	var default_settings = "1,1,1,1,1,1,1,1,1,1,1,1;A: garage,B: my room,C: hall,D: cemetery,E: cornfield,F: swamp;1: UV,2: light,3: strobe,4: sound,5: air horn,6: zombie;" + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + ";1,1,1,1,1,1;0;00;"
+	//var default_settings = "1,1,1,1,1,1,1,1,1,1,1,1;my room,input2,input3,input4,input5,input6;light,output2,output3,output4,output5,output6;" + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + ";1,1,1,1,1,1;0;00;"
 
 
 	//##################################### Initial Page Load Stuff ##################################### 
 	$("#unsaved_modal").modal('hide');		//hide the unsaved changes modal
 	$("div.alert").hide();					//hide the alerts
 	$("#display_container").children().hide();			//load with all "tabs" hidden
+	$(".inner_sentence").fadeTo(0,.5);
 	
 	for (i=1;i<6;i++){						//dynamically build the program rows
 		$("div.program .sentence").first().clone({deepWithDataAndEvents: true}).appendTo(".sentence_container");
@@ -767,7 +871,7 @@ $(function(){//shortcut for doc.ready
 		var alert = $("div.alert");
 		alert.hide();
 		alert.attr("class","alert " + type).children("h4").html(header).next().html(message);
-		alert.fadeIn();
+		//alert.fadeIn(); *********TEMPORARILY HIDE ALERTS*******************
 
 		console.log("status_code: " + status_code);
 	}//end status_message()
@@ -788,12 +892,22 @@ $(function(){//shortcut for doc.ready
 		};
 	};//end sanitize()
 	
+	$("input[name='enable_disable']").click(function(){
+		if($(this).attr("checked") == "checked"){
+			$(this).next().fadeTo(150,1);
+		} else {
+			$(this).next().fadeTo(150,.3);
+		}
+	});
+	
+	$("div.program, div.subheader").hide();
+	$("div.settings").show();
 });//doc.ready
 </script>
 </head>
 
 <body>
-	<div class="container">
+	<div class="container body_container">
 	<div class="navbar">
 		<div class="navbar-inner">
 			<div class="container">
@@ -816,73 +930,94 @@ $(function(){//shortcut for doc.ready
 		</div>
 	</div><!--//.navbar -->
 	
+<div class="navbar">
+	<ul class="nav">
+		<li class="active"><a href="#" class="program">Program</a></li>
+		<li><a href="#" class="settings">Settings</a></li>
+		<li><a href="#" class="export">Export</a></li>
+		<li><a href="#" class="help">Help</a></li>
+	</ul>
+	<p class="nav pull-right">Free RAM: ?</p>
+</div><!--//.navbar -->
+	
 	<div class="alert">
 		<a class="close">&times;</a>
 		<h4 class="alert-heading">Alert</h4>
 		<p>Alert Info</p>
 	</div>
 
-<div id="display_container">    
+<div id="display_container">
 	<div class="program">
-		<h2>Program</h2>
-		<p>This is where the magic happens. Complete the sentences to control your HauntBox.</p>
-		<div class="headings">
-			<h3 class="inputs">Inputs</h3>
-			<h3 class="outputs">Outputs</h3>
+		<div class="subheader">
+			<h2>Program</h2>
+			<p>This is where the magic happens.<br />Complete the sentences to control your HauntBox.</p>
+		</div>
+		<div class="sentence_headings">
+			<h3 class="input">Input</h3>
+			<h3 class="delay">Delay</h3>
+			<h3 class="output">Output</h3>
+			<h3 class="duration">Duration</h3>
 		</div>
 		<div class="sentence_container">
 			<div class="sentence">
-				When
-				<select class="sensor" name="sensor3">
-					<option value="0">-</option>
-					<option value="1">input A</option>
-					<option value="2">input B</option>
-					<option value="3">input C</option>
-					<option value="4">input D</option>
-					<option value="5">input E</option>
-					<option value="6">input F</option>
-				</select>
-				is
-				<select class="sensor_state" name="sensor_state3">
-					<option value="1">on</option>
-					<option value="0">off</option>
-				</select>
-				&nbsp;&nbsp;:&nbsp;&nbsp;
-				Wait
-				<div class="wait">
-					<a href="#" class="up">+</a>
-					<a href="#" class="down">-</a>
+				<input type="checkbox" name="enable_disable">
+				<div class="inner_sentence">
+					<span class="input">
+						When
+						<select class="sensor" name="sensor3">
+							<option value="0">-</option>
+							<option value="1">input A</option>
+							<option value="2">input B</option>
+							<option value="3">input C</option>
+							<option value="4">input D</option>
+							<option value="5">input E</option>
+							<option value="6">input F</option>
+						</select>
+						is
+						<select class="sensor_state" name="sensor_state3">
+							<option value="1">on</option>
+							<option value="0">off</option>
+						</select>
+					</span><span class="delay">
+						Wait
+						<div class="wait">
+							<a href="#" class="up">+</a>
+							<a href="#" class="down">-</a>
+						</div>
+						<input type="text" class="wait_time" name="wait_time3" maxlength="3" value="0" />
+						second(s) then turn
+					</span><span class="output">
+						<select class="output" name="output3">
+							<option value="0">-</option>
+							<option value="1">output 1</option>
+							<option value="2">output 2</option>
+							<option value="3">output 3</option>
+							<option value="4">output 4</option>
+							<option value="5">output 5</option>
+							<option value="6">output 6</option>
+						</select>
+						<select class="output_state" name="output_state3">
+							<option value="1">on</option>
+							<option value="0">off</option>
+							<option value="2">toggled</option>
+						</select>
+					</span><span class="duration">
+						<select class="output_duration">
+							<option value="x">until further notice.</option>
+							<option value="constantly">while input is triggered.</option>
+							<option value="for">for...</option>
+						</select>
+						<div class="duration_container">
+							<div class="duration">
+								<a href="#" class="up">+</a>
+								<a href="#" class="down">-</a>
+							</div>
+							<input type="text" class="output_duration" name="output_duration3" maxlength="3" value="0" />
+							second(s).
+						</div>
+					</span>
+					<span class="row_status"></span>
 				</div>
-				<input type="text" class="wait_time" name="wait_time3" maxlength="3" value="0" />
-				second(s) then turn
-				<select class="output" name="output3">
-					<option value="0">-</option>
-					<option value="1">output 1</option>
-					<option value="2">output 2</option>
-					<option value="3">output 3</option>
-					<option value="4">output 4</option>
-					<option value="5">output 5</option>
-					<option value="6">output 6</option>
-				</select>
-				<select class="output_state" name="output_state3">
-					<option value="1">on</option>
-					<option value="0">off</option>
-					<option value="2">toggled</option>
-				</select>
-				<select class="output_duration">
-					<option value="x">until further notice.</option>
-					<option value="constantly">while input is triggered.</option>
-					<option value="for">for...</option>
-				</select>
-				<div class="duration_container">
-					<div class="duration">
-						<a href="#" class="up">+</a>
-						<a href="#" class="down">-</a>
-					</div>
-					<input type="text" class="output_duration" name="output_duration3" maxlength="3" value="0" />
-					second(s).
-				</div>
-				<span class="row_status"></span>
 			</div>
 
 		</div>
@@ -895,11 +1030,19 @@ $(function(){//shortcut for doc.ready
 	</div><!-- //end program -->
 	
 	<div class="settings">
-		<h2>Settings</h2>
-		<p>These are the guts of the HauntBox. You can rename your inputs and outputs here, set whether digital HIGH or LOW will trigger the input, and set the minimum time between triggers.</p>
+		<div class="subheader">
+			<h2>Settings</h2>
+			<p>These are the guts of the HauntBox. You can rename your inputs and outputs here, set whether digital HIGH or LOW will trigger the input, and set the minimum time between triggers.</p>
+		</div>
 
 		<div class="inputs_container">
-			<h3>Inputs</h3>
+			<!--<h3>Inputs</h3>-->
+			<div class="sentence_headings">
+				<h3 class="voltage">Voltage</h3>
+				<h3 class="io_name">Name</h3>
+				<h3 class="high_or_low">High or Low</h3>
+				<h3 class="retrigger">Retrigger Time</h3>
+			</div>
 			<div class="sentence">
 				<span class="input_title">Input A</span>
 				<select class="threshold">
@@ -907,18 +1050,24 @@ $(function(){//shortcut for doc.ready
 					<option>12V</option>
 					<option>24V</option>
 				</select>:
-				<input type="text" class="input_name" name="input1" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow1" value="1" checked />High<input type="radio" class="highlow" name="highlow1" value="0">Low.&nbsp;
+				<input type="text" class="input_name" name="input1" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow1" value="1" checked /> High <input type="radio" class="highlow" name="highlow1" value="0"> Low.&nbsp;
 					Wait
 					<div class="wait">
 						<a href="#" class="up">+</a>
 						<a href="#" class="down">-</a>
 					</div>
-					<input type="text" class="retrigger" maxlength="3" value="0" /> seconds before input can be re-triggered.
+					<input type="text" class="retrigger" maxlength="3" value="0" /> seconds before input retrigger.
 				</div>
 		</div>
 		
+
 		<div class="outputs_container">
-			<h3>Outputs</h3>
+			<!--<h3>Outputs</h3>
+			<div class="sentence_headings">
+				<h3 class="voltage">Voltage</h3>
+				<h3 class="io_name">Name</h3>
+				<h3 class="high_or_low">High or Low</h3>
+			</div>-->
 			<div class="sentence">
 				<span class="output_title">Output 1</span>
 				<select class="threshold">

@@ -62,6 +62,12 @@ This manufacturing technology enables us to get these into your hands by avoidin
 26. [Sensor universe screen]
  -toggle switch
  -break-beam sensor
+- push button
+- toggle switch
+- reed switch
+- pressure pad
+- 
+- ball switch
 
 ### Outputs
 27. What about outputs?
