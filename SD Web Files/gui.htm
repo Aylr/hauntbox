@@ -2,22 +2,28 @@
 <html lang="en">
 <head>
 	<!--<meta name="viewport" content="width=device-width, initial-scale=1.0">-->
-    <title>HauntBox</title>
+    <title>Hauntbox</title>
 <link rel="stylesheet" href="bs_full.css" type="text/css" media="screen" \>
-<link href='http://fonts.googleapis.com/css?family=Chango' rel='stylesheet' type='text/css'>
+<!--<link href='http://fonts.googleapis.com/css?family=Chango' rel='stylesheet' type='text/css'>
 <link href='http://fonts.googleapis.com/css?family=Reenie+Beanie' rel='stylesheet' type='text/css'>
+-->
 <style type="text/css">
 /*	dark grey background: rgb(34,34,34);*/
-
-body {
-	background: url(navbg.png);
-	background-repeat:repeat-x;
+@font-face {
+  font-family: 'Reenie Beanie';
+  font-style: normal;
+  font-weight: normal;
+  src: local('Reenie Beanie'), local('ReenieBeanie'), url('fontrb.ttf') format('truetype');
 }
-.body_container {
-	background: url(nav_.png);
-	bacground-attachment: fixed;
-	background-position: 11px 0px;
-	background-repeat: no-repeat;
+@font-face {
+  font-family: 'Chango';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Chango Regular'), local('Chango-Regular'), url('fontch.ttf') format('truetype');
+}
+body {
+	background: url(navbg.gif);
+	background-repeat:repeat-x;
 }
 .navbar {
 	margin-top: 107px; /* puts the navbar where it should be */
@@ -35,7 +41,7 @@ body {
 	color: rgb(214,222,35);
 }
 .navbar .logo {
-	position: fixed;
+	position: absolute;
 	top: 20px;
 	left: 900px;
 }
@@ -906,53 +912,28 @@ $(function(){//shortcut for doc.ready
 	
 	$("input[name='enable_disable']").click(function(){
 		if($(this).attr("checked") == "checked"){
-			$(this).next().fadeTo(150,1);
+			$(this).next().fadeTo(100,1);
 		} else {
-			$(this).next().fadeTo(150,.3);
+			$(this).next().fadeTo(100,.3);
 		}
 	});
-	
-	//$("div.program, div.subheader").hide();
-	//$("div.settings").show();
+
 });//doc.ready
 </script>
 </head>
 
 <body>
-	<div class="container body_container">
-	<!--<div class="navbar">
-		<div class="navbar-inner">
-			<div class="container">
-				<a class="brand" href="#">HauntBox</a>
-					<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</a>
-				<div class="nav-collapse">
-					<ul class="nav">
-						<li class="active"><a href="#" class="program"><i style="font-size:18px;" class="icon-home"></i> Program</a></li>
-						<li><a href="#" class="settings"><i style="font-size:18px;" class="icon-cogs"></i> Settings</a></li>
-						<li><a href="#" class="export"><i style="font-size:18px;" class="icon-download-alt"></i> Export</a></li>
-						<li><a href="#" class="help"><i style="font-size:18px;" class="icon-question-sign"></i> Help</a></li>
-					</ul>
-					<p class="nav pull-right">Free RAM: ?</p>
-				</div>
-			</div>
-		</div>
-	</div>--><!--//.navbar -->
-	
-<div class="navbar">
-	<ul class="nav">
-		<li class="active"><a href="#" class="program">Program</a></li>
-		<li><a href="#" class="settings">Settings</a></li>
-		<li><a href="#" class="export">Export</a></li>
-		<li><a href="#" class="help">Help</a></li>
-	</ul>
-	<p class="logo"><img src="hblogo.png" /></p>
-	<p class="nav pull-right">Free RAM: ?</p>
-</div><!--//.navbar -->
-	
+	<div class="container body_container">	
+	<div class="navbar">
+		<ul class="nav">
+			<li class="active"><a href="#" class="program">Program</a></li>
+			<li><a href="#" class="settings">Settings</a></li>
+			<li><a href="#" class="export">Export</a></li>
+			<li><a href="#" class="help">Help</a></li>
+		</ul>
+		<p class="logo"><img src="hblogo.png" width="150" height="87" /></p>
+		<p class="nav pull-right">Free RAM: ?</p>
+	</div>
 	<div class="alert">
 		<a class="close">&times;</a>
 		<h4 class="alert-heading">Alert</h4>
@@ -1075,12 +1056,6 @@ $(function(){//shortcut for doc.ready
 		
 
 		<div class="outputs_container">
-			<!--<h3>Outputs</h3>
-			<div class="sentence_headings">
-				<h3 class="voltage">Voltage</h3>
-				<h3 class="io_name">Name</h3>
-				<h3 class="high_or_low">High or Low</h3>
-			</div>-->
 			<div class="sentence">
 				<span class="output_title">Output 1</span>
 				<select class="threshold">
@@ -1104,8 +1079,7 @@ $(function(){//shortcut for doc.ready
 			<p>Have an awesome Hauntbox gig setup?<br />Export it for use later.</p>
 		</div>
 		<div class="container">
-		<h3>Today's date: 4/12/12</h3>
-		<textarea>Description</textarea>
+		
 		<h3>Your current settings</h3>
 		<p>Copy and paste these into a text file for safekeeping.</p>
 		
@@ -1116,12 +1090,12 @@ $(function(){//shortcut for doc.ready
 		
 		<h3>URL schema</h3>
 		<pre>
-		/program		current program + status + ram
-		/settings	current settings + status + ram
-		/program.txt	current program file
-		/settings.txt	current settings file
-		/export		export
-		/ram		free ram
+/program	current program + status + ram
+/settings	current settings + status + ram
+/program.txt	current program file
+/settings.txt	current settings file
+/export		export
+/ram		free ram
 		</pre>
 		</div>
 	</div>
