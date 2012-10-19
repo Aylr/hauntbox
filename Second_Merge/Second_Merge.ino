@@ -9,6 +9,7 @@
 #include <Flash.h>
 #include <SD.h>
 #include <TinyWebServer.h>
+#include <EthernetBonjour.h>
 
 int d = 0;  //Delay used in testing of code.  Set to 0 if not testing code.
 
@@ -21,7 +22,7 @@ byte inputArray[] =       {1, 6, 6, 6, 6, 6};    //which input (0-6) is read by 
 
 byte inputHiLowArray[] =  {1, 1, 1, 1, 1, 0};    //What signal level is considered "on" for input # ({input1, input2, ...})
                                                 //1 = High, 0 = Low
-byte inputLEDArray [] =  {23,25,27,29,31,33};
+byte inputLEDArray [] =  {39,32,33,34,35,36};
                                                 
 byte outputArray[] =      {1, 2, 3, 4, 5, 6};    //which outputs (0-6) are controlled by which row ({row0, row1, ...})
                                                 //0 = no output, 1 = output #1, 2 = output #2, etc
@@ -44,20 +45,20 @@ unsigned long tempStampA;
 unsigned long tempStampB;
 
 //Define I/O pins
-int pinIn1 = 0;  //Analog pin
-int pinIn2 = 1;  //Analog pin
-int pinIn3 = 2;  //Analog pin
-int pinIn4 = 3;  //Analog pin
-int pinIn5 = 4;  //Analog pin
-int pinIn6 = 5;  //Analog pin
+int pinIn1 = 10;  //Analog pin
+int pinIn2 = 11;  //Analog pin
+int pinIn3 = 12;  //Analog pin
+int pinIn4 = 13;  //Analog pin
+int pinIn5 = 14;  //Analog pin
+int pinIn6 = 15;  //Analog pin
 
 //int CS_pin = 4;  //Pin to SD card  IS THIS THE SAME AS PIN 10, BUT FOR THE SHIELD?
-int pinOut1 = 7; //Digital pin
-int pinOut2 = 6; //Digital pin
-int pinOut3 = 5; //Digital pin
-int pinOut4 = 8; //Digital pin
-int pinOut5 = 3; //Digital pin
-int pinOut6 = 2; //Digital pin
+int pinOut1 = 49; //Digital pin
+int pinOut2 = 48; //Digital pin
+int pinOut3 = 38; //Digital pin
+int pinOut4 = 41; //Digital pin
+int pinOut5 = 40; //Digital pin
+int pinOut6 = 37; //Digital pin
 // Pin0 unused
 // Pin1 unused
 // Pin9 unused
@@ -71,13 +72,13 @@ int pinOut6 = 2; //Digital pin
 
 /****************VALUES YOU CHANGE*************/
 // pin 4 is the SPI select pin for the SDcard
-const int SD_CS = 4;
+const int SD_CS = 4;        //****CHANGE TO PIN 31 FOR REAL HAUNTBOX RATHER THAN STACK'O'SHIELDS
 
 // pin 10 is the SPI select pin for the Ethernet
-const int ETHER_CS = 10;
+const int ETHER_CS = 10;      //****** CHANGE TO PIN 53 FOR REAL HAUNTBOX RATHER THAN STACK'O'SHIELDS
 
 // Don't forget to modify the IP to an available one on your home network
-byte ip[] = { 192, 168, 1, 9 };
+byte ip[] = { 192, 168, 0, 10 };
 //byte ip[] = {10,0,0,10 };
 
 char StorageString[100];
@@ -532,6 +533,19 @@ void file_uploader_handler(TinyWebServer& web_server,
 // -------------------- begin firmware -------------------- 
 
 void setup() {
+  //good to here
+  
+  //debugging the official hb pcb
+  pinMode(32, OUTPUT); //should be input A
+  for (int i = 0; i < 5; i++) {
+    digitalWrite(32, HIGH);
+    delay(200);
+    digitalWrite(32, LOW);
+    delay(500);
+  }
+  //end debugging
+  
+  
   Serial.begin(115200);
   Serial << F("Free RAM: ") << FreeRam() << "\n";
 
@@ -551,7 +565,8 @@ void setup() {
                                 // configuration)
   pinMode(SD_CS, OUTPUT);       // Set the SDcard CS pin as an output
   digitalWrite(SD_CS, HIGH); 	// Turn off the SD card! (wait for
-                                // configuration)
+                                // configuration)  
+  //good to here
 
   // initialize the SD card.
   Serial << F("Setting up SD card...\n");
@@ -571,6 +586,7 @@ void setup() {
   }
 
   if (has_filesystem) {
+    //good to here
     // Assign our function to `upload_handler_fn'.
    TinyWebPutHandler::put_handler_fn = file_uploader_handler;
   }
@@ -579,11 +595,27 @@ void setup() {
   Serial << F("Setting up the Ethernet card...\n");
   Ethernet.begin(mac, ip);
 
+  //good to here
+
   // Start the web server.
   Serial << F("Web server starting...\n");
   web.begin();
+  
+  //zeroconf/bonjour:
+  EthernetBonjour.begin("hauntbox");
+  EthernetBonjour.addServiceRecord("Hauntbox._http", 80, MDNSServiceTCP);
 
   Serial << F("Ready to accept HTTP requests.\n");
+
+//debugging the official hb pcb  
+  pinMode(32, OUTPUT); //should be input A
+  for (int i = 0; i < 5; i++) {
+    digitalWrite(32, HIGH);
+    delay(200);
+    digitalWrite(32, LOW);
+    delay(500);
+  }
+  //end debugging
   
   
   
@@ -606,9 +638,9 @@ void setup() {
    pinMode(26, OUTPUT);
    pinMode(27, OUTPUT);
    pinMode(28, OUTPUT);
-   pinMode(29, OUTPUT);
-   pinMode(30, OUTPUT);
-   pinMode(31, OUTPUT);
+   //pinMode(29, OUTPUT);
+   //pinMode(30, OUTPUT);
+   //pinMode(31, OUTPUT);
    //pinMode(32, OUTPUT);
    //6: pinMode(33, OUTPUT);
 }
@@ -679,38 +711,37 @@ void outputSelectFunction(int rowNumber, int onOff) {
     if(y == 1) {           // "on" means turn output high
       if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
       if(x == 1) {digitalWrite(pinOut1, HIGH); }//digitalWrite(23, HIGH); }
-      if(x == 2) {digitalWrite(pinOut2, HIGH); digitalWrite(25, HIGH); }
-      if(x == 3) {digitalWrite(pinOut3, HIGH); digitalWrite(27, HIGH); }
-      if(x == 4) {digitalWrite(pinOut4, HIGH); digitalWrite(29, HIGH); }
-      if(x == 5) {digitalWrite(pinOut5, HIGH); digitalWrite(31, HIGH); }
-      if(x == 6) {digitalWrite(pinOut6, HIGH); digitalWrite(33, HIGH); } 
-      }
+      if(x == 2) {digitalWrite(pinOut2, HIGH); }//digitalWrite(25, HIGH); }
+      if(x == 3) {digitalWrite(pinOut3, HIGH); }//digitalWrite(27, HIGH); }
+      if(x == 4) {digitalWrite(pinOut4, HIGH); }//digitalWrite(29, HIGH); }
+      if(x == 5) {digitalWrite(pinOut5, HIGH); }//digitalWrite(31, HIGH); }
+      if(x == 6) {digitalWrite(pinOut6, HIGH); }}//digitalWrite(33, HIGH); } }
     if(y == 0) {           // "on" means turn output low
       if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
-      if(x == 1) {digitalWrite(pinOut1, LOW); digitalWrite(23, LOW);}
-      if(x == 2) {digitalWrite(pinOut2, LOW); digitalWrite(25, LOW);}
-      if(x == 3) {digitalWrite(pinOut3, LOW); digitalWrite(27, LOW);}
-      if(x == 4) {digitalWrite(pinOut4, LOW); digitalWrite(29, LOW);}
-      if(x == 5) {digitalWrite(pinOut5, LOW); digitalWrite(31, LOW);}
-      if(x == 6) {digitalWrite(pinOut6, LOW); digitalWrite(33, LOW);} }
+      if(x == 1) {digitalWrite(pinOut1, LOW); }//digitalWrite(23, LOW);}
+      if(x == 2) {digitalWrite(pinOut2, LOW); }//digitalWrite(25, LOW);}
+      if(x == 3) {digitalWrite(pinOut3, LOW); }//digitalWrite(27, LOW);}
+      if(x == 4) {digitalWrite(pinOut4, LOW); }//digitalWrite(29, LOW);}
+      if(x == 5) {digitalWrite(pinOut5, LOW); }//digitalWrite(31, LOW);}
+      if(x == 6) {digitalWrite(pinOut6, LOW); }}//digitalWrite(33, LOW);} }
     return; }
   if(onOff == 0) {         //turn output off
     if(y == 1) {           // "off" means turn output low
       if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
-      if(x == 1) {digitalWrite(pinOut1, LOW); digitalWrite(23, LOW);}
-      if(x == 2) {digitalWrite(pinOut2, LOW); digitalWrite(25, LOW);}
-      if(x == 3) {digitalWrite(pinOut3, LOW); digitalWrite(27, LOW);}
-      if(x == 4) {digitalWrite(pinOut4, LOW); digitalWrite(29, LOW);}
-      if(x == 5) {digitalWrite(pinOut5, LOW); digitalWrite(31, LOW);}
-      if(x == 6) {digitalWrite(pinOut6, LOW); digitalWrite(33, LOW);} }
+      if(x == 1) {digitalWrite(pinOut1, LOW); }//digitalWrite(23, LOW);}
+      if(x == 2) {digitalWrite(pinOut2, LOW); }//digitalWrite(25, LOW);}
+      if(x == 3) {digitalWrite(pinOut3, LOW); }//digitalWrite(27, LOW);}
+      if(x == 4) {digitalWrite(pinOut4, LOW); }//digitalWrite(29, LOW);}
+      if(x == 5) {digitalWrite(pinOut5, LOW); }//digitalWrite(31, LOW);}
+      if(x == 6) {digitalWrite(pinOut6, LOW); }}//digitalWrite(33, LOW);} }
     if(y == 0) {           // "off" means turn output high
       if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
       if(x == 1) {digitalWrite(pinOut1, HIGH); }//digitalWrite(23, HIGH); }
-      if(x == 2) {digitalWrite(pinOut2, HIGH); digitalWrite(25, HIGH); }
-      if(x == 3) {digitalWrite(pinOut3, HIGH); digitalWrite(27, HIGH); }
-      if(x == 4) {digitalWrite(pinOut4, HIGH); digitalWrite(29, HIGH); }
-      if(x == 5) {digitalWrite(pinOut5, HIGH); digitalWrite(31, HIGH); }
-      if(x == 6) {digitalWrite(pinOut6, HIGH); digitalWrite(33, HIGH); } }
+      if(x == 2) {digitalWrite(pinOut2, HIGH); }//digitalWrite(25, HIGH); }
+      if(x == 3) {digitalWrite(pinOut3, HIGH); }//digitalWrite(27, HIGH); }
+      if(x == 4) {digitalWrite(pinOut4, HIGH); }//digitalWrite(29, HIGH); }
+      if(x == 5) {digitalWrite(pinOut5, HIGH); }//digitalWrite(31, HIGH); }
+      if(x == 6) {digitalWrite(pinOut6, HIGH); }}//digitalWrite(33, HIGH); } }
     return; }
   }
 
@@ -832,6 +863,7 @@ void loop(){
    if (has_filesystem) {  //This tiny section runs the entire web server. Must be in void loop()
     web.process();
   }
+    EthernetBonjour.run();  //zeroconf/bonjour
 }// end void loop
 
 
