@@ -22,12 +22,13 @@ Welcome to the source code of the Hauntbox.
 - Insert that SD card into your hauntbox/arduino
 - Download the required Arduino libraries into your Arduino > libraries folder
 - Open Second_Merge > Second_Merge.ino (this is the hauntbox firmware)
-	- Set your static IP by finding the line labeled "byte ip[] = { 192, 168, 0, 10 };" Adjust accordingly
+	- If you have DHCP on your network (very likely) there is no need to modify the firmware before upload to the Arduino.
+	- If you prefer a static IP, find the line labeled "byte ip[] = { 192, 168, 0, 10 };" Adjust accordingly
 - compile and upload the firmware onto your arudino/hauntbox
 
 ## Use
 - Plug the hauntbox/arduino into your network
 - Power the hauntbox/arduino
 - Make sure your controlling device (laptop, desktop, smartphone, tablet, etc) is on WiFi **on the same network** as the hauntbox.
-- Open your browser and navigate to http://hauntbox.local
+- Open your browser and navigate to http://hauntbox.local (or the static IP you set earlier if you don't have DHCP)
 - Enjoy configuring your hauntbox.
