@@ -71,19 +71,18 @@ int pinOut6 = 37; //Digital pin
 
 
 /****************VALUES YOU CHANGE*************/
-// pin 4 is the SPI select pin for the SDcard
+// pin 4 is the SPI select pin for the SDcard if using an ethernet shield
 const int SD_CS = 4;        //****CHANGE TO PIN 31 FOR REAL HAUNTBOX RATHER THAN STACK'O'SHIELDS
 
-// pin 10 is the SPI select pin for the Ethernet
+// pin 10 is the SPI select pin for the Ethernet if using an ethernet shield
 const int ETHER_CS = 10;      //****** CHANGE TO PIN 53 FOR REAL HAUNTBOX RATHER THAN STACK'O'SHIELDS
 
 // Don't forget to modify the IP to an available one on your home network
-byte ip[] = { 192, 168, 0, 10 };
-//byte ip[] = {10,0,0,10 };
+byte ip[] = { 192, 168, 0, 100 };
 
-char StorageString[100];
 
 /*********************************************/
+char StorageString[100];
 static uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 char* browser_header = "HTTP/1.0 200 OK\nContent-Type: text/html\n";  //2 line header including mandatory blank line to signify data below
 
@@ -97,8 +96,7 @@ boolean settings_handler(TinyWebServer& web_server);
 boolean export_handler(TinyWebServer& web_server);
 
 TinyWebServer::PathHandler handlers[] = {
-  // Work around Arduino's IDE preprocessor bug in handling /* inside
-  // strings.
+  // Work around Arduino's IDE preprocessor bug in handling /* inside strings.
   //
   // `put_handler' is defined in TinyWebServer
  // {"/", TinyWebServer::GET, &index_handler },
@@ -591,19 +589,48 @@ void setup() {
    TinyWebPutHandler::put_handler_fn = file_uploader_handler;
   }
 
-  // Initialize the Ethernet.
-  Serial << F("Setting up the Ethernet card...\n");
-  Ethernet.begin(mac, ip);
+  if (has_filesystem) {
+     char* ip_temp = open_file("ip.txt");    //try to open ip.txt
+      if (ip_temp != "") {
+        
+        //Placeholders for actual code that should validate the IP address
+        //test for real IP which should look like this: byte ip[] = { 192, 168, 0, 100 };
+        //StaticIP = true;
+        
 
+        
+        Serial << F("Static IP on\n");
+        Serial << ip_temp;
+        Ethernet.begin(mac,ip);                                 //setup with static address
+        
+      }else{      //if there is not a static ip specified... use DHCP
+        
+        Serial << F("Setting up the Ethernet card...\n");
+        if (Ethernet.begin(mac) == 0) {                          // Initialize ethernet with DHCP
+           Serial << F("DHCP failed\n");
+        }
+      }
+   }//end if has filesystem
+   
+   //print IP address to serial
+   Serial.print("IP Address: ");
+   for (byte thisByte = 0; thisByte < 4; thisByte++) {                   // print the value of each byte of the IP address:
+          Serial.print(Ethernet.localIP()[thisByte], DEC);
+          Serial.print("."); 
+        }
+    Serial.print("\n");
+  
   //good to here
+
+  //Ethernet.begin(mac);   //DHCP only fallback for debugging
 
   // Start the web server.
   Serial << F("Web server starting...\n");
   web.begin();
   
-  //zeroconf/bonjour:
-  EthernetBonjour.begin("hauntbox");
-  EthernetBonjour.addServiceRecord("Hauntbox._http", 80, MDNSServiceTCP);
+  // Start the bonjour/zeroconf service
+  EthernetBonjour.begin("hauntbox");                                        //Set the advertised name
+  EthernetBonjour.addServiceRecord("Hauntbox._http", 80, MDNSServiceTCP);   //Set the advertised port/service
 
   Serial << F("Ready to accept HTTP requests.\n");
 
@@ -878,15 +905,6 @@ char* open_file(char* input_file){
   Serial.print(SD.begin(SD_CS));
   Serial.print(" ,has_filesystem = ");
   Serial.println(has_filesystem);
-  
-  //THIS BOTHERSOME SECTION SEEMS TO BEHAVE INCONSISTENTLY AT BEST. COMMENTING OUT TO KEEP THE BRIDGE WORKING. IT IS ASSUMED THAT THE SD CARD IS WORKING AT THIS POINT.
-  //if (!SD.begin(SD_CS)) {
-  //if (!has_filesystem){                  //hijack the already check SD from TinyWebServer library
-  //  Serial.println("SD.begin failed");
-  //  return fail;          
-  //}
-  //Serial.println("ready");
-
   
   File file = SD.open(input_file);
   
