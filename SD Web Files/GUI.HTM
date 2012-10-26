@@ -42,7 +42,7 @@ body {
 }
 .navbar .logo {
 	position: absolute;
-	top: 20px;
+	top: 45px;
 	left: 900px;
 }
 input[name="enable_disable"] {
@@ -180,6 +180,12 @@ span.input, span.output, span.duration, span.delay {
 	padding: 0 5px 5px 5px;
 	border-bottom: 1px solid rgb(225,225,225);
 }
+div.alert {
+	position: absolute;
+	top: 55px;
+	left:640px;
+	width: 190px;
+}
 </style>
 <script src="jqry171.js"></script>
 
@@ -249,7 +255,7 @@ $(function(){//shortcut for doc.ready
 			error: function(data){
 				//failure ALERT HERE..............
 				populate_program(default_program);
-				alert("default program used");
+				alert("Error loading program.txt Default program used");
 			}
 		});
 		
@@ -307,7 +313,7 @@ $(function(){//shortcut for doc.ready
 				//failure ALERT HERE..............
 				populate_settings(default_settings);	//if failed, use default settings
 				update_status_and_ram(default_settings);
-				alert("default settings used");
+				alert("Error loading Settings.txt Default settings used");
 			}
 		});
 
@@ -805,25 +811,24 @@ $(function(){//shortcut for doc.ready
 	}//end set_voltage_threshold()
 		
 	function status_message(status_code) {
-		//switch 0,1,2,3,4,5
-		//plug in status codes here and trigger an event if needed
-		//and a BOOTSTRAP alert if needed
+		//switch 0,1,2,3,4,5,...
+		//plug in status codes here and trigger an event if needed and a BOOTSTRAP alert if needed
 		status_code = parseInt(status_code);
 		if (isNaN(status_code)) {
 			status_code = null;
 		}
-		var header = "", message = "", button1 = "", button2 = "", type = "alert-info";
+		var header = "", message = "", button1 = "", button2 = "", type = "alert-info";		//initialize defaults
 		
 		switch	(status_code){					//this entire switch really just changes the message in the alert
 			case 0:
 				//0 = all good
-				header = "All systems good";
-				message = "Everything appears normal, sir.";
+				header = "All systems go.";
+				message = "Everything appears normal, sir/madam.";
 				button1 = "button1";
 				button2 = "button2";
 				type = "alert-success";
 				setTimeout(function(){
-					$(".alert").fadeOut();
+					$("..alert").fadeOut();
 				},2000);
 				break;
 			case 1:
@@ -895,7 +900,7 @@ $(function(){//shortcut for doc.ready
 		var alert = $("div.alert");
 		alert.hide();
 		alert.attr("class","alert " + type).children("h4").html(header).next().html(message);
-		//alert.fadeIn(); *********TEMPORARILY HIDE ALERTS*******************
+		alert.fadeIn();
 
 		console.log("status_code: " + status_code);
 	}//end status_message()
@@ -938,12 +943,12 @@ $(function(){//shortcut for doc.ready
 			<li><a href="#" class="help">Help</a></li>
 		</ul>
 		<p class="logo"><img src="hblogo.png" width="150" height="87" /></p>
+		<div class="alert">
+			<a class="close">&times;</a>
+			<h4 class="alert-heading">Alert</h4>
+			<p>Alert Info</p>
+		</div>
 		<p class="nav pull-right">Free RAM: ?</p>
-	</div>
-	<div class="alert">
-		<a class="close">&times;</a>
-		<h4 class="alert-heading">Alert</h4>
-		<p>Alert Info</p>
 	</div>
 
 <div id="display_container">
