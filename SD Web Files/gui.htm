@@ -201,7 +201,7 @@ $(function(){//shortcut for doc.ready
 	var threshold_24V = 492;			//(24V / 5)*1024 = 492
 	
 	var default_program = "0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0,0,0,0,0,0;1,1,1,1,1,1;0,1,3,5,10,30;0;00"
-	var default_settings = "1,1,1,1,1,1,1,1,1,1,1,1;A: garage,B: my room,C: hall,D: cemetery,E: cornfield,F: swamp;1: UV,2: light,3: strobe,4: sound,5: air horn,6: zombie;" + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + ";1,1,1,1,1,1;0;00;"
+	var default_settings = "1,1,1,1,1,1,1,1,1,1,1,1;garage,my room,hall,cemetery,cornfield,swamp;UV,light,strobe,sound,air horn,zombie;" + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + ";1,1,1,1,1,1;0;00;"
 	//var default_settings = "1,1,1,1,1,1,1,1,1,1,1,1;my room,input2,input3,input4,input5,input6;light,output2,output3,output4,output5,output6;" + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + ";1,1,1,1,1,1;0;00;"
 
 
@@ -743,10 +743,16 @@ $(function(){//shortcut for doc.ready
 	
 	function set_io_names(select,names){					//this function sets the custom i/o names from the settings arrays
 		var i = 0;											//inititalize counter variable
+		tempPrefaces = [];
+		if(select=="select.sensor") {
+			tempPrefaces = ["","A: ","B: ","C: ","D: ","E: ","F: "];
+		}else if(select=="select.output"){
+			tempPrefaces = ["","1: ","2: ","3: ","4: ","5: ","6: "];
+		}
 		names.unshift("-");									//add the "-" to the beginning for the default choice
 		$(select).each(function(){							//loop through each select.sensor
 			$(this).children().each(function(){				//loop through each dropdown option
-				$(this).html(names[i]);						//set the actual html names					
+				$(this).html(tempPrefaces[i] + names[i]);		//set the actual html names
 				i ++;										//increment i
 			});//end each option
 			i = 0;											//reset i for next group of options
