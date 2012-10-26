@@ -201,14 +201,13 @@ $(function(){//shortcut for doc.ready
 	var next_page = null;					//keeps track of next page
 	var ABC = ["A","B","C","D","E","F"]		//used when naming the dynamically generated rows
 	
-	//ADC threshold values for inputs/outputs. Maths are done here to spare Arduino cycles
+	//ADC threshold values for inputs/outputs. Maths are done here to spare Arduino CPU cycles
 	var threshold_5V = 103;				//(5V / 5)*1024 = 103
 	var threshold_12V = 246;			//(12V / 5)*1024 = 246
 	var threshold_24V = 492;			//(24V / 5)*1024 = 492
 	
-	var default_program = "0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0,0,0,0,0,0;1,1,1,1,1,1;0,1,3,5,10,30;0;00"
-	var default_settings = "1,1,1,1,1,1,1,1,1,1,1,1;garage,my room,hall,cemetery,cornfield,swamp;UV,light,strobe,sound,air horn,zombie;" + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + ";1,1,1,1,1,1;0;00;"
-	//var default_settings = "1,1,1,1,1,1,1,1,1,1,1,1;my room,input2,input3,input4,input5,input6;light,output2,output3,output4,output5,output6;" + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + ";1,1,1,1,1,1;0;00;"
+	var default_program = "0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0,0,0,0,0,0;1,1,1,1,1,1;0,1,3,5,10,30;2;00"
+	var default_settings = "1,1,1,1,1,1,1,1,1,1,1,1;garage,my room,hall,cemetery,cornfield,swamp;UV,light,strobe,sound,air horn,zombie;" + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + ";1,1,1,1,1,1;2;00;"
 
 
 	//##################################### Initial Page Load Stuff ##################################### 
@@ -228,7 +227,6 @@ $(function(){//shortcut for doc.ready
 	function load_settings(){
 		//this should load values from the firmware...
 		//including intelligent defaults and populate the form correctly
-		tempStatus = 0;
 
 		//Data receiving protocol (Arduino --> Browser)
 		//Input array;Input on/off;On delay;Output array;Output on/off;Duration;status code;Free RAM;
@@ -246,16 +244,12 @@ $(function(){//shortcut for doc.ready
 			type: 'GET',
 			success: function(data){
 				populate_program(data);
-				tempStatus ++;			//increment for one status message, not 2 flashy ones
-				console.log("tempStatus = " + tempStatus);
-				if (tempStatus == 2){
-					update_status_and_ram(data);
-				}
+				update_status_and_ram(data);
 			},
 			error: function(data){
 				//failure ALERT HERE..............
 				populate_program(default_program);
-				alert("Error loading program.txt Default program used");
+				status_message(8);//				alert("Error loading program.txt Default program used");
 			}
 		});
 		
@@ -303,17 +297,13 @@ $(function(){//shortcut for doc.ready
 			type: 'GET',
 			success: function(data){
 				populate_settings(data);				//if successful, populate the settings
-				tempStatus ++;			//increment for one status message, not 2 flashy ones
-				console.log("tempStatus = " + tempStatus);
-				if (tempStatus == 2){
-					update_status_and_ram(data);
-				};
+				update_status_and_ram(data);
 			},
 			error: function(data){
 				//failure ALERT HERE..............
 				populate_settings(default_settings);	//if failed, use default settings
 				update_status_and_ram(default_settings);
-				alert("Error loading Settings.txt Default settings used");
+				status_message(8); //alert("Error loading Settings.txt Default settings used");
 			}
 		});
 
@@ -588,10 +578,7 @@ $(function(){//shortcut for doc.ready
 		var post_data = "";					//initialize the POST string
 		var counter = 0;					//use to insert commas after each row
 
-		for (var i=0, tot=column_names.length; i < tot; i++) {
-			//console.log($(column_names[i]));			//log the current object
-		    //console.log($(column_names[i]).length);		//log the current object length
-		
+		for (var i=0, tot=column_names.length; i < tot; i++) {		
 			$(column_names[i]).each(function(){	//loop through a single column
 				counter ++;						//increment counter
 				post_data += $(this).val();		//append value of input
@@ -605,10 +592,6 @@ $(function(){//shortcut for doc.ready
 		};//loop through each column
 
 		console.log(post_data);				//log to firebug
-		
-		/*$.post("/testget", post_data, function(data){ 	//the AJAX bit
-			$("#status_program").hide().html(data).fadeIn();
-		});*/
 		
 		$.ajax({
 			//ERROR HANDLING ********************************** PUT IN HERE ****************
@@ -841,8 +824,8 @@ $(function(){//shortcut for doc.ready
 				break;
 			case 2:
 				//2 = no SD card --> insert valid one and reset Arduino
-				header = "Error 2";
-				message = "2 = no SD card --> insert valid one and reset Arduino";
+				header = "Error 2: No valid SD card";
+				message = "Please insert a valid SD card and reset Arduino";
 				button1 = "button1";
 				button2 = "button2";
 				type = "alert-error";
@@ -887,6 +870,15 @@ $(function(){//shortcut for doc.ready
 				button2 = "button2";
 				type = "alert-error";
 				break;
+			case 8:
+				//8 = Loading program/settings failed
+				header = "Loading program.txt or settings.txt failed";
+				message = "Please check that your SD card is functioning normally and reset power.";
+				button1 = "button1";
+				button2 = "button2";
+				type = "alert-error";
+				break;
+		
 			default:
 				//if no error code or garbled --> NO CLUE WHAT SHOULD HAPPEN HERE
 				header = "Unknown Error";
