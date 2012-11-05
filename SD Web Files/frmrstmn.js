@@ -1,0 +1,1 @@
+(function(e){var t="input";if(!("oninput"in document||"oninput"in e("<input>")[0])){t+=" keypress keyup"}jQuery.fn.restrict=function(n){e(this).bind(t,function(t){e(this).val(n(e(this).val()))})};jQuery.fn.regexRestrict=function(t){var n=function(e){return e.replace(t,"")};e(this).restrict(n)}})(jQuery)
