@@ -199,6 +199,7 @@ $(function(){//shortcut for doc.ready
 	var increment_hold_delay = 1000;		//the delay in milliseconds (timeout) before auto ++ing
 	var interval = null, timeout = null;	//vars for auto incrementing and auto delay
 	var unsaved_changes = false;			//keep track if user has unsaved changes
+	var unfinished_ajax_put = false;			//keep track of pending ajax calls to prevent loading something before something else is done
 	var current_page = "program";			//keeps track of current page
 	var next_page = null;					//keeps track of next page
 	var ABC = ["A","B","C","D","E","F"]		//used when naming the dynamically generated rows
@@ -224,7 +225,7 @@ $(function(){//shortcut for doc.ready
 		$("div.settings .inputs_container .sentence").first().clone({deepWithDataAndEvents: true}).appendTo("div.settings .inputs_container").children("span").html("Input " + ABC[i]).parent().children("input[type=radio]").attr("name","highlow" + (i+1));
 		$("div.settings .outputs_container .sentence").first().clone({deepWithDataAndEvents: true}).appendTo("div.settings .outputs_container").children("span").html("Output " + (i+1)).parent().children("input[type=radio]").attr("name","output_highlow" + (i+1));
 	}
-	$("div.program").show();							//...except the program div
+	$("div.program").show();							//show the program div
 
 	function load_settings(){
 		//this should load values from the firmware...
@@ -356,7 +357,7 @@ $(function(){//shortcut for doc.ready
 	load_settings();					//load the data and populate form
 
 
-	//##################################### General button stuff ##################################### 
+	//##################################### General navigation manager ##################################### 
 	$(".navbar .nav a").click(function(){
 		next_page = $(this);				//where are you navigating to?
 		
@@ -364,12 +365,12 @@ $(function(){//shortcut for doc.ready
 			unsaved_modal();					//yes: present dialog
 		}else{									//no: proceed with navigation change
 			var chosen = $(this).attr("class");
-			if (chosen == "settings") {
+			if (chosen == "settings") {		//"Settings" clicked
 				//load settings
 				load_settings();					//load the data and populate form
-			}else if (chosen == "program"){
+			}else if (chosen == "program"){	//"Program" clicked
 				load_settings();					//load the data and populate form
-			}else if (chosen == "export"){
+			}else if (chosen == "export"){	//"Export" clicked
 				//load exports
 				$.ajax({
 					url: '/settings.txt',
@@ -383,6 +384,8 @@ $(function(){//shortcut for doc.ready
 						//$("div.alert").alert('close');
 						$("div.export pre.settings").html(data);
 						console.log("file: " + data);
+						
+						//Nest the other .ajax call to program.txt here...
 					},
 					statusCode: {
 						404: function(){
@@ -423,25 +426,25 @@ $(function(){//shortcut for doc.ready
 		}
 	});//navbar.click()
 	
-	$("#unsaved_modal .save").click(function(){		//defines what happens when the modal "Save Changes" is clicked
-		$(this).button('loading');			//set button to loading state
-		var modal_h3 = $("#unsaved_modal h3");		//save the header
-		var modal_body = $("#unsaved_modal p");		//save the body
-		modal_h3.html("Saving");			//change header to "saving"
+	$("#unsaved_modal .save").click(function(){	//defines what happens when the modal "Save Changes" is clicked
+		$(this).button('loading');									//set button to loading state
+		var modal_h3 = $("#unsaved_modal h3");						//save the header
+		var modal_body = $("#unsaved_modal p");						//save the body
+		modal_h3.html("Saving");									//change header to "saving"
 		modal_body.html("Please wait while saving...");
-		save(current_page);					//try to save
-		$(this).button('reset');			//reset button
-		$("#unsaved_modal").modal("hide");			//hide the modal
-		modal_h3.html("Unsaved Changes");	//reset header
+		save(current_page);											//try to save
+		$(this).button('reset');									//reset button
+		$("#unsaved_modal").modal("hide");							//hide the modal
+		modal_h3.html("Unsaved Changes");							//reset header
 		modal_body.html("Would you like to save your changes?")		//reset body
-		load_settings();					//reload the new settings and update the form
-		set_active_nav(next_page);			//go on with navigation
+		load_settings();											//reload the new settings and update the form
+		set_active_nav(next_page);									//go on with navigation
 	});
 	
 	$("#unsaved_modal .discard").click(function(){		//defines what happens when the modal "Discard Changes" is clicked
-		unsaved_changes = false;		//reset unsaved_changes
+		unsaved_changes = false;				//reset unsaved_changes
 		$("#unsaved_modal").modal('hide');		//hide the modal
-		set_active_nav(next_page);		//go to the requested page
+		set_active_nav(next_page);				//go to the requested page
 	});
 	
 	$("#refresh_settings, #refresh_program").click(function(){
@@ -531,7 +534,7 @@ $(function(){//shortcut for doc.ready
 	
 //##################################### Utility Functions #####################################
 	
-	function unsaved_modal(){
+	function unsaved_modal(){	//displays the unsaved changes warning with save/discard buttons
 		if (unsaved_changes) {
 			$('#unsaved_modal').modal({
 				keyboard: true,
