@@ -531,11 +531,12 @@ void file_uploader_handler(TinyWebServer& web_server,
 // -------------------- begin firmware -------------------- 
 
 void setup() {
+  int i;
   //good to here
   
   //debugging the official hb pcb
   pinMode(32, OUTPUT); //should be input A
-  for (int i = 0; i < 5; i++) {
+  for (i = 0; i < 5; i++) {
     digitalWrite(32, HIGH);
     delay(200);
     digitalWrite(32, LOW);
@@ -592,6 +593,27 @@ void setup() {
   if (has_filesystem) {
      char* ip_temp = open_file("ip.txt");    //try to open ip.txt
       if (ip_temp != "") {
+        
+        char* tok;
+        char* val[4];
+        
+        tok = strtok(ip_temp, ".");
+        val[0] = tok;
+	for (i = 1; i < 4; i++) {
+	  if (tok == NULL)
+	    break;
+	  tok = strtok(NULL, ".");
+	  val[i] = tok;
+	}
+
+        for (i = 0; i < 4; i++) {
+          Serial << (val[i]) << ' ';
+	}
+      
+        for (i = 0; i < 4; i++) {
+          ip[i] = (byte)atoi(val[i]);
+        }
+        
         
         //Placeholders for actual code that should validate the IP address
         //test for real IP which should look like this: byte ip[] = { 192, 168, 0, 100 };
