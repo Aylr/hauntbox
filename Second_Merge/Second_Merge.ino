@@ -72,10 +72,10 @@ int pinOut6 = 37; //Digital pin
 
 /****************VALUES YOU CHANGE*************/
 // pin 4 is the SPI select pin for the SDcard if using an ethernet shield
-const int SD_CS = 4;        //****CHANGE TO PIN 31 FOR REAL HAUNTBOX RATHER THAN STACK'O'SHIELDS
+const int SD_CS = 31;//4;        //****CHANGE TO PIN 31 FOR REAL HAUNTBOX RATHER THAN STACK'O'SHIELDS
 
 // pin 10 is the SPI select pin for the Ethernet if using an ethernet shield
-const int ETHER_CS = 10;      //****** CHANGE TO PIN 53 FOR REAL HAUNTBOX RATHER THAN STACK'O'SHIELDS
+const int ETHER_CS = 53;/10;      //****** CHANGE TO PIN 53 FOR REAL HAUNTBOX RATHER THAN STACK'O'SHIELDS
 
 // Don't forget to modify the IP to an available one on your home network
 byte ip[] = { 192, 168, 0, 100 };

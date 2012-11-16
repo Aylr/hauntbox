@@ -199,7 +199,6 @@ $(function(){//shortcut for doc.ready
 	var increment_hold_delay = 1000;		//the delay in milliseconds (timeout) before auto ++ing
 	var interval = null, timeout = null;	//vars for auto incrementing and auto delay
 	var unsaved_changes = false;			//keep track if user has unsaved changes
-	var unfinished_ajax_put = false;			//keep track of pending ajax calls to prevent loading something before something else is done
 	var current_page = "program";			//keeps track of current page
 	var next_page = null;					//keeps track of next page
 	var ABC = ["A","B","C","D","E","F"]		//used when naming the dynamically generated rows
@@ -364,7 +363,13 @@ $(function(){//shortcut for doc.ready
 		if (unsaved_changes) {				//check for change
 			unsaved_modal();					//yes: present dialog
 		}else{									//no: proceed with navigation change
-			var chosen = $(this).attr("class");
+			navigation_manager();
+		}
+	});//navbar.click()
+	
+	
+	function navigation_manager(){
+			var chosen = next_page.attr("class");
 			if (chosen == "settings") {		//"Settings" clicked
 				//load settings
 				load_settings();					//load the data and populate form
@@ -372,59 +377,58 @@ $(function(){//shortcut for doc.ready
 				load_settings();					//load the data and populate form
 			}else if (chosen == "export"){	//"Export" clicked
 				//load exports
-				$.ajax({
-					url: '/settings.txt',
-					type: 'GET',
-					beforeSend: function(){
-						//show loading alert
-						//$("div.alert").alert();
-					},
-					success: function(data){
-						//hide alert
-						//$("div.alert").alert('close');
-						$("div.export pre.settings").html(data);
-						console.log("file: " + data);
-						
-						//Nest the other .ajax call to program.txt here...
-					},
-					statusCode: {
-						404: function(){
-							$("div.export pre.settings").html("File not found");
-							status_message(99);
+					$.ajax({
+						url: '/settings.txt',
+						type: 'GET',
+						beforeSend: function(){
+							//show loading alert
+							//$("div.alert").alert();
+						},
+						success: function(data){
+							//hide alert
+							//$("div.alert").alert('close');
+							$("div.export pre.settings").html(data);
+							console.log("file: " + data);
+
+							//Nest the other .ajax call to program.txt here...
+						},
+						statusCode: {
+							404: function(){
+								$("div.export pre.settings").html("File not found");
+								status_message(99);
+							}
+						},
+						error: function(){
+							//alert: fail
+							$("div.export pre.settings").html("Please try again.");
 						}
-					},
-					error: function(){
-						//alert: fail
-						$("div.export pre.settings").html("Please try again.");
-					}
-				});
-				
-				$.ajax({
-					url: '/program.txt',
-					type: 'GET',
-					beforeSend: function(){
-						//show loading alert
-						//$("div.alert").alert();
-					},
-					success: function(data){
-						//hide alert
-						//$("div.alert").alert('close');
-						$("div.export pre.program").html(data);
-						console.log("file: " + data);
-					},
-					error: function(){
-						//alert: fail
-						$("div.export pre.program").html("Please try again.");
-					}
-				});//end ajax
+					});
+
+					$.ajax({
+						url: '/program.txt',
+						type: 'GET',
+						beforeSend: function(){
+							//show loading alert
+							//$("div.alert").alert();
+						},
+						success: function(data){
+							//hide alert
+							//$("div.alert").alert('close');
+							$("div.export pre.program").html(data);
+							console.log("file: " + data);
+						},
+						error: function(){
+							//alert: fail
+							$("div.export pre.program").html("Please try again.");
+						}
+					});//end ajax
 			}
 			set_active_nav(next_page);
-		}
 		
-		function four_o_four(file){
-			
-		}
-	});//navbar.click()
+		
+		
+	
+	}
 	
 	$("#unsaved_modal .save").click(function(){	//defines what happens when the modal "Save Changes" is clicked
 		$(this).button('loading');									//set button to loading state
@@ -432,6 +436,7 @@ $(function(){//shortcut for doc.ready
 		var modal_body = $("#unsaved_modal p");						//save the body
 		modal_h3.html("Saving");									//change header to "saving"
 		modal_body.html("Please wait while saving...");
+		console.log(current_page);
 		save(current_page);											//try to save
 		$(this).button('reset');									//reset button
 		$("#unsaved_modal").modal("hide");							//hide the modal
@@ -564,11 +569,11 @@ $(function(){//shortcut for doc.ready
 			$(selector).parent().attr("class","active").siblings().attr("class","");	//change the active highlight in the navbar
 			current_page = selector.attr("class");										//save the current page into memory
 		}
-		next_page = null;			//reset the next_page
+		//next_page = null;			//reset the next_page
 	}
 	
 	function save(type) {	//this function sets up the call to cupcake with the columns you want sent
-		var colum_names = null;
+		var column_names = null;
 		var file = type + ".txt"	//make a file name based on the save type
 		
 		if (type == "program"){
@@ -608,11 +613,14 @@ $(function(){//shortcut for doc.ready
 			type: 'PUT',
 			data: post_data,
 			success: function(){
-				unsaved_changes = false;
-				status_message(0);
-				console.log("changes saved");
-				saved_successfully(type);
-				
+				if(unsaved_changes){
+					unsaved_changes = false;
+					navigation_manager();
+				}else{
+					status_message(0);
+					console.log("changes saved");
+					saved_successfully(type);
+				}
 			},
 			error: function(){		//keep unsaved_changes = true
 				//alert which file failed --> take action
@@ -816,7 +824,7 @@ $(function(){//shortcut for doc.ready
 				button2 = "button2";
 				type = "alert-success";
 				setTimeout(function(){
-					$("..alert").fadeOut();
+					$(".alert").fadeOut();
 				},2000);
 				break;
 			case 1:
@@ -1011,7 +1019,7 @@ $(function(){//shortcut for doc.ready
 						</select>
 						<div class="duration_container">
 							<div class="duration">
-								<a href="#" class="up">+</a>
+								<span class="up">+</span>
 								<a href="#" class="down">-</a>
 							</div>
 							<input type="text" class="output_duration" name="output_duration3" maxlength="3" value="0" />
