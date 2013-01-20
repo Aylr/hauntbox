@@ -8,8 +8,8 @@
 // Variables
 char* background_wav = "break.wav";
 char* trigger_wav = "alarm.wav";
-int trigger_pin = 0;
-int trigger_threshold = 800;
+int trigger_pin = 4;
+int trigger_threshold = 200;
 byte background_exists = 0;
 
 
@@ -62,7 +62,7 @@ void setup() {
   pinMode(5, OUTPUT);
  
   // pin13 LED
-  pinMode(13, OUTPUT);
+  pinMode(6, OUTPUT);//13 for stack of shields
  
   // enable pull-up resistors on switch pins (analog inputs)
  /* digitalWrite(14, HIGH);
@@ -107,9 +107,9 @@ void setup() {
   }
   
   //Test for background wav and set mode appropriately
-  if (background_wav exists){
-    background = 1;
-  }
+  //if (background_wav exists){
+  //  background = 1;
+  //}
   
   
   

@@ -11,6 +11,7 @@
 #include <TinyWebServer.h>
 #include <EthernetBonjour.h>
 
+
 int d = 0;  //Delay used in testing of code.  Set to 0 if not testing code.
 
 //--------------------Define/get variables from GUI-------------------------------------
@@ -52,7 +53,6 @@ int pinIn4 = 13;  //Analog pin
 int pinIn5 = 14;  //Analog pin
 int pinIn6 = 15;  //Analog pin
 
-//int CS_pin = 4;  //Pin to SD card  IS THIS THE SAME AS PIN 10, BUT FOR THE SHIELD?
 int pinOut1 = 49; //Digital pin
 int pinOut2 = 48; //Digital pin
 int pinOut3 = 38; //Digital pin
@@ -72,10 +72,10 @@ int pinOut6 = 37; //Digital pin
 
 /****************VALUES YOU CHANGE*************/
 // pin 4 is the SPI select pin for the SDcard if using an ethernet shield
-const int SD_CS = 31;//4;        //****CHANGE TO PIN 31 FOR REAL HAUNTBOX RATHER THAN STACK'O'SHIELDS
+const int SD_CS = 4;//31;//4;        //****CHANGE TO PIN 31 FOR REAL HAUNTBOX RATHER THAN STACK'O'SHIELDS
 
 // pin 10 is the SPI select pin for the Ethernet if using an ethernet shield
-const int ETHER_CS = 53;/10;      //****** CHANGE TO PIN 53 FOR REAL HAUNTBOX RATHER THAN STACK'O'SHIELDS
+const int ETHER_CS = 10;//53;//10;      //****** CHANGE TO PIN 53 FOR REAL HAUNTBOX RATHER THAN STACK'O'SHIELDS
 
 // Don't forget to modify the IP to an available one on your home network
 byte ip[] = { 192, 168, 0, 100 };
@@ -83,7 +83,7 @@ byte ip[] = { 192, 168, 0, 100 };
 
 /*********************************************/
 char StorageString[100];
-static uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+static uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xEE };
 char* browser_header = "HTTP/1.0 200 OK\nContent-Type: text/html\n";  //2 line header including mandatory blank line to signify data below
 
 //--------------------------- Define Handlers ----------------------------
@@ -532,24 +532,9 @@ void file_uploader_handler(TinyWebServer& web_server,
 
 void setup() {
   int i;
-  //good to here
-  
-  //debugging the official hb pcb
-  pinMode(32, OUTPUT); //should be input A
-  for (i = 0; i < 5; i++) {
-    digitalWrite(32, HIGH);
-    delay(200);
-    digitalWrite(32, LOW);
-    delay(500);
-  }
-  //end debugging
-  
   
   Serial.begin(115200);
   Serial << F("Free RAM: ") << FreeRam() << "\n";
-
-//  pinMode(LEDPIN, OUTPUT);
-//  setLedEnabled(false);
 
   pinMode(SS_PIN, OUTPUT);	// set the SS pin as an output
                                 // (necessary to keep the board as
@@ -561,11 +546,10 @@ void setup() {
   // ethernet board They may need to be re-jigged for different boards
   pinMode(ETHER_CS, OUTPUT); 	// Set the CS pin as an output
   digitalWrite(ETHER_CS, HIGH); // Turn off the W5100 chip! (wait for
-                                // configuration)
+                                // configuration)                              
   pinMode(SD_CS, OUTPUT);       // Set the SDcard CS pin as an output
   digitalWrite(SD_CS, HIGH); 	// Turn off the SD card! (wait for
                                 // configuration)  
-  //good to here
 
   // initialize the SD card.
   Serial << F("Setting up SD card...\n");
@@ -585,8 +569,7 @@ void setup() {
   }
 
   if (has_filesystem) {
-    //good to here
-    // Assign our function to `upload_handler_fn'.
+   // Assign our function to `upload_handler_fn'.
    TinyWebPutHandler::put_handler_fn = file_uploader_handler;
   }
 
@@ -614,22 +597,20 @@ void setup() {
           ip[i] = (byte)atoi(val[i]);
         }
         
-        
         //Placeholders for actual code that should validate the IP address
         //test for real IP which should look like this: byte ip[] = { 192, 168, 0, 100 };
-        //StaticIP = true;
-        
-
         
         Serial << F("Static IP on\n");
         Serial << ip_temp;
         Ethernet.begin(mac,ip);                                 //setup with static address
+
         
       }else{      //if there is not a static ip specified... use DHCP
         
         Serial << F("Setting up the Ethernet card...\n");
         if (Ethernet.begin(mac) == 0) {                          // Initialize ethernet with DHCP
            Serial << F("DHCP failed\n");
+           
         }
       }
    }//end if has filesystem
@@ -642,10 +623,6 @@ void setup() {
         }
     Serial.print("\n");
   
-  //good to here
-
-  //Ethernet.begin(mac);   //DHCP only fallback for debugging
-
   // Start the web server.
   Serial << F("Web server starting...\n");
   web.begin();
@@ -653,20 +630,18 @@ void setup() {
   // Start the bonjour/zeroconf service
   EthernetBonjour.begin("hauntbox");                                        //Set the advertised name
   EthernetBonjour.addServiceRecord("Hauntbox._http", 80, MDNSServiceTCP);   //Set the advertised port/service
-
-  Serial << F("Ready to accept HTTP requests.\n");
-
-//debugging the official hb pcb  
+  
+  //debugging the official hb pcb
   pinMode(32, OUTPUT); //should be input A
-  for (int i = 0; i < 5; i++) {
+  for (i = 0; i < 10; i++) {
     digitalWrite(32, HIGH);
-    delay(200);
+    delay(100);
     digitalWrite(32, LOW);
-    delay(500);
+    delay(100);
   }
   //end debugging
-  
-  
+
+  Serial << F("Ready to accept HTTP requests.\n");
   
    pinMode(pinOut1, OUTPUT);
    pinMode(pinOut2, OUTPUT);
@@ -680,7 +655,7 @@ void setup() {
    //A:22, B:24, C:26, D:28, E:30, F:32
    // temporarlily disable a few to prevent overcurrent
    
-   pinMode(22, OUTPUT);
+   //pinMode(22, OUTPUT);
    //1: pinMode(23, OUTPUT);
    pinMode(24, OUTPUT);
    pinMode(25, OUTPUT);
