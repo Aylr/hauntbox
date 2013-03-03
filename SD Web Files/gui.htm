@@ -94,7 +94,7 @@ div.alert{
 	display:none;
 }
 input, div.settings input.retrigger { /*slim up the wide 999 second boxes */
-	width: 2em;
+	width: 2.5em;
 	text-align:right;
 }
 .settings select, .sensor_state, .output_state {
@@ -119,11 +119,17 @@ div.wait span, div.duration span {
 	text-align: center;
 	text-decoration: none;
 	color: #000;
-	width: 15px;
-	height: 16px;
+	width: 20px;
+	height: 20px;
+	border-radius: 10px;
+	-moz-border-radius: 10px;
 	margin: 0 0 -1px 0;
 	cursor: pointer;
 	-webkit-user-select: none;
+}
+div.wait span:first-child, div.duration span:first-child {
+	position:relative;
+	top:-5px;
 }
 div.outputs_container, div.button_container {
 	margin-top: 2em;
@@ -144,10 +150,10 @@ div.outputs_container, div.button_container {
 	width: 259px;
 }
 .sentence_headings .delay {
-	width: 300px;
+	width: 310px;
 }
 .sentence_headings .output {
-	width: 155px;
+	width: 165px;
 }
 .sentence_headings .duration {
 	width: 340px;
@@ -156,13 +162,13 @@ div.outputs_container, div.button_container {
 	width: 105px;
 }
 .sentence_headings .io_name {
-	width: 120px;
+	width: 125px;
 }
 .sentence_headings .high_or_low {
-	width: 376px;
+	width: 380px;
 }
 .sentence_headings .retrigger {
-	width: 350px;
+	width: 360px;
 }
 div.sentence_container, .sentence {
 	clear: both;
@@ -271,7 +277,7 @@ $(function(){//shortcut for doc.ready
 		});
 		
 		function populate_program(string){
-			var input_array = new Array(), input_onoff = new Array(), on_delay = new Array(), output_array = new Array(), output_onoff = new Array(), duration = new Array();
+			var input_array = input_onoff = on_delay = output_array = output_onoff = duration = new Array();
 		
 			var incoming_program = string.split(";")		//split into substrings
 			var input_array = incoming_program[0].split(",");		//split substrings into arrays of strings "1,2,3,..." --> ["1","2","3",...]
@@ -325,7 +331,7 @@ $(function(){//shortcut for doc.ready
 		});
 
 		function populate_settings(string){
-			var input_names = new Array(), output_names = new Array(), io_definitions = new Array(), io_voltage_thresholds = new Array(), retrigger_delays = new Array();
+			var input_names = output_names = io_definitions = io_voltage_thresholds = retrigger_delays = new Array();
 			var incoming_settings = string.split(";");	//split into substrings
 
 			if (incoming_settings[incoming_settings.length - 1].length == 0) {		//test for length == 0 then delete element
@@ -475,7 +481,7 @@ $(function(){//shortcut for doc.ready
 	});
 	
 	$("input.wait_time").change(function(){					//whenever the wait field changes
-		$(this).val(parseInt(sanitize($(this).val())));		//update the input with sanitized
+		$(this).val(sanitize($(this).val()));		//update the input with sanitized
 	});
 
 	$(".save_program").click(function(){
@@ -543,8 +549,16 @@ $(function(){//shortcut for doc.ready
 	
 	$(".input_name, output_name").alphanumeric({allow:" -.!@"});			//relies on the excellent work of https://github.com/treyhunner/jquery-formrestrict
 	
-	$(".wait_time").numeric();
-	
+	// $(".wait_time").numeric({allow:"1.111"});
+	$("input.retrigger").change(function(){
+		var newval = 1;												//default new value
+		var current = sanitize($(this).val());						//get the sanitized value
+		if(current != 0){											//if sanitized not 0, then let it pass, otherwise use the default of 1
+			newval = current;
+		}
+		$(this).val(newval);										//update field with either 1 or clean value
+	});
+
 	$("a.brand").click(function(){
 		$("div.alert").toggle();
 	});
@@ -931,16 +945,15 @@ $(function(){//shortcut for doc.ready
 	function stop_auto(){				//this function is called whenever you want to stop auto incrementing
 		clearInterval(interval);
 		clearTimeout(timeout);
-		//console.log("stopped");
 	};//end stop_auto
 	
 	function sanitize(num) {
-		if(parseInt(num) >= 0){					//sanitize, filter out NaN and negative numbers
-			//console.log("OK: num = " + num + "  	parseInt(num) = " + parseInt(num));
-		    return parseInt(num);				//return the clean value
+		var sanitizedNum = parseFloat(num);
+		if(isNaN(sanitizedNum)){					//sanitize, filter out NaN and negative numbers
+			console.log("ERROR: num = " + num + "  	parseFloat(num) = " + sanitizedNum + "   ==> NaN");
+			return "0";								//If the user entered garbage return 0
 		}else{
-			console.log("ERROR: num = " + num + "  	parseInt(num) = " + parseInt(num) + "   ==> 0");
-			return "0";							//if the user entered garbage, set to "0"
+			return sanitizedNum;					//Return the clean value
 		};
 	};//end sanitize()
 	
@@ -951,7 +964,6 @@ $(function(){//shortcut for doc.ready
 			$(this).next().fadeTo(100,.3).find("input, select").prop("disabled", true);
 		}
 	});
-
 });//doc.ready
 </script>
 </head>
@@ -1012,7 +1024,7 @@ $(function(){//shortcut for doc.ready
 							<span class="up">+</span>
 							<span class="down">-</span>
 						</div>
-						<input type="text" class="wait_time" name="wait_time3" maxlength="3" value="0" disabled="disabled" />
+						<input type="text" class="wait_time" name="wait_time3" maxlength="5" value="0" disabled="disabled" />
 						second(s) then turn
 					</span><span class="output">
 						<select class="output" name="output3" disabled="disabled">
@@ -1040,7 +1052,7 @@ $(function(){//shortcut for doc.ready
 								<span class="up">+</span>
 								<span class="down">-</span>
 							</div>
-							<input type="text" class="output_duration" name="output_duration3" maxlength="3" value="0" disabled="disabled" />
+							<input type="text" class="output_duration" name="output_duration3" maxlength="5" value="0" disabled="disabled" />
 							second(s).
 						</div>
 					</span>
@@ -1084,7 +1096,7 @@ $(function(){//shortcut for doc.ready
 						<span class="up">+</span>
 						<span class="down">-</span>
 					</div>
-					<input type="text" class="retrigger" maxlength="3" value="0" /> seconds before input retrigger.
+					<input type="text" class="retrigger" maxlength="5" value="0" /> seconds before input retrigger.
 				</div>
 		</div>
 		
@@ -1188,12 +1200,8 @@ $(function(){//shortcut for doc.ready
 	</div>
 	
 </div><!--//end .container -->
-
-	
 	<script src="bs_full.js" type="text/javascript" charset="utf-8"></script>
-	<script src="alphnmin.js" type="text/javascript" charset="utf-8"></script>
 	<script src="frmrstmn.js" type="text/javascript" charset="utf-8"></script>
-	
-
+	<script src="alphnmin.js" type="text/javascript" charset="utf-8"></script>
 </body>
 </html>
