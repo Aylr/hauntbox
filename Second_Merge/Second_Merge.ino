@@ -90,10 +90,8 @@ char* browser_header = "HTTP/1.0 200 OK\nContent-Type: text/html\n";  //2 line h
 
 boolean file_handler(TinyWebServer& web_server);
 boolean index_handler(TinyWebServer& web_server);
-boolean test_handler(TinyWebServer& web_server);
 boolean program_handler(TinyWebServer& web_server);
 boolean settings_handler(TinyWebServer& web_server);
-boolean export_handler(TinyWebServer& web_server);
 
 TinyWebServer::PathHandler handlers[] = {
   // Work around Arduino's IDE preprocessor bug in handling /* inside strings.
@@ -105,7 +103,6 @@ TinyWebServer::PathHandler handlers[] = {
   {"/status", TinyWebServer::GET, &status_handler },
   {"/program", TinyWebServer::GET, &program_handler },
   {"/settings", TinyWebServer::GET, &settings_handler },
-  {"/export", TinyWebServer::GET, &export_handler },
   {"/upload/" "*", TinyWebServer::PUT, &TinyWebPutHandler::put_handler },
   {"/" "*", TinyWebServer::GET, &file_handler },
   {NULL},
@@ -189,17 +186,6 @@ boolean settings_handler(TinyWebServer& web_server){
   client.stop();
   return true; //exit the handler 
 }
-
-// -------------------- export handler -------------------- 
-boolean export_handler(TinyWebServer& web_server) {
-  Client& client = web_server.get_client();
-  client.println(browser_header);
-  
-  client.print("Date, Description\nSettings:0,1,0,0,1,0,0,0,1,0,0,0;input1,input2,input3,input4,input5,input6;output1,output2,output3,output4,output5,output6;103,246,492,103,246,492,103,246,492,103,246,492;1,2,3,4,5,6;\nProgram: 0,2,3,4,5,6;0,1,0,1,0,1;0,1,10,100,500,900;6,5,4,3,2,1;0,1,0,1,0,1;0,1,10,100,500,900;\n");
-  client.stop();
-  return true;
-}
-
 
 
 // -------------------- ram handler -------------------- 
