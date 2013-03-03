@@ -308,20 +308,14 @@ void setup() {
   Serial.begin(115200);
   Serial << F("Free RAM: ") << FreeRam() << "\n";
 
-  pinMode(SS_PIN, OUTPUT);	// set the SS pin as an output
-                                // (necessary to keep the board as
-                                // master and not SPI slave)
+  pinMode(SS_PIN, OUTPUT);	// set the SS pin as an output (necessary to keep the board as master and not SPI slave)
   digitalWrite(SS_PIN, HIGH);	// and ensure SS is high
 
-  // Ensure we are in a consistent state after power-up or a reset
-  // button These pins are standard for the Arduino w5100 Rev 3
-  // ethernet board They may need to be re-jigged for different boards
+  // Ensure we are in a consistent state after power-up or a reset button These pins are standard for the Arduino w5100 Rev 3 ethernet board They may need to be re-jigged for different boards
   pinMode(ETHER_CS, OUTPUT); 	// Set the CS pin as an output
-  digitalWrite(ETHER_CS, HIGH); // Turn off the W5100 chip! (wait for
-                                // configuration)                              
+  digitalWrite(ETHER_CS, HIGH); // Turn off the W5100 chip! (wait for configuration)                              
   pinMode(SD_CS, OUTPUT);       // Set the SDcard CS pin as an output
-  digitalWrite(SD_CS, HIGH); 	// Turn off the SD card! (wait for
-                                // configuration)  
+  digitalWrite(SD_CS, HIGH); 	// Turn off the SD card! (wait for configuration)  
 
   // initialize the SD card.
   Serial << F("Setting up SD card...\n");
@@ -672,7 +666,7 @@ char* open_file(char* input_file){
   
   Serial.print("SD.begin = ");
   Serial.print(SD.begin(SD_CS));
-  Serial.print(" ,has_filesystem = ");
+  Serial.print(", has_filesystem = ");
   Serial.println(has_filesystem);
   
   File file = SD.open(input_file);
@@ -692,7 +686,7 @@ char* open_file(char* input_file){
     file.close();                      //close the file
     return storage;                    //return the read bytes
   }else{                              //no file
-    Serial.print("no file");          //error
+    Serial.println("no file");          //error
     return fail;                      //return w/ fail
   }
 }//end open_file
@@ -827,6 +821,6 @@ char convert(char* readString){
       Serial.print("\nDuration: ");
       for (i = 0; i < 6; i++){
         Serial.print(DurationRow[i]);
-        Serial.print(" ");
+        Serial.print("\n");
       }
 }//end convert cupcake string to arrays function
