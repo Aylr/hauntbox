@@ -11,6 +11,8 @@
 #include <TinyWebServer.h>
 #include <EthernetBonjour.h>
 
+#define MAXROWS 6
+
 
 int d = 0;  //Delay used in testing of code.  Set to 0 if not testing code.
 
@@ -35,6 +37,7 @@ unsigned int DurationRow[] = {1000, 6000, 6000, 6000, 6000, 6000};  //Time in mi
 
 //----------------------Define variables in code-----------------------------
 int rn = 6;  //number of rows
+int OutputState[MAXROWS];              //array to hold on/off (1/0) state of every given output. Manipulated by any/multiple rules
 int stateRow[6];                       //array that defines each row's state. Gets initialized in initializeFunction called from main function
 int trigState[6];                      //gets initialized immediately before it is used
 unsigned long timeStampDelayRow[6];    //gets initialized immediately before it is used
@@ -468,7 +471,7 @@ void guiMess(int n) {
   if (n==2) {Serial.println("No SD Card anymore");}
   if (n==3) {Serial.println("Problem opening file on SD card");}
   if (n==4) {Serial.println("Corrupted SD file -Read/Write fail");}
-  if (n==5) {Serial.println("Successfully updated definitions");}
+  if (n==5) {Serial.println("Successfully updated programming");}
   if (n==6) {Serial.println("Finished writing to .csv file");}
   
 }
@@ -478,12 +481,25 @@ void guiMess(int n) {
    //1:23, 2:25, 3:27, 4:29, 5:31, 6:33
    //A:22, B:24, C:26, D:28, E:30, F:32
 // Function that pairs the output pins to the row that is controlling for it
-void outputSelectFunction(int rowNumber, int onOff) {
+void outputSelectFunction(int rowNumber, int action) { //"formerly onOff"
+  //takes an output (rowNumber) and an action:
+    //0 = off
+    //1 = on
+    //2 = toggle
   int x;      //local variable
   int y;
   x = outputArray[rowNumber]; //
   y = outputHiLowArray[x-1];// lookup which value is considered "on"
-  if(onOff == 1) {         // turn output on
+  if(action == 2) {  // toggle
+    if(x == 0) {            //if it is off
+      action = 1;               //turn it on
+    }
+    if (x == 1) {          //if it is on
+      action = 0;              //turn it off
+    }
+  }
+  
+  if(action == 1) {         // turn output on
     if(y == 1) {           // "on" means turn output high
       if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
       if(x == 1) {digitalWrite(pinOut1, HIGH); }//digitalWrite(23, HIGH); }
@@ -501,7 +517,7 @@ void outputSelectFunction(int rowNumber, int onOff) {
       if(x == 5) {digitalWrite(pinOut5, LOW); }//digitalWrite(31, LOW);}
       if(x == 6) {digitalWrite(pinOut6, LOW); }}//digitalWrite(33, LOW);} }
     return; }
-  if(onOff == 0) {         //turn output off
+  if(action == 0) {         //turn output off
     if(y == 1) {           // "off" means turn output low
       if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
       if(x == 1) {digitalWrite(pinOut1, LOW); }//digitalWrite(23, LOW);}
@@ -560,12 +576,23 @@ void loop(){
       stateRow[z] = 5;                      //Moves on to next state
     }
     else if(stateRow[z] == 5) {             //STATE 5 = Duration of output "on"
-      nowTime = millis();
-      netTime = nowTime - timeStampDurationRow[z];
-      if(netTime >= DurationRow[z] * 1000) {      
-        outputSelectFunction(z, 0);        //Turn output off after duration is over
-        stateRow[z] = 1;                   //Moves on to trigger-waiting state
-      }
+      
+      //switch for 3 different duration dropdown modes
+      //if (duration == 1) {    //"for...seconds"
+        nowTime = millis();
+        netTime = nowTime - timeStampDurationRow[z];
+        if(netTime >= DurationRow[z] * 1000) {
+          outputSelectFunction(z, 0);        //Turn output off after duration is over
+          stateRow[z] = 1;                   //Moves on to trigger-waiting state
+        }
+      //}
+      //else if (duration == 2) {  //"while input triggered"
+      //  trigState[z] = inputSelectFunction(z); //Call function and pass(Row number) to see if input is on or off
+      //  if trigState[z] == 0 then turn off trigger;
+      //}
+      //else if (duration == 3) {  //"other inputs"
+      //  stateRow[z] = 1;
+      //}
     }
     else {                                 //if state is not 1-5, set to 1 (waiting)
       stateRow[z] = 1;                     // this is to increase robustness
