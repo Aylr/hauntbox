@@ -1,3 +1,7 @@
+//This file is a modified version of Adafruit's Waveshield demo files from http://www.ladyada.net/make/waveshield/download.html
+//It is CRITICAL to note that for the official hauntbox sound module you use a modified version of
+//Adafruit's WaveHC library. The only change is a single pin definition.
+
 #include <FatReader.h>
 #include <SdReader.h>
 #include <avr/pgmspace.h>
@@ -8,16 +12,17 @@
 // Variables
 char* background_wav = "break.wav";
 char* trigger_wav = "alarm.wav";
-int trigger_pin = 4;
+int trigger_pin = 5;
 int trigger_threshold = 200;
 byte background_exists = 0;
+int trigger_LED_pin = 7;    //indicator LED when triggered
+int reset_LED_pin = 8;      //indicator board needs to be reset
 
 
 SdReader card;    // This object holds the information for the card
 FatVolume vol;    // This holds the information for the partition on the card
 FatReader root;   // This holds the information for the filesystem on the card
 FatReader f;      // This holds the information for the file we're play
-
 WaveHC wave;      // This is the only wave (audio) object, since we will only play one at a time
 
 #define DEBOUNCE 100  // button debouncer
@@ -52,7 +57,7 @@ void setup() {
   Serial.begin(9600);
   putstring_nl("WaveHC with 6 buttons");
   
-   putstring("Free RAM: ");       // This can help with debugging, running out of RAM is bad
+  putstring("Free RAM: ");       // This can help with debugging, running out of RAM is bad
   Serial.println(freeRam());      // if this is under 150 bytes it may spell trouble!
   
   // Set the output pins for the DAC control. This pins are defined in the library
@@ -61,9 +66,10 @@ void setup() {
   pinMode(4, OUTPUT);
   pinMode(5, OUTPUT);
  
-  // pin13 LED
-  pinMode(6, OUTPUT);//13 for stack of shields
- 
+  //Set the LED output pins
+  pinMode(trigger_LED_pin, OUTPUT);
+  pinMode(reset_LED_pin, OUTPUT);
+  
   // enable pull-up resistors on switch pins (analog inputs)
  /* digitalWrite(14, HIGH);
   digitalWrite(15, HIGH);
@@ -118,9 +124,9 @@ void setup() {
 }
 
 void loop() {
-  putstring(".");            // uncomment this to see if the loop isnt running
+  //putstring(".");            // uncomment this to see if the loop isnt running
   
-  Serial.println(analogRead(trigger_pin));
+  //Serial.println(analogRead(trigger_pin));
   playbackground(background_wav);
   
   
@@ -188,10 +194,14 @@ void playbackground(char *name) {
   while (wave.isplaying) {
   // do nothing while its playing
     if (analogRead(trigger_pin) > trigger_threshold) {
+      putstring("Trigger: ");
+      Serial.println(analogRead(trigger_pin));
+      digitalWrite(trigger_LED_pin,HIGH);   //turn on trigger indicator LED
       playcomplete(trigger_wav);
     }
   }
   // now its done playing
+  digitalWrite(trigger_LED_pin,LOW);    //turn off trigger indicator LED
 }
 
 void playfile(char *name) {
