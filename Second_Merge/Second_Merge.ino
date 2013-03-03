@@ -37,7 +37,8 @@ unsigned int DurationRow[] = {1000, 6000, 6000, 6000, 6000, 6000};  //Time in mi
 
 //----------------------Define variables in code-----------------------------
 int rn = 6;  //number of rows
-int OutputState[MAXROWS];              //array to hold on/off (1/0) state of every given output. Manipulated by any/multiple rules
+int outputState[6];                    //array to hold on/off (1/0) state of every given output. Manipulated by any/multiple rules
+                //***only 6 outputs!!!
 int stateRow[6];                       //array that defines each row's state. Gets initialized in initializeFunction called from main function
 int trigState[6];                      //gets initialized immediately before it is used
 unsigned long timeStampDelayRow[6];    //gets initialized immediately before it is used
@@ -103,7 +104,8 @@ TinyWebServer::PathHandler handlers[] = {
  // {"/", TinyWebServer::GET, &index_handler },
   {"/", TinyWebServer::GET, &index_handler },
   {"/ram", TinyWebServer::GET, &ram_handler },
-  {"/status", TinyWebServer::GET, &status_handler },
+  {"/row_status", TinyWebServer::GET, &row_status_handler },
+  {"/output_status", TinyWebServer::GET, &output_status_handler },
   {"/program", TinyWebServer::GET, &program_handler },
   {"/settings", TinyWebServer::GET, &settings_handler },
   {"/upload/" "*", TinyWebServer::PUT, &TinyWebPutHandler::put_handler },
@@ -204,24 +206,38 @@ boolean ram_handler(TinyWebServer& web_server) {
 
 
 
-// -------------------- status handler -------------------- 
+// -------------------- row status handler -------------------- 
 
-boolean status_handler(TinyWebServer& web_server) {
+boolean row_status_handler(TinyWebServer& web_server) {
+  web_server.send_error_code(200);
+  web_server.send_content_type("text/plain");
+  web_server.end_headers();
+  
+  Client& client = web_server.get_client();
+  for (int i = 0; i < 6; i++){
+    client.print(stateRow[0], DEC);
+    if(i < 5){
+      client.print(",");
+    }
+  }
+  return true;
+}
+
+// -------------------- output status handler -------------------- 
+
+boolean output_status_handler(TinyWebServer& web_server) {
   web_server.send_error_code(200);
   web_server.send_content_type("text/plain");
   web_server.end_headers();
   Client& client = web_server.get_client();
-  client.print(stateRow[0], DEC);
-  client.print(",");
-    client.print(stateRow[1], DEC);
-  client.print(",");
-    client.print(stateRow[2], DEC);
-  client.print(",");
-    client.print(stateRow[3], DEC);
-  client.print(",");
-    client.print(stateRow[4], DEC);
-  client.print(",");
-    client.println(stateRow[5], DEC);
+  
+  client.print("Current output states:\n");
+  for (int i = 0; i < 6; i++){
+    client.print(outputState[i], DEC);
+    if (i < 5){
+      client.print(",");
+    }
+  }
   return true;
 }
 
