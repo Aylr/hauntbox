@@ -111,7 +111,7 @@ div.wait, div.duration {
 	position: relative;
 	top: 8px;
 }
-div.wait a, div.duration a {
+div.wait span, div.duration span {
 	display: block;
 	border: 1px solid #aaa;
 	background: rgb(247,247,247);
@@ -122,6 +122,8 @@ div.wait a, div.duration a {
 	width: 15px;
 	height: 16px;
 	margin: 0 0 -1px 0;
+	cursor: pointer;
+	-webkit-user-select: none;
 }
 div.outputs_container, div.button_container {
 	margin-top: 2em;
@@ -211,7 +213,20 @@ $(function(){//shortcut for doc.ready
 	var default_program = "0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0,0,0,0,0,0;1,1,1,1,1,1;0,1,3,5,10,30;2;00"
 	var default_settings = "1,1,1,1,1,1,1,1,1,1,1,1;garage,my room,hall,cemetery,cornfield,swamp;UV,light,strobe,sound,air horn,zombie;" + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + ";1,1,1,1,1,1;2;00;"
 
-
+	//##################################### Mobile Detection #####################################
+	function detectmobile() { 
+		if (navigator.userAgent.match(/Android/i)
+		|| navigator.userAgent.match(/webOS/i)
+		|| navigator.userAgent.match(/iPhone/i)
+		|| navigator.userAgent.match(/iPad/i)
+		|| navigator.userAgent.match(/iPod/i)
+		|| navigator.userAgent.match(/BlackBerry/i)
+		|| navigator.userAgent.match(/Windows Phone/i)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 	//##################################### Initial Page Load Stuff ##################################### 
 	$("#unsaved_modal").modal('hide');		//hide the unsaved changes modal
 	$("div.alert").hide();					//hide the alerts
@@ -357,7 +372,7 @@ $(function(){//shortcut for doc.ready
 
 
 	//##################################### General navigation manager ##################################### 
-	$(".navbar .nav a").click(function(){
+	$(".navbar .nav a").click(function(e){
 		next_page = $(this);				//where are you navigating to?
 		
 		if (unsaved_changes) {				//check for change
@@ -365,69 +380,66 @@ $(function(){//shortcut for doc.ready
 		}else{									//no: proceed with navigation change
 			navigation_manager();
 		}
+		e.preventDefault();
 	});//navbar.click()
 	
 	
 	function navigation_manager(){
-			var chosen = next_page.attr("class");
-			if (chosen == "settings") {		//"Settings" clicked
-				//load settings
-				load_settings();					//load the data and populate form
-			}else if (chosen == "program"){	//"Program" clicked
-				load_settings();					//load the data and populate form
-			}else if (chosen == "export"){	//"Export" clicked
-				//load exports
-					$.ajax({
-						url: '/settings.txt',
-						type: 'GET',
-						beforeSend: function(){
-							//show loading alert
-							//$("div.alert").alert();
-						},
-						success: function(data){
-							//hide alert
-							//$("div.alert").alert('close');
-							$("div.export pre.settings").html(data);
-							console.log("file: " + data);
+		var chosen = next_page.attr("class");
+		if (chosen == "settings") {		//"Settings" clicked
+			//load settings
+			load_settings();					//load the data and populate form
+		}else if (chosen == "program"){	//"Program" clicked
+			load_settings();					//load the data and populate form
+		}else if (chosen == "export"){	//"Export" clicked
+			//load exports
+				$.ajax({
+					url: '/settings.txt',
+					type: 'GET',
+					beforeSend: function(){
+						//show loading alert
+						//$("div.alert").alert();
+					},
+					success: function(data){
+						//hide alert
+						//$("div.alert").alert('close');
+						$("div.export pre.settings").html(data);
+						console.log("file: " + data);
 
-							//Nest the other .ajax call to program.txt here...
-						},
-						statusCode: {
-							404: function(){
-								$("div.export pre.settings").html("File not found");
-								status_message(99);
-							}
-						},
-						error: function(){
-							//alert: fail
-							$("div.export pre.settings").html("Please try again.");
+						//Nest the other .ajax call to program.txt here...
+					},
+					statusCode: {
+						404: function(){
+							$("div.export pre.settings").html("File not found");
+							status_message(99);
 						}
-					});
+					},
+					error: function(){
+						//alert: fail
+						$("div.export pre.settings").html("Please try again.");
+					}
+				});
 
-					$.ajax({
-						url: '/program.txt',
-						type: 'GET',
-						beforeSend: function(){
-							//show loading alert
-							//$("div.alert").alert();
-						},
-						success: function(data){
-							//hide alert
-							//$("div.alert").alert('close');
-							$("div.export pre.program").html(data);
-							console.log("file: " + data);
-						},
-						error: function(){
-							//alert: fail
-							$("div.export pre.program").html("Please try again.");
-						}
-					});//end ajax
-			}
-			set_active_nav(next_page);
-		
-		
-		
-	
+				$.ajax({
+					url: '/program.txt',
+					type: 'GET',
+					beforeSend: function(){
+						//show loading alert
+						//$("div.alert").alert();
+					},
+					success: function(data){
+						//hide alert
+						//$("div.alert").alert('close');
+						$("div.export pre.program").html(data);
+						console.log("file: " + data);
+					},
+					error: function(){
+						//alert: fail
+						$("div.export pre.program").html("Please try again.");
+					}
+				});//end ajax
+		}
+		set_active_nav(next_page);
 	}
 	
 	$("#unsaved_modal .save").click(function(){	//defines what happens when the modal "Save Changes" is clicked
@@ -475,18 +487,34 @@ $(function(){//shortcut for doc.ready
 		save("settings");
 	});
 
-	$(".wait .up").mousedown(function(){					//call the "+" handler
-		fast_plus_minus($(this).parent().next(),"+");
-	});
-	$(".wait .down").mousedown(function(){					//call the "-" handler
-		fast_plus_minus($(this).parent().next(),"-");
-	});
-	$(".wait .up,.wait .down,.duration .up,.duration .down").mouseup(function(){			//stop when the mouse click stops
-		stop_auto();										//stop all value auto increments
-	});
-	$(".wait .up,.wait .down,.duration .up,.duration .down").mouseleave(function(){		//stop when the mouse leaves the button (in case you held down then left)
-		stop_auto();										//stop all value auto increments
-	});
+	if (detectmobile()) {
+		$("body").on("touchstart", ".wait .up, .duration .up", function(event){
+			fast_plus_minus($(this).parent().next(),"+");
+			event.preventDefault();
+		});
+		$("body").on("touchstart", ".wait .down, .duration .down", function(event){
+			fast_plus_minus($(this).parent().next(),"-");
+			event.preventDefault();
+		});
+		$("body").on("touchend", ".wait .up, .wait .down, .duration .up, .duration .down", function(event){			//stop when the mouse click stops
+			stop_auto();										//stop all value auto increments
+			event.preventDefault();
+		});
+	} else {
+		alert("Start HEre");
+		$("body").on("mousedown", ".wait .up, .duration .up", function(){					//call the "+" handler
+			fast_plus_minus($(this).parent().next(),"+");
+		});
+		$("body").on("mousedown", ".wait .down, .duration .down", function(){					//call the "-" handler
+			fast_plus_minus($(this).parent().next(),"-");
+		});
+		$("body").on("mouseup", ".wait .up,.wait .down,.duration .up,.duration .down", function(){			//stop when the mouse click stops
+			stop_auto();										//stop all value auto increments
+		});
+		$("body").on("mouseleave", ".wait .up,.wait .down,.duration .up,.duration .down", function(){		//stop when the mouse leaves the button (in case you held down then left)
+			stop_auto();										//stop all value auto increments
+		});
+	}
 
 	$("input.output_duration").change(function(){					//on manual keybaord entry
 		var newval = 1;												//default new value
@@ -513,13 +541,6 @@ $(function(){//shortcut for doc.ready
 		$(this).next().children('input[class="output_duration"]').val(new_duration);	//set the field to the new value	
 		console.log("output changed, value = " + $("#output_duration3").val());
 	});//output_duration.change()
-
-	$(".duration .up").mousedown(function(){				//call the "+" handler
-		fast_plus_minus($(this).parent().next(),"+");
-	});
-	$(".duration .down").mousedown(function(){				//call the "-" handler
-		fast_plus_minus($(this).parent().next(),"-");
-	});
 	
 	$(".input_name, output_name").alphanumeric({allow:" -.!@"});			//relies on the excellent work of https://github.com/treyhunner/jquery-formrestrict
 	
@@ -529,8 +550,9 @@ $(function(){//shortcut for doc.ready
 		$("div.alert").toggle();
 	});
 	
-	$("div.alert .close").click(function(){				//hide the alert when closed	
+	$("div.alert .close").click(function(e){				//hide the alert when closed	
 		$(this).parent().fadeOut();
+		e.preventDefault();
 	});
 
 	$("div.help a.factory_defaults").click(function(){
@@ -683,7 +705,7 @@ $(function(){//shortcut for doc.ready
 					input.val(input_up(current));			//get & set new value
 				}, increment_on_hold_speed);				//the speed of ++ing the value
 			},increment_hold_delay);						//the delay (timeout) before ++ing
-		}else if(direction == "-"){							//if "-" was passed to the function
+		} else if(direction == "-"){							//if "-" was passed to the function
 			input.val(input_down(current));					//get & set new value
 
 			timeout = setTimeout(function(){				//This waits 1 second before...
@@ -692,9 +714,8 @@ $(function(){//shortcut for doc.ready
 					input.val(input_down(current));			//get & set new value
 				}, increment_on_hold_speed);				//the speed of auto ++ing the value
 			},increment_hold_delay);						//the delay (timeout) before auto ++ing
-		};
-		return false;										//prevent the html link from doing anything	
-	};
+		}
+	}
 
 	function input_up(current){								//this increments the current value up to 999
 		//console.log("input_up " + current);
@@ -906,8 +927,6 @@ $(function(){//shortcut for doc.ready
 		alert.hide();
 		alert.attr("class","alert " + type).children("h4").html(header).next().html(message);
 		alert.fadeIn();
-
-		console.log("status_code: " + status_code);
 	}//end status_message()
 	
 	function stop_auto(){				//this function is called whenever you want to stop auto incrementing
@@ -928,9 +947,9 @@ $(function(){//shortcut for doc.ready
 	
 	$("input[name='enable_disable']").click(function(){
 		if($(this).attr("checked") == "checked"){
-			$(this).next().fadeTo(100,1);
+			$(this).next().fadeTo(100,1).find("input, select").prop("disabled", false);
 		} else {
-			$(this).next().fadeTo(100,.3);
+			$(this).next().fadeTo(100,.3).find("input, select").prop("disabled", true);
 		}
 	});
 
@@ -974,7 +993,7 @@ $(function(){//shortcut for doc.ready
 				<div class="inner_sentence">
 					<span class="input">
 						When
-						<select class="sensor" name="sensor3">
+						<select class="sensor" name="sensor3" disabled="disabled">
 							<option value="0">-</option>
 							<option value="1">input A</option>
 							<option value="2">input B</option>
@@ -984,20 +1003,20 @@ $(function(){//shortcut for doc.ready
 							<option value="6">input F</option>
 						</select>
 						is
-						<select class="sensor_state" name="sensor_state3">
+						<select class="sensor_state" name="sensor_state3" disabled="disabled">
 							<option value="1">on</option>
 							<option value="0">off</option>
 						</select>
 					</span><span class="delay">
 						Wait
 						<div class="wait">
-							<a href="#" class="up">+</a>
-							<a href="#" class="down">-</a>
+							<span class="up">+</span>
+							<span class="down">-</span>
 						</div>
-						<input type="text" class="wait_time" name="wait_time3" maxlength="3" value="0" />
+						<input type="text" class="wait_time" name="wait_time3" maxlength="3" value="0" disabled="disabled" />
 						second(s) then turn
 					</span><span class="output">
-						<select class="output" name="output3">
+						<select class="output" name="output3" disabled="disabled">
 							<option value="0">-</option>
 							<option value="1">output 1</option>
 							<option value="2">output 2</option>
@@ -1006,13 +1025,13 @@ $(function(){//shortcut for doc.ready
 							<option value="5">output 5</option>
 							<option value="6">output 6</option>
 						</select>
-						<select class="output_state" name="output_state3">
+						<select class="output_state" name="output_state3" disabled="disabled">
 							<option value="1">on</option>
 							<option value="0">off</option>
 							<option value="2">toggled</option>
 						</select>
 					</span><span class="duration">
-						<select class="output_duration">
+						<select class="output_duration" disabled="disabled">
 							<option value="x">until further notice.</option>
 							<option value="constantly">while input is triggered.</option>
 							<option value="for">for...</option>
@@ -1020,9 +1039,9 @@ $(function(){//shortcut for doc.ready
 						<div class="duration_container">
 							<div class="duration">
 								<span class="up">+</span>
-								<a href="#" class="down">-</a>
+								<span class="down">-</span>
 							</div>
-							<input type="text" class="output_duration" name="output_duration3" maxlength="3" value="0" />
+							<input type="text" class="output_duration" name="output_duration3" maxlength="3" value="0" disabled="disabled" />
 							second(s).
 						</div>
 					</span>
@@ -1063,8 +1082,8 @@ $(function(){//shortcut for doc.ready
 				<input type="text" class="input_name" name="input1" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow1" value="1" checked /> High <input type="radio" class="highlow" name="highlow1" value="0"> Low.&nbsp;
 					Wait
 					<div class="wait">
-						<a href="#" class="up">+</a>
-						<a href="#" class="down">-</a>
+						<span class="up">+</span>
+						<span class="down">-</span>
 					</div>
 					<input type="text" class="retrigger" maxlength="3" value="0" /> seconds before input retrigger.
 				</div>
@@ -1130,7 +1149,7 @@ $(function(){//shortcut for doc.ready
 		
 		<p>Please consider adding to our <a href="https://github.com/Aylr/theHB/wiki">wiki</a> and you can find, hack, and contribute to our code at <a href="https://github.com/Aylr/theHB/">github</a>.</p>
 		
-		<a href="#" class="factory_defaults btn btn-danger">Reset to factory defaults</a>
+		<button type="button" class="factory_defaults btn btn-danger">Reset to factory defaults</button>
 		
 		<p>kickstarter</p>
 		<p>email</p>
@@ -1154,8 +1173,8 @@ $(function(){//shortcut for doc.ready
 			<p>Would you like to save your changes?</p>
 		</div>
 		<div class="modal-footer">
-			<a href="#" class="discard btn">Discard changes</a>
-			<a href="#" class="save btn btn-primary" data-loading-text="Saving...">Yes! Save changes</a>
+			<button type="button" class="discard btn">Discard changes</button>
+			<button type="button" class="save btn btn-primary" data-loading-text="Saving...">Yes! Save changes</button>
 		</div>
 	</div>
 	
