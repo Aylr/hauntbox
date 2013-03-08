@@ -531,7 +531,7 @@ $(function(){//shortcut for doc.ready
 		console.log("changed, duration = " + newval);
 	});
 
-	$("select.output_duration").change(function(){					//when dropdown changes...
+	$("select.duration_type").change(function(){					//when dropdown changes...
 		temp = $(this).val();										//get current value
 		if(temp == "1" || temp == "0"){								//if "1" = "while input is triggered" or "0" (until further notice)
 			$(this).next(".duration_container").fadeOut(250);		//fade out buttons & field
@@ -541,8 +541,8 @@ $(function(){//shortcut for doc.ready
 			$(this).children('option[value="2"]').html("for");		//update grammar
 		}
 
-		console.log("duration, value = " + $(".output_duration").val());
-	});//output_duration.change()
+		console.log("duration_type, value = " + $(".duration_type").val());
+	});//duration_type.change()
 	
 	$(".input_name, output_name").alphanumeric({allow:" -.!@"});			//relies on the excellent work of https://github.com/treyhunner/jquery-formrestrict
 	
@@ -1039,7 +1039,7 @@ $(function(){//shortcut for doc.ready
 							<option value="2">toggled</option>
 						</select>
 					</span><span class="duration">
-						<select class="output_duration" disabled="disabled">
+						<select class="duration_type" disabled="disabled">
 							<option value="0">until further notice.</option>
 							<option value="1">while input is triggered.</option>
 							<option value="2">for...</option>
@@ -1049,7 +1049,7 @@ $(function(){//shortcut for doc.ready
 								<span class="up">+</span>
 								<span class="down">-</span>
 							</div>
-							<input type="text" class="output_duration" name="output_duration3" maxlength="5" value="0" disabled="disabled" />
+							<input type="text" class="output_duration" name="output_duration" maxlength="5" value="0" disabled="disabled" />
 							second(s).
 						</div>
 					</span>
