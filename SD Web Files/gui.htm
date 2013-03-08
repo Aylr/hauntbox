@@ -252,8 +252,8 @@ $(function(){//shortcut for doc.ready
 		//including intelligent defaults and populate the form correctly
 
 		//Data receiving protocol (Arduino --> Browser)
-		//Input array;Input on/off;On delay;Output array;Output on/off;Duration;status code;Free RAM;
-		//0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0;182;
+		//Input array;Input on/off;On delay;Output array;Output on/off;duration type;Duration;status code;Free RAM;
+		//0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0,0,0,0,0,0;1,1,1,1,1,1;2,2,2,2,2,2;0,0,0,0,0,0;0;182;
 
 		//status codes
 		//0 = all good
@@ -525,7 +525,7 @@ $(function(){//shortcut for doc.ready
 		});
 	}
 
-	$("input.output_duration").change(function(){					//on manual keybaord entry
+	$("input.output_duration").change(function(){		//on manual keybaord entry
 		var newval = 1;												//default new value
 		var current = sanitize($(this).val());						//get the sanitized value
 		if(current != 0){											//if sanitized not 0, then let it pass, otherwise use the default of 1
@@ -535,7 +535,7 @@ $(function(){//shortcut for doc.ready
 		console.log("changed, duration = " + newval);
 	});
 
-	$("select.duration_type").change(function(){					//when dropdown changes...
+	$("select.duration_type").change(function(){					//when duration_type dropdown changes
 		temp = $(this).val();										//get current value
 		if(temp == "1" || temp == "0"){								//if "1" = "while input is triggered" or "0" (until further notice)
 			$(this).next(".duration_container").fadeOut(250);		//fade out buttons & field
@@ -613,7 +613,7 @@ $(function(){//shortcut for doc.ready
 		var file = type + ".txt"	//make a file name based on the save type
 		
 		if (type == "program"){
-			column_names = ["div.program select.sensor", "div.program select.sensor_state", "div.program input.wait_time", "div.program select.output", "div.program select.output_state", "div.program input.output_duration"];
+			column_names = ["div.program select.sensor", "div.program select.sensor_state", "div.program input.wait_time", "div.program select.output", "div.program select.output_state", "div.program select.duration_type", "div.program input.output_duration"];
 		}else if (type == "settings"){
 			column_names = ["div.settings input[type='radio']:checked", "div.settings input.input_name", "div.settings input.output_name", "div.settings select.threshold", "div.settings input.retrigger"];
 		}		
