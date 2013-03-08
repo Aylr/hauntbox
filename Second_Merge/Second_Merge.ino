@@ -31,7 +31,8 @@ byte outputArray[] =      {1, 2, 3, 4, 5, 6};    //which outputs (0-6) are contr
                                                 //0 = no output, 1 = output #1, 2 = output #2, etc
                                                 
 byte outputHiLowArray[] = {1, 1, 1, 1, 1, 1};    //Output considered on when High (1) or Low (0)
-unsigned int DelayRow[] = {0, 2000, 3000, 4000, 5000, 6000};     //Time in millis  
+unsigned int DelayRow[] = {0, 2000, 3000, 4000, 5000, 6000};     //Time in millis
+int durationType[] = {1,1,1,1,1,1}  //The type of duration 0 = until further notice, 1 = while input active, 2 = for ...
 unsigned int DurationRow[] = {1000, 6000, 6000, 6000, 6000, 6000};  //Time in millis  //TURN INTO AN ARRAY FOR FINAL CODE
 
 

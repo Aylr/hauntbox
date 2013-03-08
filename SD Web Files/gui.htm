@@ -533,18 +533,15 @@ $(function(){//shortcut for doc.ready
 
 	$("select.output_duration").change(function(){					//when dropdown changes...
 		temp = $(this).val();										//get current value
-		var new_duration;											//initialize new duration
-		if(temp == "constantly"){									//if "constantly"
+		if(temp == "1" || temp == "0"){								//if "1" = "while input is triggered" or "0" (until further notice)
 			$(this).next(".duration_container").fadeOut(250);		//fade out buttons & field
-			$(this).children('option[value="for"]').html("for...")	//update grammar
-			new_duration = 0;										//set duration = 0
-		}else if(temp == "for"){									//if "for..".
+			$(this).children('option[value="2"]').html("for...")	//update grammar
+		}else if(temp == "2"){									//if 2 (for...)
 			$(this).next(".duration_container").fadeIn(250);		//show buttons & field
-			$(this).children('option[value="for"]').html("for");	//update grammar
-			new_duration = "1";										//set duration = 1
+			$(this).children('option[value="2"]').html("for");		//update grammar
 		}
-		$(this).next().children('input[class="output_duration"]').val(new_duration);	//set the field to the new value	
-		console.log("output changed, value = " + $("#output_duration3").val());
+
+		console.log("duration, value = " + $(".output_duration").val());
 	});//output_duration.change()
 	
 	$(".input_name, output_name").alphanumeric({allow:" -.!@"});			//relies on the excellent work of https://github.com/treyhunner/jquery-formrestrict
@@ -817,11 +814,11 @@ $(function(){//shortcut for doc.ready
 						temp_selected = $(this).parent();							//reduce jquery calls
 						if (array[i] > 0) {											//if the duration is not zero
 							temp_selected.show();									//show the input field
-							temp_selected.prev().val("for");						//choose the "for" select
+							temp_selected.prev().val("2");						//choose the "for" select
 							temp_selected.prev().children().last().html("for");		//and change the "for..." to "for"
 						}else{													//if it is 0
 							temp_selected.hide();									//hide the field
-							temp_selected.prev().val("constantly");					//and choose "constantly" to complete the sentence
+							temp_selected.prev().val("1");					//and choose "while input is triggered" (2) to complete the sentence
 						}
 					};
 				};
@@ -1043,9 +1040,9 @@ $(function(){//shortcut for doc.ready
 						</select>
 					</span><span class="duration">
 						<select class="output_duration" disabled="disabled">
-							<option value="x">until further notice.</option>
-							<option value="constantly">while input is triggered.</option>
-							<option value="for">for...</option>
+							<option value="0">until further notice.</option>
+							<option value="1">while input is triggered.</option>
+							<option value="2">for...</option>
 						</select>
 						<div class="duration_container">
 							<div class="duration">
