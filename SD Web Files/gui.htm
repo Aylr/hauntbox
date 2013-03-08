@@ -395,7 +395,11 @@ $(function(){//shortcut for doc.ready
 	
 	
 	function navigation_manager(){
+		if (!next_page){			//if you got here somehow without clicking
+			next_page = $(".navbar .nav a.program");	//set the default page to program
+		}
 		var chosen = next_page.attr("class");
+		
 		if (chosen == "settings") {		//"Settings" clicked
 			//load settings
 			load_settings();					//load the data and populate form
@@ -489,7 +493,8 @@ $(function(){//shortcut for doc.ready
 	});
 
 	$(".save_program").click(function(){
-		$(this).html("Saving...")
+		console.log("you clicked save program");
+		$(this).html("Saving...");
 		save("program");
 	});
 
@@ -585,6 +590,7 @@ $(function(){//shortcut for doc.ready
 	}//end unsaved_modal()
 	
 	function saved_successfully(type){
+		console.log("saved_successfully has been called on line 598")
 		var modal = $("#successful_save_modal");							//select the modal
 		type = type.charAt(0).toUpperCase() + type.slice(1);				//capitalize first letter (program --> Program)
 		modal.children().first().children("h3").html(type + " saved");		//change the modal h3 header
@@ -654,7 +660,7 @@ $(function(){//shortcut for doc.ready
 					navigation_manager();
 				}else{
 					status_message(0);
-					console.log("changes saved");
+					console.log(type + "changes saved");
 					saved_successfully(type);
 				}
 			},

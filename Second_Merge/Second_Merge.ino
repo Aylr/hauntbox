@@ -735,7 +735,7 @@ char* open_file(char* input_file){
 
 //----- Section Convert cupcake string from SD/Web to arrays -----
 char convert(char* readString){
-  char* col[6];
+  char* col[7];
   char* tok;
   //byte input_arr[6]; inputArray
   //byte in_onoff[6];
@@ -765,7 +765,7 @@ char convert(char* readString){
       // This may help it fail more gracefully.
       tok = strtok(readString, ";");
       col[0] = tok;
-      for (i = 1; i < 6; i++) {
+      for (i = 1; i < 7; i++) {
         if (tok == NULL)
           break;
         tok = strtok(NULL, ";");
@@ -819,8 +819,16 @@ char convert(char* readString){
         outputHiLowArray[i] = (byte)atoi(tok);
         tok = strtok(NULL, ",");
       }
-      // duration
+      // duration type
       tok = strtok(col[5], ",");
+      for (i = 0; i < 6; i++) {
+        if (tok == NULL)
+          break;
+        durationType[i] = (unsigned int)atoi(tok);
+        tok = strtok(NULL, ",");
+      }
+      // duration
+      tok = strtok(col[6], ",");
       for (i = 0; i < 6; i++) {
         if (tok == NULL)
           break;
@@ -857,6 +865,12 @@ char convert(char* readString){
       for (i = 0; i < 6; i++){
         Serial.print(outputHiLowArray[i]);
         Serial.print(" ");
+      }
+      
+      Serial.print("\nDuration Type: ");
+      for (i = 0; i < 6; i++){
+        Serial.print(durationType[i]);
+        Serial.print("\n");
       }
       
       Serial.print("\nDuration: ");
