@@ -32,8 +32,8 @@ byte outputArray[] =      {1, 2, 3, 4, 5, 6};    //which outputs (0-6) are contr
                                                 
 byte outputHiLowArray[] = {1, 1, 1, 1, 1, 1};    //Output considered on when High (1) or Low (0)
 unsigned int DelayRow[] = {0, 2000, 3000, 4000, 5000, 6000};     //Time in millis
-int durationType[] = {1,1,1,1,1,1}  //The type of duration 0 = until further notice, 1 = while input active, 2 = for ...
 unsigned int DurationRow[] = {1000, 6000, 6000, 6000, 6000, 6000};  //Time in millis  //TURN INTO AN ARRAY FOR FINAL CODE
+int durationType[] = {0,1,2,0,1,2};  //The type of duration 0 = until further notice, 1 = while input active, 2 = for ...
 
 
 //----------------------Define variables in code-----------------------------
@@ -579,10 +579,10 @@ void loop(){
     }
     else if(stateRow[z] == 5) {             //STATE 5 = Duration of output "on"
       //switch for 3 different duration types
-      if (durationType == 0) {  //"until further notice"
+      if (durationType[z] == 0) {  //"until further notice"
         stateRow[z] = 1;  //reset row state to waiting for trigger
       }
-      else if (durationType == 1) {  //"while input triggered"
+      else if(durationType[z] == 1) {  //"while input triggered"
         if(trigState[z] == 0){  //trigger has stopped active
           if (outputHiLowArray[z] == 1) //if on, turn back off
           {
@@ -600,7 +600,7 @@ void loop(){
            stateRow[z] = 1;
         }
       }
-      else if (durationType == 2) {    //"for...seconds"
+      else if (durationType[z] == 2) {    //"for...seconds"
         nowTime = millis();
         netTime = nowTime - timeStampDurationRow[z];
         if(netTime >= DurationRow[z] * 1000) {
