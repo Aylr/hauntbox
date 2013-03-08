@@ -37,7 +37,7 @@ unsigned int DurationRow[] = {1000, 6000, 6000, 6000, 6000, 6000};  //Time in mi
 
 //----------------------Define variables in code-----------------------------
 int rn = 6;  //number of rows
-int outputState[6];                    //array to hold on/off (1/0) state of every given output. Manipulated by any/multiple rules
+bool outputState[6] = {0,0,0,0,0,0};   //array to hold on/off (1/0) state of every given output. Manipulated by any/multiple rules
                 //***only 6 outputs!!!
 int stateRow[6];                       //array that defines each row's state. Gets initialized in initializeFunction called from main function
 int trigState[6];                      //gets initialized immediately before it is used
@@ -128,7 +128,6 @@ SdFile file;
 
 
 // -------------------- send file handler -------------------- 
-
 void send_file_name(TinyWebServer& web_server, const char* filename) {
   if (!filename) {
     web_server.send_error_code(404);
@@ -151,7 +150,6 @@ void send_file_name(TinyWebServer& web_server, const char* filename) {
 
 
 // -------------------- file handler -------------------- 
-
 boolean file_handler(TinyWebServer& web_server) {
   char* filename = TinyWebServer::get_file_from_path(web_server.get_path());
   send_file_name(web_server, filename);
@@ -159,8 +157,8 @@ boolean file_handler(TinyWebServer& web_server) {
   return true;
 }
 
-// -------------------- index handler -------------------- 
 
+// -------------------- index handler -------------------- 
 boolean index_handler(TinyWebServer& web_server) {
   send_file_name(web_server, "gui.htm");
   return true;
@@ -168,7 +166,6 @@ boolean index_handler(TinyWebServer& web_server) {
 
 
 // -------------------- send program + status handler -------------------- 
-
 boolean program_handler(TinyWebServer& web_server){
   send_file_name(web_server, "program.txt");
   Client& client = web_server.get_client();
@@ -194,7 +191,6 @@ boolean settings_handler(TinyWebServer& web_server){
 
 
 // -------------------- ram handler -------------------- 
-
 boolean ram_handler(TinyWebServer& web_server) {
   web_server.send_error_code(200);
   web_server.send_content_type("text/plain");
@@ -205,9 +201,7 @@ boolean ram_handler(TinyWebServer& web_server) {
 }
 
 
-
 // -------------------- row status handler -------------------- 
-
 boolean row_status_handler(TinyWebServer& web_server) {
   web_server.send_error_code(200);
   web_server.send_content_type("text/plain");
@@ -224,7 +218,6 @@ boolean row_status_handler(TinyWebServer& web_server) {
 }
 
 // -------------------- output status handler -------------------- 
-
 boolean output_status_handler(TinyWebServer& web_server) {
   web_server.send_error_code(200);
   web_server.send_content_type("text/plain");
@@ -401,16 +394,6 @@ void setup() {
   // Start the bonjour/zeroconf service
   EthernetBonjour.begin("hauntbox");                                        //Set the advertised name
   EthernetBonjour.addServiceRecord("Hauntbox._http", 80, MDNSServiceTCP);   //Set the advertised port/service
-  
-  //debugging the official hb pcb
-  pinMode(32, OUTPUT); //should be input A
-  for (i = 0; i < 10; i++) {
-    digitalWrite(32, HIGH);
-    delay(100);
-    digitalWrite(32, LOW);
-    delay(100);
-  }
-  //end debugging
 
   Serial << F("Ready to accept HTTP requests.\n");
   
@@ -447,8 +430,9 @@ void initializeFunction()
    delay(d*3);
 //m   Serial.println(" ");
 //m   Serial.println("Initializing Variables");
-   for(int a = 0; a < 7; a++) {
-     outputSelectFunction(a, 0);  //start with all pins off
+   for(int a = 0; a < 6; a++) {
+      outputState[a] = 0;
+      outputSelectFunction(a, 0);  //start with all pins off
    }
    ini = 1;
    delay(d*3);
@@ -497,23 +481,14 @@ void guiMess(int n) {
    //1:23, 2:25, 3:27, 4:29, 5:31, 6:33
    //A:22, B:24, C:26, D:28, E:30, F:32
 // Function that pairs the output pins to the row that is controlling for it
-void outputSelectFunction(int outputNumber, int action) {
+void outputSelectFunction(int outputNumber, bool action) {
   //takes an output (outputNumber) and an action:
     //0 = off
     //1 = on
-    //2 = toggle
   int x;      //local variable
   int y;
-  x = outputArray[outputNumber]; //
+  x = outputArray[outputNumber]; //lookup which output is being controlled
   y = outputHiLowArray[x-1];// lookup which value is considered "on"
-  if(action == 2) {  // toggle
-    if(x == 0) {            //if it is off
-      action = 1;               //turn it on
-    }
-    if (x == 1) {          //if it is on
-      action = 0;              //turn it off
-    }
-  }
   
   if(action == 1) {         // turn output on
     if(y == 1) {           // "on" means turn output high
@@ -587,32 +562,65 @@ void loop(){
       }
     }
     else if(stateRow[z] == 4) {             //STATE 4 = Change output (make it on/off/toggle)
-      outputSelectFunction(z, ****variable****);           //(output, change_type) *******
+      if (outputHiLowArray[z] == 0)       //if it should be off
+      {
+        outputState[z] = 0;
+      }
+      else if(outputHiLowArray[z] == 1){  //if it should be on
+        outputState[z] = 1;
+      }
+      else if(outputHiLowArray[z] == 2){  //if it should toggle
+        outputState[z] = !outputState[z]; //flip the bit
+      }
+      outputSelectFunction(z, outputState[z]);    //enact the change
       timeStampDurationRow[z] = millis();   //Get timestamp
       stateRow[z] = 5;                      //Moves on to next state
     }
     else if(stateRow[z] == 5) {             //STATE 5 = Duration of output "on"
-      
-      //switch for 3 different duration dropdown modes
-      if (durationType == 2) {    //"for...seconds"
-        nowTime = millis();
-        netTime = nowTime - timeStampDurationRow[z];
-        if(netTime >= DurationRow[z] * 1000) {
-          outputSelectFunction(z, ****variable****);        //Turn output off after duration is over
-          stateRow[z] = 1;                   //Moves on to trigger-waiting state
-        }
+      //switch for 3 different duration types
+      if (durationType == 0) {  //"until further notice"
+        stateRow[z] = 1;  //reset row state to waiting for trigger
       }
       else if (durationType == 1) {  //"while input triggered"
         if(trigState[z] == 0){  //trigger has stopped active
-           outputSelectFunction(z, variable); //reverse the change
+          if (outputHiLowArray[z] == 1) //if on, turn back off
+          {
+            outputState[z] = 0;
+            outputSelectFunction(z, 0);
+          }
+          else if(outputHiLowArray[z] == 0){ //if off, turn back on
+            outputState[z] = 1;
+            outputSelectFunction(z, 1);
+          }
+          else if(outputHiLowArray[z] == 2){  //if toggle
+            outputState[z] = !outputState[z]; //change the current state
+            outputSelectFunction(z, outputState[z]);
+          }
            stateRow[z] = 1;
-        }        
+        }
       }
-      else if (durationType == 0) {  //"until further notice"
-        //change state as specified. outputSelectFunction(z, var);
-        stateRow[z] = 1;  //reset row state to waiting for trigger
+      else if (durationType == 2) {    //"for...seconds"
+        nowTime = millis();
+        netTime = nowTime - timeStampDurationRow[z];
+        if(netTime >= DurationRow[z] * 1000) {
+          if (outputHiLowArray[z] == 1) //if on, turn back off
+          {
+            outputState[z] = 0;
+            outputSelectFunction(z, 0);
+          }
+          else if(outputHiLowArray[z] == 0){ //if off, turn back on
+            outputState[z] = 1;
+            outputSelectFunction(z, 1);
+          }
+          else if(outputHiLowArray[z] == 2){  //if toggle
+            outputState[z] = !outputState[z]; //change the current state
+            outputSelectFunction(z, outputState[z]);
+          }
+          stateRow[z] = 1;                   //Moves on to trigger-waiting state
+        }
       }
     }
+
     else {                                 //if state is not 1-5, set to 1 (waiting)
       stateRow[z] = 1;                     // this is to increase robustness
 //m      Serial.print("Initializing Row State ");
