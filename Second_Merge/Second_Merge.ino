@@ -497,14 +497,14 @@ void guiMess(int n) {
    //1:23, 2:25, 3:27, 4:29, 5:31, 6:33
    //A:22, B:24, C:26, D:28, E:30, F:32
 // Function that pairs the output pins to the row that is controlling for it
-void outputSelectFunction(int rowNumber, int action) { //"formerly onOff"
-  //takes an output (rowNumber) and an action:
+void outputSelectFunction(int outputNumber, int action) {
+  //takes an output (outputNumber) and an action:
     //0 = off
     //1 = on
     //2 = toggle
   int x;      //local variable
   int y;
-  x = outputArray[rowNumber]; //
+  x = outputArray[outputNumber]; //
   y = outputHiLowArray[x-1];// lookup which value is considered "on"
   if(action == 2) {  // toggle
     if(x == 0) {            //if it is off
@@ -568,10 +568,10 @@ void loop(){
   for(int z = 0; z < rn; z++) {              //runs loop for each row
     if(stateRow[z] == 1) {                   //STATE 1 = Waiting for a trigger
       trigState[z] = inputSelectFunction(z); //Call function and pass(Row number) to see if input is on or off
-      if(trigState[z] == 1) {                //If input is "on"
+      if(trigState[z] == 1) {                //If triggered
         stateRow[z] = 2;                     //Moves to next state
       }
-      if(trigState[z] == 0) {               //If input is off
+      if(trigState[z] == 0) {               //If not triggered
       //Do nothing
       }
     }
@@ -586,29 +586,32 @@ void loop(){
         stateRow[z] = 4;                    //If we've met our delay, go to next state
       }
     }
-    else if(stateRow[z] == 4) {             //STATE 4 = Turn output 1 on
-      outputSelectFunction(z, 1);           //(Row, On)
+    else if(stateRow[z] == 4) {             //STATE 4 = Change output (make it on/off/toggle)
+      outputSelectFunction(z, ****variable****);           //(output, change_type) *******
       timeStampDurationRow[z] = millis();   //Get timestamp
       stateRow[z] = 5;                      //Moves on to next state
     }
     else if(stateRow[z] == 5) {             //STATE 5 = Duration of output "on"
       
       //switch for 3 different duration dropdown modes
-      //if (duration == 1) {    //"for...seconds"
+      if (durationType == 2) {    //"for...seconds"
         nowTime = millis();
         netTime = nowTime - timeStampDurationRow[z];
         if(netTime >= DurationRow[z] * 1000) {
-          outputSelectFunction(z, 0);        //Turn output off after duration is over
+          outputSelectFunction(z, ****variable****);        //Turn output off after duration is over
           stateRow[z] = 1;                   //Moves on to trigger-waiting state
         }
-      //}
-      //else if (duration == 2) {  //"while input triggered"
-      //  trigState[z] = inputSelectFunction(z); //Call function and pass(Row number) to see if input is on or off
-      //  if trigState[z] == 0 then turn off trigger;
-      //}
-      //else if (duration == 3) {  //"other inputs"
-      //  stateRow[z] = 1;
-      //}
+      }
+      else if (durationType == 1) {  //"while input triggered"
+        if(trigState[z] == 0){  //trigger has stopped active
+           outputSelectFunction(z, variable); //reverse the change
+           stateRow[z] = 1;
+        }        
+      }
+      else if (durationType == 0) {  //"until further notice"
+        //change state as specified. outputSelectFunction(z, var);
+        stateRow[z] = 1;  //reset row state to waiting for trigger
+      }
     }
     else {                                 //if state is not 1-5, set to 1 (waiting)
       stateRow[z] = 1;                     // this is to increase robustness
