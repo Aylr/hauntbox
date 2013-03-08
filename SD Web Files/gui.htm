@@ -11,192 +11,192 @@
 <link href='http://fonts.googleapis.com/css?family=Reenie+Beanie' rel='stylesheet' type='text/css'>
 -->
 <style type="text/css">
-/*	dark grey background: rgb(34,34,34);*/
-@font-face {
-  font-family: 'Reenie Beanie';
-  font-style: normal;
-  font-weight: normal;
-  src: local('Reenie Beanie'), local('ReenieBeanie'), url('fontrb.ttf') format('truetype');
-}
-@font-face {
-  font-family: 'Chango';
-  font-style: normal;
-  font-weight: 400;
-  src: local('Chango Regular'), local('Chango-Regular'), url('fontch.ttf') format('truetype');
-}
-body {
-	background: url(navbg.gif);
-	background-repeat:repeat-x;
-}
-.navbar {
-	margin-top: 107px; /* puts the navbar where it should be */
-	margin-left: 12px;	/* lines up everything left except checkboxes */
-}
-.navbar .nav > li > a {
-	/* puts the | spacer between the nav 
-	border-right: 1px solid rgb(88,89,91); */
-	padding-right: 15px;
-	font-family: Chango;
-	text-transform: lowercase;
-	color: rgb(88,89,91);
-}
-.navbar li.active a {
-	color: rgb(214,222,35);
-}
-.navbar .logo {
-	position: absolute;
-	top: 45px;
-	left: 900px;
-}
-input[name="enable_disable"] {
-	/* the checkbox on each row */
-	margin: 0 2px 0 0;
-}
-.sentence_headings, div.export .container, div.help .container {
-	margin-left: 23px;/*enough room for a checkbox*/
-/*	margin-top: 23px; /* white space! */
-}
-.inner_sentence {
-	display: inline;
-}
-#display_container {
-	margin-top: 155px;
-	width: 1200px;
-}
-.subheader {
-	clear: both;
-	width: 100%;
-	padding: 22px 0 24px 0;
-	color: #fff;
-	margin-bottom:22px; /* white space! */
-}
-h2 {
-	font-family: Chango;
-	font-size: 30px;
-	font-weight: normal;
-	text-transform: uppercase;
-	margin-right: 12px;
-	margin-left:21px; /* lines up with everything left except checkboxes */
-	float: left;
-}
-.subheader p{
-	font-size: 8pt;
-	line-height: 15px;
-	padding-top: 4px;
-	font-family: arial, sans-serif;
-	color: rgb(204,204,204);
-}
+	/*	dark grey background: rgb(34,34,34);*/
+	@font-face {
+	  font-family: 'Reenie Beanie';
+	  font-style: normal;
+	  font-weight: normal;
+	  src: local('Reenie Beanie'), local('ReenieBeanie'), url('fontrb.ttf') format('truetype');
+	}
+	@font-face {
+	  font-family: 'Chango';
+	  font-style: normal;
+	  font-weight: 400;
+	  src: local('Chango Regular'), local('Chango-Regular'), url('fontch.ttf') format('truetype');
+	}
+	body {
+		background: url(navbg.gif);
+		background-repeat:repeat-x;
+	}
+	.navbar {
+		margin-top: 107px; /* puts the navbar where it should be */
+		margin-left: 12px;	/* lines up everything left except checkboxes */
+	}
+	.navbar .nav > li > a {
+		/* puts the | spacer between the nav 
+		border-right: 1px solid rgb(88,89,91); */
+		padding-right: 15px;
+		font-family: Chango;
+		text-transform: lowercase;
+		color: rgb(88,89,91);
+	}
+	.navbar li.active a {
+		color: rgb(214,222,35);
+	}
+	.navbar .logo {
+		position: absolute;
+		top: 45px;
+		left: 900px;
+	}
+	input[name="enable_disable"] {
+		/* the checkbox on each row */
+		margin: 0 2px 0 0;
+	}
+	.sentence_headings, div.export .container, div.help .container {
+		margin-left: 23px;/*enough room for a checkbox*/
+	/*	margin-top: 23px; /* white space! */
+	}
+	.inner_sentence {
+		display: inline;
+	}
+	#display_container {
+		margin-top: 155px;
+		width: 1200px;
+	}
+	.subheader {
+		clear: both;
+		width: 100%;
+		padding: 22px 0 24px 0;
+		color: #fff;
+		margin-bottom:22px; /* white space! */
+	}
+	h2 {
+		font-family: Chango;
+		font-size: 30px;
+		font-weight: normal;
+		text-transform: uppercase;
+		margin-right: 12px;
+		margin-left:21px; /* lines up with everything left except checkboxes */
+		float: left;
+	}
+	.subheader p{
+		font-size: 8pt;
+		line-height: 15px;
+		padding-top: 4px;
+		font-family: arial, sans-serif;
+		color: rgb(204,204,204);
+	}
 
-div.settings input[type="text"] {
-	width: 8.5em;
-}
-div.alert{
-	display:none;
-}
-input, div.settings input.retrigger { /*slim up the wide 999 second boxes */
-	width: 2.5em;
-	text-align:right;
-}
-.settings select, .sensor_state, .output_state {
-	width: 4.4em;
-}
-label {
-	font-weight: normal;
-}
-div.duration_container {
-	display: inline-block;
-}
-div.wait, div.duration {
-	display: inline-block;
-	position: relative;
-	top: 8px;
-}
-div.wait span, div.duration span {
-	display: block;
-	border: 1px solid #aaa;
-	background: rgb(247,247,247);
-	font-size: 1em;
-	text-align: center;
-	text-decoration: none;
-	color: #000;
-	width: 20px;
-	height: 20px;
-	border-radius: 10px;
-	-moz-border-radius: 10px;
-	margin: 0 0 -1px 0;
-	cursor: pointer;
-	-webkit-user-select: none;
-}
-div.wait span:first-child, div.duration span:first-child {
-	position:relative;
-	top:-5px;
-}
-div.outputs_container, div.button_container {
-	margin-top: 2em;
-}
-.sentence_headings {
-	width: 1200px;
-}
-.sentence_headings h3 {
-	color: rgb(34,34,34);
-	font-family: Chango;
-	font-size: 10pt;
-	text-transform: uppercase;
-	border-bottom: 2px solid rgb(200,200,200);
-	float: left;
-	margin-right: 10px;
-}
-.sentence_headings .input {
-	width: 259px;
-}
-.sentence_headings .delay {
-	width: 310px;
-}
-.sentence_headings .output {
-	width: 165px;
-}
-.sentence_headings .duration {
-	width: 340px;
-}
-.sentence_headings .voltage {
-	width: 105px;
-}
-.sentence_headings .io_name {
-	width: 125px;
-}
-.sentence_headings .high_or_low {
-	width: 380px;
-}
-.sentence_headings .retrigger {
-	width: 360px;
-}
-div.sentence_container, .sentence {
-	clear: both;
-	color: rgb(88,89,91);
-	font-family: 'Reenie Beanie';
-	font-size: 26px;
-}
-div.settings div.sentence {
-	color: rgb(88,89,91);
-	font-family: 'Reenie Beanie';
-	font-size: 22px;
-}
-div.sentence {
-	height: 60px;
-	padding: 2px 0 0 0;
-}
-span.input, span.output, span.duration, span.delay {
-	display: inline-block;
-	margin: 0 10px 0 0;
-	padding: 0 5px 5px 5px;
-	border-bottom: 1px solid rgb(225,225,225);
-}
-div.alert {
-	position: absolute;
-	top: 55px;
-	left:640px;
-	width: 190px;
-}
+	div.settings input[type="text"] {
+		width: 8.5em;
+	}
+	div.alert{
+		display:none;
+	}
+	input, div.settings input.retrigger { /*slim up the wide 999 second boxes */
+		width: 2.5em;
+		text-align:right;
+	}
+	.settings select, .sensor_state, .output_state {
+		width: 4.4em;
+	}
+	label {
+		font-weight: normal;
+	}
+	div.duration_container {
+		display: inline-block;
+	}
+	div.wait, div.duration {
+		display: inline-block;
+		position: relative;
+		top: 8px;
+	}
+	div.wait span, div.duration span {
+		display: block;
+		border: 1px solid #aaa;
+		background: rgb(247,247,247);
+		font-size: 1em;
+		text-align: center;
+		text-decoration: none;
+		color: #000;
+		width: 20px;
+		height: 20px;
+		border-radius: 10px;
+		-moz-border-radius: 10px;
+		margin: 0 0 -1px 0;
+		cursor: pointer;
+		-webkit-user-select: none;
+	}
+	div.wait span:first-child, div.duration span:first-child {
+		position:relative;
+		top:-5px;
+	}
+	div.outputs_container, div.button_container {
+		margin-top: 2em;
+	}
+	.sentence_headings {
+		width: 1200px;
+	}
+	.sentence_headings h3 {
+		color: rgb(34,34,34);
+		font-family: Chango;
+		font-size: 10pt;
+		text-transform: uppercase;
+		border-bottom: 2px solid rgb(200,200,200);
+		float: left;
+		margin-right: 10px;
+	}
+	.sentence_headings .input {
+		width: 259px;
+	}
+	.sentence_headings .delay {
+		width: 310px;
+	}
+	.sentence_headings .output {
+		width: 165px;
+	}
+	.sentence_headings .duration {
+		width: 340px;
+	}
+	.sentence_headings .voltage {
+		width: 105px;
+	}
+	.sentence_headings .io_name {
+		width: 125px;
+	}
+	.sentence_headings .high_or_low {
+		width: 380px;
+	}
+	.sentence_headings .retrigger {
+		width: 360px;
+	}
+	div.sentence_container, .sentence {
+		clear: both;
+		color: rgb(88,89,91);
+		font-family: 'Reenie Beanie';
+		font-size: 26px;
+	}
+	div.settings div.sentence {
+		color: rgb(88,89,91);
+		font-family: 'Reenie Beanie';
+		font-size: 22px;
+	}
+	div.sentence {
+		height: 60px;
+		padding: 2px 0 0 0;
+	}
+	span.input, span.output, span.duration, span.delay {
+		display: inline-block;
+		margin: 0 10px 0 0;
+		padding: 0 5px 5px 5px;
+		border-bottom: 1px solid rgb(225,225,225);
+	}
+	div.alert {
+		position: absolute;
+		top: 55px;
+		left:640px;
+		width: 190px;
+	}
 </style>
 
 <script>
@@ -969,236 +969,234 @@ $(function(){//shortcut for doc.ready
 
 <body>
 	<div class="container body_container">	
-	<div class="navbar">
-		<ul class="nav">
-			<li class="active"><a href="#" class="program">Program</a></li>
-			<li><a href="#" class="settings">Settings</a></li>
-			<li><a href="#" class="export">Export</a></li>
-			<li><a href="#" class="help">Help</a></li>
-		</ul>
-		<p class="logo"><img src="hblogo.png" width="150" height="87" /></p>
-		<div class="alert">
-			<a class="close">&times;</a>
-			<h4 class="alert-heading">Alert</h4>
-			<p>Alert Info</p>
+		<div class="navbar">
+			<ul class="nav">
+				<li class="active"><a href="#" class="program">Program</a></li>
+				<li><a href="#" class="settings">Settings</a></li>
+				<li><a href="#" class="export">Export</a></li>
+				<li><a href="#" class="help">Help</a></li>
+			</ul>
+			<p class="logo"><img src="hblogo.png" width="150" height="87" /></p>
+			<div class="alert">
+				<a class="close">&times;</a>
+				<h4 class="alert-heading">Alert</h4>
+				<p>Alert Info</p>
+			</div>
+			<p class="nav pull-right">Free RAM: ?</p>
 		</div>
-		<p class="nav pull-right">Free RAM: ?</p>
-	</div>
 
-<div id="display_container">
-	<div class="program">
-		<div class="subheader">
-			<h2>Program</h2>
-			<p>This is where the magic happens.<br />Complete the sentences to control your Hauntbox.</p>
-		</div>
-		<div class="sentence_headings">
-			<h3 class="input">Input</h3>
-			<h3 class="delay">Delay</h3>
-			<h3 class="output">Output</h3>
-			<h3 class="duration">Duration</h3>
-		</div>
-		<div class="sentence_container">
-			<div class="sentence">
-				<input type="checkbox" name="enable_disable">
-				<div class="inner_sentence">
-					<span class="input">
-						When
-						<select class="sensor" name="sensor3" disabled="disabled">
-							<option value="0">-</option>
-							<option value="1">input A</option>
-							<option value="2">input B</option>
-							<option value="3">input C</option>
-							<option value="4">input D</option>
-							<option value="5">input E</option>
-							<option value="6">input F</option>
-						</select>
-						is
-						<select class="sensor_state" name="sensor_state3" disabled="disabled">
-							<option value="1">on</option>
-							<option value="0">off</option>
-						</select>
-					</span><span class="delay">
-						Wait
-						<div class="wait">
-							<span class="up">+</span>
-							<span class="down">-</span>
+		<div id="display_container">
+			<div class="program">
+				<div class="subheader">
+					<h2>Program</h2>
+					<p>This is where the magic happens.<br />Complete the sentences to control your Hauntbox.</p>
+				</div>
+				<div class="sentence_headings">
+					<h3 class="input">Input</h3>
+					<h3 class="delay">Delay</h3>
+					<h3 class="output">Output</h3>
+					<h3 class="duration">Duration</h3>
+				</div>
+				<div class="sentence_container">
+					<div class="sentence">
+						<input type="checkbox" name="enable_disable">
+						<div class="inner_sentence">
+							<span class="input">
+								When
+								<select class="sensor" name="sensor3" disabled="disabled">
+									<option value="0">-</option>
+									<option value="1">input A</option>
+									<option value="2">input B</option>
+									<option value="3">input C</option>
+									<option value="4">input D</option>
+									<option value="5">input E</option>
+									<option value="6">input F</option>
+								</select>
+								is
+								<select class="sensor_state" name="sensor_state3" disabled="disabled">
+									<option value="1">on</option>
+									<option value="0">off</option>
+								</select>
+							</span><span class="delay">
+								Wait
+								<div class="wait">
+									<span class="up">+</span>
+									<span class="down">-</span>
+								</div>
+								<input type="text" class="wait_time" name="wait_time3" maxlength="5" value="0" disabled="disabled" />
+								second(s) then turn
+							</span><span class="output">
+								<select class="output" name="output3" disabled="disabled">
+									<option value="0">-</option>
+									<option value="1">output 1</option>
+									<option value="2">output 2</option>
+									<option value="3">output 3</option>
+									<option value="4">output 4</option>
+									<option value="5">output 5</option>
+									<option value="6">output 6</option>
+								</select>
+								<select class="output_state" name="output_state3" disabled="disabled">
+									<option value="1">on</option>
+									<option value="0">off</option>
+									<option value="2">toggled</option>
+								</select>
+							</span><span class="duration">
+								<select class="duration_type" disabled="disabled">
+									<option value="0">until further notice.</option>
+									<option value="1">while input is triggered.</option>
+									<option value="2">for...</option>
+								</select>
+								<div class="duration_container">
+									<div class="duration">
+										<span class="up">+</span>
+										<span class="down">-</span>
+									</div>
+									<input type="text" class="output_duration" name="output_duration" maxlength="5" value="0" disabled="disabled" />
+									second(s).
+								</div>
+							</span>
+							<span class="row_status"></span>
 						</div>
-						<input type="text" class="wait_time" name="wait_time3" maxlength="5" value="0" disabled="disabled" />
-						second(s) then turn
-					</span><span class="output">
-						<select class="output" name="output3" disabled="disabled">
-							<option value="0">-</option>
-							<option value="1">output 1</option>
-							<option value="2">output 2</option>
-							<option value="3">output 3</option>
-							<option value="4">output 4</option>
-							<option value="5">output 5</option>
-							<option value="6">output 6</option>
-						</select>
-						<select class="output_state" name="output_state3" disabled="disabled">
-							<option value="1">on</option>
-							<option value="0">off</option>
-							<option value="2">toggled</option>
-						</select>
-					</span><span class="duration">
-						<select class="duration_type" disabled="disabled">
-							<option value="0">until further notice.</option>
-							<option value="1">while input is triggered.</option>
-							<option value="2">for...</option>
-						</select>
-						<div class="duration_container">
-							<div class="duration">
+					</div>
+
+				</div>
+				
+				<div class="button_container">
+					<button class="save_program" name="save" type="button">Save Program</button>
+					<button id="refresh_program" name="refresh" type="button">Refresh Program</button>
+				</div>
+				<div id="status_program"></div>
+			</div><!-- //end program -->
+			
+			<div class="settings">
+				<div class="subheader">
+					<h2>Settings</h2>
+					<p>These are the guts of the HauntBox. You can rename your inputs &amp; outputs.<br />Also set whether digital HIGH or LOW will trigger the input, and set the minimum time between triggers.</p>
+				</div>
+
+				<div class="inputs_container">
+					<!--<h3>Inputs</h3>-->
+					<div class="sentence_headings">
+						<h3 class="voltage">Voltage</h3>
+						<h3 class="io_name">Name</h3>
+						<h3 class="high_or_low">High or Low</h3>
+						<h3 class="retrigger">Retrigger Time</h3>
+					</div>
+					<div class="sentence">
+						<span class="input_title">Input A</span>
+						<select class="threshold">
+							<option>5V</option>
+							<option>12V</option>
+							<option>24V</option>
+						</select>:
+						<input type="text" class="input_name" name="input1" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow1" value="1" checked /> High <input type="radio" class="highlow" name="highlow1" value="0"> Low.&nbsp;
+							Wait
+							<div class="wait">
 								<span class="up">+</span>
 								<span class="down">-</span>
 							</div>
-							<input type="text" class="output_duration" name="output_duration" maxlength="5" value="0" disabled="disabled" />
-							second(s).
+							<input type="text" class="retrigger" maxlength="5" value="0" /> seconds before input retrigger.
 						</div>
-					</span>
-					<span class="row_status"></span>
 				</div>
-			</div>
+				
 
-		</div>
-		
-		<div class="button_container">
-			<button class="save_program" name="save" type="button">Save Program</button>
-			<button id="refresh_program" name="refresh" type="button">Refresh Program</button>
-		</div>
-		<div id="status_program"></div>
-	</div><!-- //end program -->
-	
-	<div class="settings">
-		<div class="subheader">
-			<h2>Settings</h2>
-			<p>These are the guts of the HauntBox. You can rename your inputs &amp; outputs.<br />Also set whether digital HIGH or LOW will trigger the input, and set the minimum time between triggers.</p>
-		</div>
-
-		<div class="inputs_container">
-			<!--<h3>Inputs</h3>-->
-			<div class="sentence_headings">
-				<h3 class="voltage">Voltage</h3>
-				<h3 class="io_name">Name</h3>
-				<h3 class="high_or_low">High or Low</h3>
-				<h3 class="retrigger">Retrigger Time</h3>
-			</div>
-			<div class="sentence">
-				<span class="input_title">Input A</span>
-				<select class="threshold">
-					<option>5V</option>
-					<option>12V</option>
-					<option>24V</option>
-				</select>:
-				<input type="text" class="input_name" name="input1" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow1" value="1" checked /> High <input type="radio" class="highlow" name="highlow1" value="0"> Low.&nbsp;
-					Wait
-					<div class="wait">
-						<span class="up">+</span>
-						<span class="down">-</span>
+				<div class="outputs_container">
+					<div class="sentence">
+						<span class="output_title">Output 1</span>
+						<select class="threshold">
+							<option>5V</option>
+							<option>12V</option>
+							<option>24V</option>
+						</select>:
+						<input type="text" class="output_name" name="output1" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow1" value="1" checked />High<input type="radio" class="highlow" name="output_highlow1" value="0" />Low.
 					</div>
-					<input type="text" class="retrigger" maxlength="5" value="0" /> seconds before input retrigger.
 				</div>
-		</div>
-		
+				<div class="button_container">
+					<button class="save_settings" name="save" type="button">Save Settings</button>
+					<button id="refresh_settings" name="refresh" type="button">Refresh Settings</button>
+				</div>
+				<div id="status_settings"></div>
+			</div><!--//end div.settings -->
 
-		<div class="outputs_container">
-			<div class="sentence">
-				<span class="output_title">Output 1</span>
-				<select class="threshold">
-					<option>5V</option>
-					<option>12V</option>
-					<option>24V</option>
-				</select>:
-				<input type="text" class="output_name" name="output1" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow1" value="1" checked />High<input type="radio" class="highlow" name="output_highlow1" value="0" />Low.
+			<div class="export">
+				<div class="subheader">
+					<h2>Export</h2>
+					<p>Have an awesome Hauntbox gig setup?<br />Export it for use later.</p>
+				</div>
+				<div class="container">
+				
+				<h3>Your current settings</h3>
+				<p>Copy and paste this into a text file for safekeeping or right click <a href="settings.txt">settings.txt</a> and save this file.</p>
+				
+				<pre class="settings">Settings string...........</pre>
+				
+
+				<h3>Your current program</h3>
+				<p>Copy and paste this into a text file for safekeeping or right click <a href="program.txt">program.txt</a> and save this file.</p>
+				<pre class="program">Program string...........</pre>
+				
+				
+				<h3>URL schema</h3>
+				<pre>
+					/program	current program + status + ram
+					/settings	current settings + status + ram
+					/program.txt	current program file
+					/settings.txt	current settings file
+					/ram		free ram
+					/row_status	current row state (as defined in firmware)
+					/output_status	current output state (on/off)
+				</pre>
+				</div>
+			</div><!--//end div.export -->
+			
+			<div class="help">
+				<div class="subheader">
+					<h2>Help</h2>
+					<p>Stumped?<br />Find some answers.</p>
+				</div>
+				<div class="container">
+				<p>Please visit <a href="http://hauntbox.net/">hauntbox.net</a> for our store.</p>
+				
+				<p>Please consider adding to our <a href="https://github.com/Aylr/theHB/wiki">wiki</a> and you can find, hack, and contribute to our code at <a href="https://github.com/Aylr/theHB/">github</a>.</p>
+				
+				<button type="button" class="factory_defaults btn btn-danger">Reset to factory defaults</button>
+				
+				<p>kickstarter</p>
+				<p>email</p>
+				<p><a href="https://twitter.com/hauntbox" class="twitter-follow-button" data-show-count="false">Follow @hauntbox</a>
+				<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+				<br />
+				<a href="https://twitter.com/intent/tweet?screen_name=hauntbox" class="twitter-mention-button" data-size="large" data-related="hauntbox">Tweet to @hauntbox</a>
+				<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+				</p>
+				</div>
+			</div><!--//end div.help -->
+		</div><!--//end display_container -->
+		
+		<div class="modal hide" id="unsaved_modal">
+			<div class="modal-header">
+				<a class="close" data-dismiss="modal">&times</a>
+				<h3>Unsaved Changes</h3>
+			</div>
+			<div class="modal-body">
+				<p>Would you like to save your changes?</p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="discard btn">Discard changes</button>
+				<button type="button" class="save btn btn-primary" data-loading-text="Saving...">Yes! Save changes</button>
 			</div>
 		</div>
-		<div class="button_container">
-			<button class="save_settings" name="save" type="button">Save Settings</button>
-			<button id="refresh_settings" name="refresh" type="button">Refresh Settings</button>
-		</div>
-		<div id="status_settings"></div>
-	</div>
-
-	<div class="export">
-		<div class="subheader">
-			<h2>Export</h2>
-			<p>Have an awesome Hauntbox gig setup?<br />Export it for use later.</p>
-		</div>
-		<div class="container">
 		
-		<h3>Your current settings</h3>
-		<p>Copy and paste this into a text file for safekeeping or right click <a href="settings.txt">settings.txt</a> and save this file.</p>
-		
-		<pre class="settings">Settings string...........</pre>
-		
-
-		<h3>Your current program</h3>
-		<p>Copy and paste this into a text file for safekeeping or right click <a href="program.txt">program.txt</a> and save this file.</p>
-		<pre class="program">Program string...........</pre>
-		
-		
-		<h3>URL schema</h3>
-		<pre>
-/program	current program + status + ram
-/settings	current settings + status + ram
-/program.txt	current program file
-/settings.txt	current settings file
-/ram		free ram
-/row_status	current row state (as defined in firmware)
-/output_status	current output state (on/off)
-		</pre>
+		<div class="modal hide" id="successful_save_modal">
+			<div class="modal-header">
+				<a class="close" data-dismiss="modal">&times</a>
+				<h3>Saved</h3>
+			</div>
+			<div class="modal-body">
+				<p>Program saved successfully.</p>
+			</div>
 		</div>
-	</div>
-	
-	<div class="help">
-		<div class="subheader">
-			<h2>Help</h2>
-			<p>Stumped?<br />Find some answers.</p>
-		</div>
-		<div class="container">
-		<p>Please visit <a href="http://hauntbox.net/">hauntbox.net</a> for our store.</p>
-		
-		<p>Please consider adding to our <a href="https://github.com/Aylr/theHB/wiki">wiki</a> and you can find, hack, and contribute to our code at <a href="https://github.com/Aylr/theHB/">github</a>.</p>
-		
-		<button type="button" class="factory_defaults btn btn-danger">Reset to factory defaults</button>
-		
-		<p>kickstarter</p>
-		<p>email</p>
-		<p><a href="https://twitter.com/hauntbox" class="twitter-follow-button" data-show-count="false">Follow @hauntbox</a>
-		<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-		<br />
-		<a href="https://twitter.com/intent/tweet?screen_name=hauntbox" class="twitter-mention-button" data-size="large" data-related="hauntbox">Tweet to @hauntbox</a>
-		<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-		</p>
-		</div>
-	</div>
-	
-	</div><!--//end display_container -->
-	
-	<div class="modal hide" id="unsaved_modal">
-		<div class="modal-header">
-			<a class="close" data-dismiss="modal">&times</a>
-			<h3>Unsaved Changes</h3>
-		</div>
-		<div class="modal-body">
-			<p>Would you like to save your changes?</p>
-		</div>
-		<div class="modal-footer">
-			<button type="button" class="discard btn">Discard changes</button>
-			<button type="button" class="save btn btn-primary" data-loading-text="Saving...">Yes! Save changes</button>
-		</div>
-	</div>
-	
-	<div class="modal hide" id="successful_save_modal">
-		<div class="modal-header">
-			<a class="close" data-dismiss="modal">&times</a>
-			<h3>Saved</h3>
-		</div>
-		<div class="modal-body">
-			<p>Program saved successfully.</p>
-		</div>
-	</div>
-	
-</div><!--//end .container -->
+	</div><!--//end .container -->
 	<script src="bs_full.js" type="text/javascript" charset="utf-8"></script>
 	<script src="frmrstmn.js" type="text/javascript" charset="utf-8"></script>
 	<script src="alphnmin.js" type="text/javascript" charset="utf-8"></script>
