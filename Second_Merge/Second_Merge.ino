@@ -339,54 +339,46 @@ void setup() {
   }
 
   if (has_filesystem) {
-     char* ip_temp = open_file("ip.txt");    //try to open ip.txt
-      if (ip_temp != "") {
-        
-        char* tok;
-        char* val[4];
-        
-        tok = strtok(ip_temp, ".");
-        val[0] = tok;
-	for (i = 1; i < 4; i++) {
-	  if (tok == NULL)
-	    break;
-	  tok = strtok(NULL, ".");
-	  val[i] = tok;
-	}
-
-        for (i = 0; i < 4; i++) {
-          Serial << (val[i]) << ' ';
-	}
+   char* ip_temp = open_file("ip.txt");    //try to open ip.txt
+    if (ip_temp != ""){  
+      char* tok;
+      char* val[4];
       
-        for (i = 0; i < 4; i++) {
-          ip[i] = (byte)atoi(val[i]);
-        }
-        
-        //Placeholders for actual code that should validate the IP address
-        //test for real IP which should look like this: byte ip[] = { 192, 168, 0, 100 };
-        
-        Serial << F("Static IP on\n");
-        Serial << ip_temp;
-        Ethernet.begin(mac,ip);                                 //setup with static address
+      tok = strtok(ip_temp, ".");
+      val[0] = tok;
+    	for (i = 1; i < 4; i++) {
+    	  if (tok == NULL)
+    	    break;
+    	  tok = strtok(NULL, ".");
+    	  val[i] = tok;
+    	}
 
-        
-      }else{      //if there is not a static ip specified... use DHCP
-        
-        Serial << F("Setting up the Ethernet card...\n");
-        if (Ethernet.begin(mac) == 0) {                          // Initialize ethernet with DHCP
-           Serial << F("DHCP failed\n");
-           
-        }
+      for (i = 0; i < 4; i++) {
+        Serial << (val[i]) << ' ';
       }
-   }//end if has filesystem
+      for (i = 0; i < 4; i++) {
+        ip[i] = (byte)atoi(val[i]);
+      }
+      
+      //Placeholders for actual code that should validate the IP address
+      //test for real IP which should look like this: byte ip[] = { 192, 168, 0, 100 };
+      
+      Serial << F("Static IP on\n");
+      Serial << ip_temp;
+    }else{      //if there is not a static ip specified... use DHCP
+      Serial << F("Setting up the Ethernet card...\n");
+      if (Ethernet.begin(mac) == 0) {                          // Initialize ethernet with DHCP
+         Serial << F("DHCP failed\n");
+      }
+    }
+  }//end if has filesystem
    
-   //print IP address to serial
-   Serial.print("IP Address: ");
-   for (byte thisByte = 0; thisByte < 4; thisByte++) {                   // print the value of each byte of the IP address:
-          Serial.print(Ethernet.localIP()[thisByte], DEC);
-          Serial.print("."); 
-        }
-    Serial.print("\n");
+  Serial.print("IP Address: ");
+  for (byte thisByte = 0; thisByte < 4; thisByte++) {  // print the value of each byte of the IP address:
+    Serial.print(Ethernet.localIP()[thisByte], DEC);
+    Serial.print("."); 
+  }
+  Serial.print("\n");
   
   // Start the web server.
   Serial << F("Web server starting...\n");
@@ -425,20 +417,13 @@ void setup() {
 }
 //----- AA1b -- Initialize Output Function -----
 // Function that initializes the outputs states to "off"
-void initializeFunction() 
-{
-//m   Serial.println(" ");
-   delay(d*3);
-//m   Serial.println(" ");
-//m   Serial.println("Initializing Variables");
-   for(int a = 0; a < 6; a++) {
-      outputState[a] = 0;
-      outputSelectFunction(a, 0);  //start with all pins off
-   }
-   ini = 1;
-   delay(d*3);
-//m   Serial.println("Initialization Complete");
-//m   Serial.println(" ");
+void initializeFunction() {
+  delay(d*3);
+
+  for(int a = 0; a < 6; a++) {
+    outputState[a] = 0;     //start with all pins off.
+  }
+  delay(d*3);
 }
 
 //----- Section AA4b -----
@@ -558,7 +543,7 @@ void loop(){
     else if(stateRow[z] == 3) {             //STATE 3 = Delay vs. timeStamp
       nowTime = millis();
       netTime = nowTime - timeStampDelayRow[z];
-      if(netTime >= DelayRow[z] * 1000) {          //Tests to see if time > delay
+      if(netTime >= DelayRow[z] * 1000) {   //Tests to see if time > delay
         stateRow[z] = 4;                    //If we've met our delay, go to next state
       }
     }
@@ -657,9 +642,9 @@ void loop(){
   
 
   //----- Section AA9 ----- See if GUI definitions have changed
-  if(guiFlag == 0) {  //No new GUI definitions
+  //if(guiFlag == 0) {  //No new GUI definitions
     //return;  //break out of main funtion if no new definitions have come in.  POSSIBLY REMOVE THE HARD RETURN?
-  }
+  //}
   if(guiFlag == 1) {  //If there are new GUI definitions...
     Serial.println("Program.txt updated");
     
@@ -676,7 +661,7 @@ void loop(){
     //----- Section AB3 -----
     //FUNCTION TO SAVE DEFINITIONS TO SD CARD
 
-    //CHECK TO SEE IF SD CARD IS THERE 
+    //CHECK TO SEE IF SD CARD IS THERE
     
     //----- Section AB4 -----
     //FUNCTION TO READ DEFINITIONS ON SD CARD
@@ -737,13 +722,6 @@ char* open_file(char* input_file){
 char convert(char* readString){
   char* col[7];
   char* tok;
-  //byte input_arr[6]; inputArray
-  //byte in_onoff[6];
-  //unsigned int ondelay[6];
-  //byte out_arr[6];
-  //byte out_onoff[6];
-  //unsigned int duration[6];
-  
   byte i = 0;
  
   // We're using a character array instead of the built-in String class because
@@ -754,128 +732,130 @@ char convert(char* readString){
   // maximum size that the variable "byte i" will index.  If you need a bigger
   // array, make i an int.  
   
-// Split readString into columns with comma-separated values.  Columns
-      // are separated by semicolons.  The first time you call strtok, you
-      // pass the string (char array) you want to work on.  It returns a
-      // a string with everything up to the delimiter you set.  For
-      // subsequent calls, you pass NULL, and the function keeps working on
-      // the original string.  Since we've set up the client to send 6
-      // columns, we call the function 6 times.  The check for tok == NULL is
-      // there in case there's a problem and we don't get the full packet.
-      // This may help it fail more gracefully.
-      tok = strtok(readString, ";");
-      col[0] = tok;
-      for (i = 1; i < 7; i++) {
-        if (tok == NULL)
-          break;
-        tok = strtok(NULL, ";");
-        col[i] = tok;
-      }
+  // Split readString into columns with comma-separated values.  Columns
+  // are separated by semicolons.  The first time you call strtok, you
+  // pass the string (char array) you want to work on.  It returns a
+  // a string with everything up to the delimiter you set.  For
+  // subsequent calls, you pass NULL, and the function keeps working on
+  // the original string.  Since we've set up the client to send 6
+  // columns, we call the function 6 times.  The check for tok == NULL is
+  // there in case there's a problem and we don't get the full packet.
+  // This may help it fail more gracefully.
+  tok = strtok(readString, ";");
+  col[0] = tok;
+  for (i = 1; i < 7; i++) {
+    if (tok == NULL)
+      break;
+    tok = strtok(NULL, ";");
+    col[i] = tok;
+  }
+
       
-      // Now turn the array of strings into arrays of numbers.  Each array is
-      // named for the column it represents.  The values are separated by
-      // commas.  atoi is used to convert the stringified numbers back into
-      // integers.  The values returned by atoi, which are ints, are cast
-      // into the appropriate data type.  (That's what the (byte) before
-      // atoi(tok) is doing.)  It would be more graceful to create a function
-      // to do this, rather than repeat it 6 times.
-      // input_arr
-      tok = strtok(col[0], ",");
-      for (i = 0; i < 6; i++) {
-        if (tok == NULL)
-          break;
-        inputArray[i] = (byte)atoi(tok);
-        tok = strtok(NULL, ",");
-      }
-      // in_onoff
-      tok = strtok(col[1], ",");
-      for (i = 0; i < 6; i++) {
-        if (tok == NULL)
-          break;
-        inputHiLowArray[i] = (byte)atoi(tok);
-        tok = strtok(NULL, ",");
-      }
-      // ondelay
-      tok = strtok(col[2], ",");
-      for (i = 0; i < 6; i++) {
-        if (tok == NULL)
-          break;
-        DelayRow[i] = (unsigned int)atoi(tok);
-        tok = strtok(NULL, ",");
-      }
-      // out_arr
-      tok = strtok(col[3], ",");
-      for (i = 0; i < 6; i++) {
-        if (tok == NULL)
-          break;
-        outputArray[i] = (byte)atoi(tok);
-        tok = strtok(NULL, ",");
-      }
-      // out_onoff
-      tok = strtok(col[4], ",");
-      for (i = 0; i < 6; i++) {
-        if (tok == NULL)
-          break;
-        outputHiLowArray[i] = (byte)atoi(tok);
-        tok = strtok(NULL, ",");
-      }
-      // duration type
-      tok = strtok(col[5], ",");
-      for (i = 0; i < 6; i++) {
-        if (tok == NULL)
-          break;
-        durationType[i] = (unsigned int)atoi(tok);
-        tok = strtok(NULL, ",");
-      }
-      // duration
-      tok = strtok(col[6], ",");
-      for (i = 0; i < 6; i++) {
-        if (tok == NULL)
-          break;
-        DurationRow[i] = (unsigned int)atoi(tok);
-        tok = strtok(NULL, ",");
-      }
-      
-      // Now print out all the values to make sure it all worked
-      Serial.print("Input array: ");
-      for (i = 0; i < 6; i++){
-        Serial.print(inputArray[i]);
-        Serial.print(" ");
-      }
-      
-      Serial.print("\ninputHiLowArray: ");
-      for (i = 0; i < 6; i++){
-        Serial.print(inputHiLowArray[i]);
-        Serial.print(" ");
-      }
-      
-      Serial.print("\nOn delay: ");
-      for (i = 0; i < 6; i++){
-        Serial.print(DelayRow[i]);
-        Serial.print(" ");
-      }
-      
-      Serial.print("\nOutput array: ");
-      for (i = 0; i < 6; i++){
-        Serial.print(outputArray[i]);
-        Serial.print(" ");
-      }
-      
-      Serial.print("\nOutput on/off: ");
-      for (i = 0; i < 6; i++){
-        Serial.print(outputHiLowArray[i]);
-        Serial.print(" ");
-      }
-      
-      Serial.print("\nDuration Type: ");
-      for (i = 0; i < 6; i++){
-        Serial.print(durationType[i]);
-        Serial.print("\n");
-      }
-      
-      Serial.print("\nDuration: ");
-      for (i = 0; i < 6; i++){
-        Serial.print(DurationRow[i]);
-        Serial.print("\n");
-      }
+  // Now turn the array of strings into arrays of numbers.  Each array is
+  // named for the column it represents.  The values are separated by
+  // commas.  atoi is used to convert the stringified numbers back into
+  // integers.  The values returned by atoi, which are ints, are cast
+  // into the appropriate data type.  (That's what the (byte) before
+  // atoi(tok) is doing.)  It would be more graceful to create a function
+  // to do this, rather than repeat it 6 times.
+  // input_arr
+  tok = strtok(col[0], ",");
+  for (i = 0; i < 6; i++) {
+    if (tok == NULL)
+      break;
+    inputArray[i] = (byte)atoi(tok);
+    tok = strtok(NULL, ",");
+  }
+  // in_onoff
+  tok = strtok(col[1], ",");
+  for (i = 0; i < 6; i++) {
+    if (tok == NULL)
+      break;
+    inputHiLowArray[i] = (byte)atoi(tok);
+    tok = strtok(NULL, ",");
+  }
+  // ondelay
+  tok = strtok(col[2], ",");
+  for (i = 0; i < 6; i++) {
+    if (tok == NULL)
+      break;
+    DelayRow[i] = (unsigned int)atoi(tok);
+    tok = strtok(NULL, ",");
+  }
+  // out_arr
+  tok = strtok(col[3], ",");
+  for (i = 0; i < 6; i++) {
+    if (tok == NULL)
+      break;
+    outputArray[i] = (byte)atoi(tok);
+    tok = strtok(NULL, ",");
+  }
+  // out_onoff
+  tok = strtok(col[4], ",");
+  for (i = 0; i < 6; i++) {
+    if (tok == NULL)
+      break;
+    outputOnOffToggleArray[i] = (byte)atoi(tok);
+    tok = strtok(NULL, ",");
+  }
+  // duration type
+  tok = strtok(col[5], ",");
+  for (i = 0; i < 6; i++) {
+    if (tok == NULL)
+      break;
+    durationType[i] = (unsigned int)atoi(tok);
+    tok = strtok(NULL, ",");
+  }
+  // duration
+  tok = strtok(col[6], ",");
+  for (i = 0; i < 6; i++) {
+    if (tok == NULL)
+      break;
+    DurationRow[i] = (unsigned int)atoi(tok);
+    tok = strtok(NULL, ",");
+  }
+  
+  // Now print out all the values to make sure it all worked
+  Serial.print("Input array: ");
+  for (i = 0; i < 6; i++){
+    Serial.print(inputArray[i]);
+    Serial.print(" ");
+  }
+  
+  Serial.print("\ninputHiLowArray: ");
+  for (i = 0; i < 6; i++){
+    Serial.print(inputHiLowArray[i]);
+    Serial.print(" ");
+  }
+  
+  Serial.print("\nOn delay: ");
+  for (i = 0; i < 6; i++){
+    Serial.print(DelayRow[i]);
+    Serial.print(" ");
+  }
+  
+  Serial.print("\nOutput array: ");
+  for (i = 0; i < 6; i++){
+    Serial.print(outputArray[i]);
+    Serial.print(" ");
+  }
+  
+  Serial.print("\nOutput on/off: ");
+  for (i = 0; i < 6; i++){
+    Serial.print(outputOnOffToggleArray[i]);
+    Serial.print(" ");
+  }
+  
+  Serial.print("\nDuration Type: ");
+  for (i = 0; i < 6; i++){
+    Serial.print(durationType[i]);
+    Serial.print("\n");
+  }
+  
+  Serial.print("\nDuration: ");
+  for (i = 0; i < 6; i++){
+    Serial.print(DurationRow[i]);
+    Serial.print("\n");
+  }
+  
 }//end convert cupcake string to arrays function
