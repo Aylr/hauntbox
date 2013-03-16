@@ -13,27 +13,36 @@
 
 #define MAXROWS 6
 
+char* bonjourName = "hauntbox";      //bonjour name
+char* bonjourServiceRecord = "hauntbox._http";  //bonjour name (needs to have the "._http" at the end)
 
 int d = 0;  //Delay used in testing of code.  Set to 0 if not testing code.
 
 //--------------------Define/get variables from GUI-------------------------------------
-int guiFlag = 0;  //GUI Flag tells us when there are new definitions from the GUI
+int guiFlag = 0;  //GUI Flag tells us when there is a new program.txt/settings.txt from the GUI
 
-//THESE VALUES ARE SET ARBITRARILY TO TEST CODE.  WILL NEED TO CHANGE IN FINAL VERSION!
-byte inputArray[] =       {1, 6, 6, 6, 6, 6};    //which input (0-6) is read by which row ({row0, row1, ...})
-                                                //0 = no input, 1 = input #1, 2 = input #2, etc
+//"Program" arrays
+byte inputArray[] =       {1, 2, 3, 4, 5, 6};   //which input (0-6) is read by which row ({row0, row1, ...})
+                                                  //0 = no input, 1 = input #1, 2 = input #2, etc
+byte inputOnOffArray[] =  {1, 1, 1, 1, 1, 1};   //when input is on/off
+unsigned int delayArray[] = {0, 0, 0, 0, 0, 0};   //actual delay in milliseconds
+byte outputArray[] =      {1, 2, 3, 4, 5, 6};   //which outputs (0-6) are controlled by which row ({row0, row1, ...})
+                                                  //0 = no output, 1 = output #1, 2 = output #2, etc
+byte outputOnOffToggleArray[] = {1,1,1,1,1,1};  //What the output should do (on/off/toggle)
+int durationTypeArray[] = {0,1,2,0,1,2};             //The type of duration
+                                                  //0 = until further notice, 1 = while input active, 2 = for ...
+unsigned int durationArray[] = {1000, 6000, 6000, 6000, 6000, 6000};  //actual effect duration in milliseconds
 
-byte inputHiLowArray[] =  {1, 1, 1, 1, 1, 0};    //What signal level is considered "on" for input # ({input1, input2, ...})
-                                                //1 = High, 0 = Low
-byte inputLEDArray [] =  {39,32,33,34,35,36};
-                                                
-byte outputArray[] =      {1, 2, 3, 4, 5, 6};    //which outputs (0-6) are controlled by which row ({row0, row1, ...})
-                                                //0 = no output, 1 = output #1, 2 = output #2, etc
-                                                
-byte outputHiLowArray[] = {1, 1, 1, 1, 1, 1};    //Output considered on when High (1) or Low (0)
-unsigned int DelayRow[] = {0, 2000, 3000, 4000, 5000, 6000};     //Time in millis
-unsigned int DurationRow[] = {1000, 6000, 6000, 6000, 6000, 6000};  //Time in millis  //TURN INTO AN ARRAY FOR FINAL CODE
-int durationType[] = {0,1,2,0,1,2};  //The type of duration 0 = until further notice, 1 = while input active, 2 = for ...
+//"Settings" arrays
+byte inputActiveHiLowArray[] =  {1, 1, 1, 1, 1, 0};   //What signal level is considered "on" for input # ({input1, input2, ...})
+                                                      //1 = High, 0 = Low
+byte outputActiveHiLowArray[] = {1, 1, 1, 1, 1, 1};   //Output considered on when High (1) or Low (0)
+int inputTriggerThresholdArray[] = {100,100,100,100,100,100};//input trigger thresholds
+unsigned int inputRetriggerDelayArray[] = {0,0,0,0,0,0};  //retrigger time in milliseconds
+
+
+//Other arrays
+byte inputLEDArray [] =  {39,32,33,34,35,36};   //the LEDs that indicate an input is triggered
 
 
 //----------------------Define variables in code-----------------------------
@@ -46,7 +55,7 @@ unsigned long timeStampDelayRow[6];    //gets initialized immediately before it 
 unsigned long timeStampDurationRow[6]; //gets initialized immediately before it is used
 unsigned long nowTime;
 unsigned long netTime;
-int ini = 0;      //Initialization variable
+int statesInitialized = 0;      //keeps track if the states have been initialized
 unsigned long tempStampA;
 unsigned long tempStampB;
 
@@ -75,19 +84,10 @@ int pinOut6 = 37; //Digital pin
 // Pin 13 (SCK)
 
 
-/****************VALUES YOU CHANGE*************/
-// pin 4 is the SPI select pin for the SDcard if using an ethernet shield
-const int SD_CS = 4;//31;//4;        //****CHANGE TO PIN 31 FOR REAL HAUNTBOX RATHER THAN STACK'O'SHIELDS
-
-// pin 10 is the SPI select pin for the Ethernet if using an ethernet shield
-const int ETHER_CS = 10;//53;//10;      //****** CHANGE TO PIN 53 FOR REAL HAUNTBOX RATHER THAN STACK'O'SHIELDS
-
-// Don't forget to modify the IP to an available one on your home network
-byte ip[] = { 192, 168, 0, 100 };
-
-
-/*********************************************/
-char StorageString[100];
+const int SD_CS = 4;      // pin 4 is the SPI select pin for the SDcard
+const int ETHER_CS = 10;  // pin 10 is the SPI select pin for the Ethernet
+byte ip[] = { 192, 168, 0, 100 }; // Static fallback IP
+char StorageString[100];    //used to parse incoming data from the web gui
 static uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xEE };
 char* browser_header = "HTTP/1.0 200 OK\nContent-Type: text/html\n";  //2 line header including mandatory blank line to signify data below
 
@@ -237,7 +237,8 @@ boolean output_status_handler(TinyWebServer& web_server) {
 
 
 // -------------------- file uploader -------------------- 
-byte tempGuiFlag = 0;
+byte tempGuiFlag = 0;   //remembers guiFlag state in between loops (this is called 3 times: start, write, end)
+                        //so we have to only set the real guiFlag after all 3 steps
 
 void file_uploader_handler(TinyWebServer& web_server,
 			   TinyWebPutHandler::PutAction action,
@@ -259,9 +260,9 @@ void file_uploader_handler(TinyWebServer& web_server,
 	Serial << F("Creating ") << fname << "\n";
 	file.open(&root, fname, O_CREAT | O_WRITE | O_TRUNC);
 
-        //IF PROGRAM.TXT WAS UPDATED, TRIGGER UPDATE TO PROGRAM ARRAYS
+        //IF PROGRAM.TXT OR SETTINGS.TXT WERE UPDATED, TRIGGER UPDATE ARRAYS
         Serial.println(fname);
-        if (strcmp(fname,"PROGRAM.TXT") == 0){    //strcmp compares the pointer to the string 0 means equal.
+        if ((strcmp(fname,"PROGRAM.TXT") == 0) || (strcmp(fname,"SETTINGS.TXT") == 0)){    //strcmp compares the pointer to the string 0 means equal.
           tempGuiFlag = 1;
         }
         Serial.println("case START");
@@ -365,6 +366,7 @@ void setup() {
       
       Serial << F("Static IP on\n");
       Serial << ip_temp;
+      Ethernet.begin(mac,ip);                                 //setup with static address
     }else{      //if there is not a static ip specified... use DHCP
       Serial << F("Setting up the Ethernet card...\n");
       if (Ethernet.begin(mac) == 0) {                          // Initialize ethernet with DHCP
@@ -385,8 +387,8 @@ void setup() {
   web.begin();
   
   // Start the bonjour/zeroconf service
-  EthernetBonjour.begin("hauntbox");                                        //Set the advertised name
-  EthernetBonjour.addServiceRecord("Hauntbox._http", 80, MDNSServiceTCP);   //Set the advertised port/service
+  EthernetBonjour.begin(bonjourName);        //Set the advertised name
+  EthernetBonjour.addServiceRecord(bonjourServiceRecord, 80, MDNSServiceTCP);   //Set the advertised port/service
 
   Serial << F("Ready to accept HTTP requests.\n");
   
@@ -418,20 +420,24 @@ void setup() {
 //----- AA1b -- Initialize Output Function -----
 // Function that initializes the outputs states to "off"
 void initializeFunction() {
+  // load settings and program from SD card
+
+  //if they aren't there, create an intelligent default
   delay(d*3);
 
   for(int a = 0; a < 6; a++) {
     outputState[a] = 0;     //start with all pins off.
+    outputSelectFunction(a, outputState[a]);  //set output according to outputState[] map
   }
+  statesInitialized = 1;
   delay(d*3);
 }
 
 //----- Section AA4b -----
-// Function that pairs the input pin state to the row that is listening for it
-// Returns int 1 for "on" or 0 for "off"
-// This actually reads the sensor and interperets what the value means
-int inputSelectFunction(int rowNumber) {
-  int trig;
+// Function that reads sensor, interprets what the value means (active hi/low) and 
+//returns int 1 for "triggered" or 0 for "not triggered"
+int decipherInputSensor(int rowNumber) {
+  int trig; //returns 1 if input is considered triggered, 0 if not
   int val;
   int x;
   int y;
@@ -442,17 +448,40 @@ int inputSelectFunction(int rowNumber) {
   if(x == 3) {val = analogRead(pinIn3);}
   if(x == 4) {val = analogRead(pinIn4);}
   if(x == 5) {val = analogRead(pinIn5);}
-  if(x == 6) {val = analogRead(pinIn6);} 
-  y = inputHiLowArray[x-1];  //Returns High/Low definition for corresponding input
-  if((y == 1) && (val >= 512)) {trig = 1;}    // if high and supposed to be, trigger on
-  if((y == 0) && (val >= 512)) {trig = 0;}    // if low and supposed to be high, don't trigger
-  if((y == 1) && (val < 512)) {trig = 0;}
-  if((y == 0) && (val < 512)) {trig = 1;}
+  if(x == 6) {val = analogRead(pinIn6);}
+
+  y = inputActiveHiLowArray[x-1];  //Returns Acvive High/Low definition for corresponding input
+      //x-1 because in the inputArray we are using 0 as "none"
+      //wherease in inputActiveHiLowArray we are not
+
+  if((y == 1) && (val >= inputTriggerThresholdArray[rowNumber])) {trig = 1;}    // if high and supposed to be, consider input "triggered"
+  if((y == 0) && (val >= inputTriggerThresholdArray[rowNumber])) {trig = 0;}    // if low and supposed to be high, don't
+  if((y == 1) && (val <  inputTriggerThresholdArray[rowNumber])) {trig = 0;}
+  if((y == 0) && (val <  inputTriggerThresholdArray[rowNumber])) {trig = 1;}    // if low and supposed to be, consider input "triggered"
   return trig;
 }
 
+
+//function that matches up the input state (triggered or not) with
+//the GUI dropdown "When input is [on/off]" to see if action should be taken
+  //The logic is deceptively simple since we are using booleans.
+  //If triggered (1) == on (1)  --> take action (1)
+  //if triggered (1) != off (0) --> don't
+  //if not trig (0)  == off (0) --> take action (1)
+  //if not trig (0)  != on (1)  --> don't
+  //Therefore, only take action when they == each other
+bool inputTakeAction(int rowNumber) {
+  bool shouldItTakeAction;
+  if ( decipherInputSensor(rowNumber) == inputOnOffArray[rowNumber] ){
+    shouldItTakeAction = 1;
+  }else{
+    shouldItTakeAction = 0;
+  }
+  return shouldItTakeAction;
+}
+
 //  Function to write messages to gui            CURRENTLY WRITTEN FOR SERIAL, NOT GUI!
-void guiMess(int n) {
+void statusMessage(int n) {
   if (n==1) {Serial.println("Definitions don't make sense");}
   if (n==2) {Serial.println("No SD Card anymore");}
   if (n==3) {Serial.println("Problem opening file on SD card");}
@@ -474,7 +503,7 @@ void outputSelectFunction(int outputNumber, bool action) {
   int x;      //local variable
   int y;
   x = outputArray[outputNumber]; //lookup which output is being controlled
-  y = outputHiLowArray[x-1];// lookup which value is considered "on"
+  y = outputActiveHiLowArray[x-1];// lookup which value is considered "on"
   
   if(action == 1) {         // turn output on
     if(y == 1) {           // "on" means turn output high
@@ -520,7 +549,7 @@ void loop(){
   delay(d/2);  //For debug use only
   
   //----- Section AA1a -----
-  if(ini == 0) {  //If the states have not been initialized, do so.
+  if(statesInitialized == 0) {  //If the states have not been initialized, do so.
     initializeFunction();
   }
   
@@ -528,7 +557,7 @@ void loop(){
   tempStampA = millis();
   for(int z = 0; z < rn; z++) {              //runs loop for each row
     if(stateRow[z] == 1) {                   //STATE 1 = Waiting for a trigger
-      trigState[z] = inputSelectFunction(z); //Call function and pass(Row number) to see if input is on or off
+      trigState[z] = inputTakeAction(z); //Call function and pass(Row number) to see if input is triggered
       if(trigState[z] == 1) {                //If triggered
         stateRow[z] = 2;                     //Moves to next state
       }
@@ -543,19 +572,19 @@ void loop(){
     else if(stateRow[z] == 3) {             //STATE 3 = Delay vs. timeStamp
       nowTime = millis();
       netTime = nowTime - timeStampDelayRow[z];
-      if(netTime >= DelayRow[z] * 1000) {   //Tests to see if time > delay
+      if(netTime >= delayArray[z] * 1000) {   //Tests to see if time > delay
         stateRow[z] = 4;                    //If we've met our delay, go to next state
       }
     }
     else if(stateRow[z] == 4) {             //STATE 4 = Change output (make it on/off/toggle)
-      if (outputHiLowArray[z] == 0)       //if it should be off
+      if (outputOnOffToggleArray[z] == 0)       //if it should be off
       {
         outputState[z] = 0;
       }
-      else if(outputHiLowArray[z] == 1){  //if it should be on
+      else if(outputOnOffToggleArray[z] == 1){  //if it should be on
         outputState[z] = 1;
       }
-      else if(outputHiLowArray[z] == 2){  //if it should toggle
+      else if(outputOnOffToggleArray[z] == 2){  //if it should toggle
         outputState[z] = !outputState[z]; //flip the bit
       }
       outputSelectFunction(z, outputState[z]);    //enact the change
@@ -564,41 +593,41 @@ void loop(){
     }
     else if(stateRow[z] == 5) {             //STATE 5 = Duration of output "on"
       //switch for 3 different duration types
-      if (durationType[z] == 0) {  //"until further notice"
+      if (durationTypeArray[z] == 0) {  //"until further notice"
         stateRow[z] = 1;  //reset row state to waiting for trigger
       }
-      else if(durationType[z] == 1) {  //"while input triggered"
+      else if(durationTypeArray[z] == 1) {  //"while input triggered"
         if(trigState[z] == 0){  //trigger has stopped active
-          if (outputHiLowArray[z] == 1) //if on, turn back off
+          if (outputOnOffToggleArray[z] == 1) //if on, turn back off
           {
             outputState[z] = 0;
             outputSelectFunction(z, 0);
           }
-          else if(outputHiLowArray[z] == 0){ //if off, turn back on
+          else if(outputOnOffToggleArray[z] == 0){ //if off, turn back on
             outputState[z] = 1;
             outputSelectFunction(z, 1);
           }
-          else if(outputHiLowArray[z] == 2){  //if toggle
+          else if(outputOnOffToggleArray[z] == 2){  //if toggle
             outputState[z] = !outputState[z]; //change the current state
             outputSelectFunction(z, outputState[z]);
           }
            stateRow[z] = 1;
         }
       }
-      else if (durationType[z] == 2) {    //"for...seconds"
+      else if (durationTypeArray[z] == 2) {    //"for...seconds"
         nowTime = millis();
         netTime = nowTime - timeStampDurationRow[z];
-        if(netTime >= DurationRow[z] * 1000) {
-          if (outputHiLowArray[z] == 1) //if on, turn back off
+        if(netTime >= durationArray[z] * 1000) {
+          if (outputOnOffToggleArray[z] == 1) //if on, turn back off
           {
             outputState[z] = 0;
             outputSelectFunction(z, 0);
           }
-          else if(outputHiLowArray[z] == 0){ //if off, turn back on
+          else if(outputOnOffToggleArray[z] == 0){ //if off, turn back on
             outputState[z] = 1;
             outputSelectFunction(z, 1);
           }
-          else if(outputHiLowArray[z] == 2){  //if toggle
+          else if(outputOnOffToggleArray[z] == 2){  //if toggle
             outputState[z] = !outputState[z]; //change the current state
             outputSelectFunction(z, outputState[z]);
           }
@@ -606,8 +635,14 @@ void loop(){
         }
       }
     }
-
-    else {                                 //if state is not 1-5, set to 1 (waiting)
+    else if(stateRow[z] == 6) {             //STATE 6 = retrigger delay holding state (kind of like a lobby)
+      nowTime = millis();
+      netTime = nowTime - timeStampDelayRow[z];
+      if(netTime >= inputRetriggerDelayArray[z] * 1000) {          //Tests to see if time > delay
+        stateRow[z] = 1;                    //If we've met our delay, go to next state
+      }
+    }
+    else {                                 //if state is not 1-6, set to 1 (waiting)
       stateRow[z] = 1;                     // this is to increase robustness
 //m      Serial.print("Initializing Row State ");
 //m      Serial.println(z);
@@ -617,7 +652,7 @@ void loop(){
     
   //----- Section AA5 ----- Update the Status LEDs on shield -----
   for(int z = 0; z < rn; z++) {              //runs loop for each row
-    trigState[z] = inputSelectFunction(z); //Call function and pass(Row number) to see if input is on or off
+    trigState[z] = decipherInputSensor(z); //Call function and pass(Row number) to see if input is on or off
       if(trigState[z] == 1) {                //If input is "on"
         digitalWrite(inputLEDArray[z],HIGH);  //turn on appropriate LED array
       }
@@ -646,22 +681,28 @@ void loop(){
     //return;  //break out of main funtion if no new definitions have come in.  POSSIBLY REMOVE THE HARD RETURN?
   //}
   if(guiFlag == 1) {  //If there are new GUI definitions...
-    Serial.println("Program.txt updated");
+    Serial.println("new info from gui received");
     
     //----- Section AB1 -----
-    // PUT FUNCTION HERE TO READ GUI DEFINITIONS
-    char* newvar = open_file("program.txt");    //store the file in a var
-    
-    Serial.println(newvar);                      //print the file out
-    convert(newvar);                            //convert the file to arrays
+    //READ program.txt and settings.txt
+    char* newvar = open_file("program.txt");  //store the program.txt in a var
+    Serial.println(newvar);                   //print the file out
+    convert(newvar,1);                        //convert the file to arrays
+    //newvar = 0;                               //erase the newvar
+    //newvar = open_file("settings.txt");       //store the settings.txt in a var
+    //Serial.println(newvar);                   //print the file out
+    //convert(newvar,0);                        //convert the file to arrays
+
     
     //----- Section AB2 -----
     //FUNCTION TO MAKE SURE GUI DEFINITIONS MAKE SENSE
-     
+    
     //----- Section AB3 -----
     //FUNCTION TO SAVE DEFINITIONS TO SD CARD
+    //saved to disk with the put handler
 
     //CHECK TO SEE IF SD CARD IS THERE
+    //already done with has_filesystem
     
     //----- Section AB4 -----
     //FUNCTION TO READ DEFINITIONS ON SD CARD
@@ -669,7 +710,7 @@ void loop(){
     //COMPARE TO VALUES FROM AB1
     
     //Sends GUI confirmation message
-    guiMess(5);  //GUI message #5
+    statusMessage(5);  //GUI message #5
     
     guiFlag = 0;                                //reset guiFlag
   }
@@ -679,7 +720,7 @@ void loop(){
    if (has_filesystem) {  //This tiny section runs the entire web server. Must be in void loop()
     web.process();
   }
-    EthernetBonjour.run();  //zeroconf/bonjour
+    EthernetBonjour.run();  //Runs zeroconf/bonjour. Must be in void loop()
 }// end void loop
 
 
@@ -719,7 +760,10 @@ char* open_file(char* input_file){
 
 
 //----- Section Convert cupcake string from SD/Web to arrays -----
-char convert(char* readString){
+char convert(char* readString, bool type){
+  //converts readString (data) into program or settings arrays
+  //type: 0 = settings, 1 = program
+
   char* col[7];
   char* tok;
   byte i = 0;
@@ -750,112 +794,194 @@ char convert(char* readString){
     col[i] = tok;
   }
 
-      
-  // Now turn the array of strings into arrays of numbers.  Each array is
-  // named for the column it represents.  The values are separated by
-  // commas.  atoi is used to convert the stringified numbers back into
-  // integers.  The values returned by atoi, which are ints, are cast
-  // into the appropriate data type.  (That's what the (byte) before
-  // atoi(tok) is doing.)  It would be more graceful to create a function
-  // to do this, rather than repeat it 6 times.
-  // input_arr
-  tok = strtok(col[0], ",");
-  for (i = 0; i < 6; i++) {
-    if (tok == NULL)
-      break;
-    inputArray[i] = (byte)atoi(tok);
-    tok = strtok(NULL, ",");
+  if (type == 0) {  //convert settings arrays here
+    Serial.println("converting settings.txt");
+    //inputActiveHiLow + outputActiveHiLow ; names ; names ; inputThreshold + outputVoltage (if we care) ; retriggerTime
+    //0,1,1,1,1,1,0,1,1,1,1,1;garage,my room,hall,cemetery,cornfield,swamp;UV,light,strobe,sound,air horn,zombie;492,246,103,103,103,103,103,103,103,103,103,103;1,1,1,1,1,0; 
+    //col[0] = inputActiveHiLow + outputActiveHiLow (need both)
+    //col[1] = input names (don't care)
+    //col[2] = output names  (don't care)
+    //col[3] = inputThreshold (need) + outputVoltage (if we care)
+    //col[4] = retriggerTime (need)
+
+    // Now turn the array of strings into arrays of numbers.  Each array is
+    // named for the column it represents.  The values are separated by
+    // commas.  atoi is used to convert the stringified numbers back into
+    // integers.  The values returned by atoi, which are ints, are cast
+    // into the appropriate data type.  (That's what the (byte) before
+    // atoi(tok) is doing.)  It would be more graceful to create a function
+    // to do this, rather than repeat it 6 times.
+
+    // inputActiveHiLowArray
+    tok = strtok(col[0], ",");
+    for (i = 0; i < 6; i++) {
+      if (tok == NULL)
+        break;
+      inputActiveHiLowArray[i] = (byte)atoi(tok);
+      tok = strtok(NULL, ",");
+    }
+    // outputActiveHiLowArray
+    tok = strtok(col[0], ",");
+    for (i = 6; i < 12; i++) {
+      if (tok == NULL)
+        break;
+      outputActiveHiLowArray[i] = (byte)atoi(tok);
+      tok = strtok(NULL, ",");
+    }
+    // inputTriggerThresholdArray
+    tok = strtok(col[3], ",");
+    for (i = 0; i < 6; i++) {
+      if (tok == NULL)
+        break;
+      inputTriggerThresholdArray[i] = (byte)atoi(tok);
+      tok = strtok(NULL, ",");
+    }
+    // inputRetriggerDelayArray
+    tok = strtok(col[4], ",");
+    for (i = 0; i < 6; i++) {
+      if (tok == NULL)
+        break;
+      inputRetriggerDelayArray[i] = (byte)atoi(tok);
+      tok = strtok(NULL, ",");
+    }
+    
+    
+    // Now print out all the values to make sure it all worked
+    Serial.print("inputActiveHiLowArray: ");
+    for (i = 0; i < 6; i++){
+      Serial.print(inputActiveHiLowArray[i]);
+      Serial.print(" ");
+    }
+    
+    Serial.print("\noutputActiveHiLowArray: ");
+    for (i = 0; i < 6; i++){
+      Serial.print(outputActiveHiLowArray[i]);
+      Serial.print(" ");
+    }
+    
+    Serial.print("\ninputTriggerThresholdArray: ");
+    for (i = 0; i < 6; i++){
+      Serial.print(inputTriggerThresholdArray[i]);
+      Serial.print(" ");
+    }
+    
+    Serial.print("\ninputRetriggerDelayArray: ");
+    for (i = 0; i < 6; i++){
+      Serial.print(inputRetriggerDelayArray[i]);
+      Serial.print(" ");
+    }
+  }else if (type == 1){ //convert program arrays here
+    Serial.println("converting Program.txt");
+    Serial << F("Free RAM: ") << FreeRam() << "\n";
+    // Now turn the array of strings into arrays of numbers.  Each array is
+    // named for the column it represents.  The values are separated by
+    // commas.  atoi is used to convert the stringified numbers back into
+    // integers.  The values returned by atoi, which are ints, are cast
+    // into the appropriate data type.  (That's what the (byte) before
+    // atoi(tok) is doing.)  It would be more graceful to create a function
+    // to do this, rather than repeat it 6 times.
+    // inputArray
+    tok = strtok(col[0], ",");
+    for (i = 0; i < 6; i++) {
+      if (tok == NULL)
+        break;
+      inputArray[i] = (byte)atoi(tok);
+      tok = strtok(NULL, ",");
+    }
+    // inputOnOffArray
+    tok = strtok(col[1], ",");
+    for (i = 0; i < 6; i++) {
+      if (tok == NULL)
+        break;
+      inputOnOffArray[i] = (byte)atoi(tok);
+      tok = strtok(NULL, ",");
+    }
+    // delayArray
+    tok = strtok(col[2], ",");
+    for (i = 0; i < 6; i++) {
+      if (tok == NULL)
+        break;
+      delayArray[i] = (unsigned int)atoi(tok);
+      tok = strtok(NULL, ",");
+    }
+    // outputArray
+    tok = strtok(col[3], ",");
+    for (i = 0; i < 6; i++) {
+      if (tok == NULL)
+        break;
+      outputArray[i] = (byte)atoi(tok);
+      tok = strtok(NULL, ",");
+    }
+    // outputOnOffToggleArray
+    tok = strtok(col[4], ",");
+    for (i = 0; i < 6; i++) {
+      if (tok == NULL)
+        break;
+      outputOnOffToggleArray[i] = (byte)atoi(tok);
+      tok = strtok(NULL, ",");
+    }
+    // durationTypeArray
+    tok = strtok(col[5], ",");
+    for (i = 0; i < 6; i++) {
+      if (tok == NULL)
+        break;
+      durationTypeArray[i] = (unsigned int)atoi(tok);
+      tok = strtok(NULL, ",");
+    }
+    // durationArray
+    tok = strtok(col[6], ",");
+    for (i = 0; i < 6; i++) {
+      if (tok == NULL)
+        break;
+      durationArray[i] = (unsigned int)atoi(tok);
+      tok = strtok(NULL, ",");
+    }
+    
+    // Now print out all the values to make sure it all worked
+    Serial.print("inputArray: ");
+    for (i = 0; i < 6; i++){
+      Serial.print(inputArray[i]);
+      Serial.print(" ");
+    }
+    
+    Serial.print("\ninputOnOffArray: ");
+    for (i = 0; i < 6; i++){
+      Serial.print(inputOnOffArray[i]);
+      Serial.print(" ");
+    }
+    
+    Serial.print("\ndelayArray: ");
+    for (i = 0; i < 6; i++){
+      Serial.print(delayArray[i]);
+      Serial.print(" ");
+    }
+    
+    Serial.print("\noutputArray: ");
+    for (i = 0; i < 6; i++){
+      Serial.print(outputArray[i]);
+      Serial.print(" ");
+    }
+    
+    Serial.print("\noutputOnOffToggleArray: ");
+    for (i = 0; i < 6; i++){
+      Serial.print(outputOnOffToggleArray[i]);
+      Serial.print(" ");
+    }
+    
+    Serial.print("\ndurationTypeArray: ");
+    for (i = 0; i < 6; i++){
+      Serial.print(durationTypeArray[i]);
+      Serial.print(" ");
+    }
+    
+    Serial.print("\ndurationArray: ");
+    for (i = 0; i < 6; i++){
+      Serial.print(durationArray[i]);
+      Serial.print(" ");
+    }
+    Serial.println("convert: done converting program");
+    Serial << F("Free RAM: ") << FreeRam() << "\n";
+
   }
-  // in_onoff
-  tok = strtok(col[1], ",");
-  for (i = 0; i < 6; i++) {
-    if (tok == NULL)
-      break;
-    inputHiLowArray[i] = (byte)atoi(tok);
-    tok = strtok(NULL, ",");
-  }
-  // ondelay
-  tok = strtok(col[2], ",");
-  for (i = 0; i < 6; i++) {
-    if (tok == NULL)
-      break;
-    DelayRow[i] = (unsigned int)atoi(tok);
-    tok = strtok(NULL, ",");
-  }
-  // out_arr
-  tok = strtok(col[3], ",");
-  for (i = 0; i < 6; i++) {
-    if (tok == NULL)
-      break;
-    outputArray[i] = (byte)atoi(tok);
-    tok = strtok(NULL, ",");
-  }
-  // out_onoff
-  tok = strtok(col[4], ",");
-  for (i = 0; i < 6; i++) {
-    if (tok == NULL)
-      break;
-    outputOnOffToggleArray[i] = (byte)atoi(tok);
-    tok = strtok(NULL, ",");
-  }
-  // duration type
-  tok = strtok(col[5], ",");
-  for (i = 0; i < 6; i++) {
-    if (tok == NULL)
-      break;
-    durationType[i] = (unsigned int)atoi(tok);
-    tok = strtok(NULL, ",");
-  }
-  // duration
-  tok = strtok(col[6], ",");
-  for (i = 0; i < 6; i++) {
-    if (tok == NULL)
-      break;
-    DurationRow[i] = (unsigned int)atoi(tok);
-    tok = strtok(NULL, ",");
-  }
-  
-  // Now print out all the values to make sure it all worked
-  Serial.print("Input array: ");
-  for (i = 0; i < 6; i++){
-    Serial.print(inputArray[i]);
-    Serial.print(" ");
-  }
-  
-  Serial.print("\ninputHiLowArray: ");
-  for (i = 0; i < 6; i++){
-    Serial.print(inputHiLowArray[i]);
-    Serial.print(" ");
-  }
-  
-  Serial.print("\nOn delay: ");
-  for (i = 0; i < 6; i++){
-    Serial.print(DelayRow[i]);
-    Serial.print(" ");
-  }
-  
-  Serial.print("\nOutput array: ");
-  for (i = 0; i < 6; i++){
-    Serial.print(outputArray[i]);
-    Serial.print(" ");
-  }
-  
-  Serial.print("\nOutput on/off: ");
-  for (i = 0; i < 6; i++){
-    Serial.print(outputOnOffToggleArray[i]);
-    Serial.print(" ");
-  }
-  
-  Serial.print("\nDuration Type: ");
-  for (i = 0; i < 6; i++){
-    Serial.print(durationType[i]);
-    Serial.print("\n");
-  }
-  
-  Serial.print("\nDuration: ");
-  for (i = 0; i < 6; i++){
-    Serial.print(DurationRow[i]);
-    Serial.print("\n");
-  }
-  
+
 }//end convert cupcake string to arrays function
