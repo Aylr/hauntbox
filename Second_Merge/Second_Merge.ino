@@ -107,6 +107,7 @@ TinyWebServer::PathHandler handlers[] = {
   {"/", TinyWebServer::GET, &index_handler },
   {"/ram", TinyWebServer::GET, &ram_handler },
   {"/row_status", TinyWebServer::GET, &row_status_handler },
+  {"/status", TinyWebServer::GET, &status_handler },
   {"/output_status", TinyWebServer::GET, &output_status_handler },
   {"/program", TinyWebServer::GET, &program_handler },
   {"/settings", TinyWebServer::GET, &settings_handler },
@@ -218,6 +219,39 @@ boolean row_status_handler(TinyWebServer& web_server) {
   }
   return true;
 }
+
+
+// -------------------- status handler -------------------- 
+boolean status_handler(TinyWebServer& web_server) {
+  web_server.send_error_code(200);
+  web_server.send_content_type("text/plain");
+  web_server.end_headers();
+  
+  Client& client = web_server.get_client();
+  for (int i = 0; i < 6; i++){
+    client.print(trigState[i], DEC);
+    if(i < 5){
+      client.print(",");
+    }
+  }
+  client.print(";");
+  for (int i = 0; i < 6; i++){
+    client.print(stateRow[i], DEC);
+    if(i < 5){
+      client.print(",");
+    }
+  }
+  client.print(";");
+  for (int i = 0; i < 6; i++){
+    client.print(outputState[i], DEC);
+    if(i < 5){
+      client.print(",");
+    }
+  }
+  client.print(";");
+  return true;
+}
+
 
 // -------------------- output status handler -------------------- 
 boolean output_status_handler(TinyWebServer& web_server) {
@@ -632,7 +666,7 @@ void loop(){
             outputState[z] = !outputState[z]; //change the current state
             outputSelectFunction(z, outputState[z]);
           }
-          
+
           stateRow[z] = 6;    //move to next state (retrigger delay)
         }
       }
