@@ -594,7 +594,7 @@ void loop(){
     else if(stateRow[z] == 5) {             //STATE 5 = Duration of output "on"
       //switch for 3 different duration types
       if (durationTypeArray[z] == 0) {  //"until further notice"
-        stateRow[z] = 1;  //reset row state to waiting for trigger
+        stateRow[z] = 6;  //move to next state (retrigger delay)
       }
       else if(durationTypeArray[z] == 1) {  //"while input triggered"
         if(trigState[z] == 0){  //trigger has stopped active
@@ -611,7 +611,8 @@ void loop(){
             outputState[z] = !outputState[z]; //change the current state
             outputSelectFunction(z, outputState[z]);
           }
-           stateRow[z] = 1;
+          
+          stateRow[z] = 6; //move to next state (retrigger delay)
         }
       }
       else if (durationTypeArray[z] == 2) {    //"for...seconds"
@@ -631,7 +632,8 @@ void loop(){
             outputState[z] = !outputState[z]; //change the current state
             outputSelectFunction(z, outputState[z]);
           }
-          stateRow[z] = 1;                   //Moves on to trigger-waiting state
+          
+          stateRow[z] = 6;    //move to next state (retrigger delay)
         }
       }
     }
@@ -639,7 +641,7 @@ void loop(){
       nowTime = millis();
       netTime = nowTime - timeStampDelayRow[z];
       if(netTime >= inputRetriggerDelayArray[z] * 1000) {          //Tests to see if time > delay
-        stateRow[z] = 1;                    //If we've met our delay, go to next state
+        stateRow[z] = 1;                    //If we've met our delay, go back to waiting for trigger state
       }
     }
     else {                                 //if state is not 1-6, set to 1 (waiting)
