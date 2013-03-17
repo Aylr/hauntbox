@@ -11,6 +11,7 @@
 #include <TinyWebServer.h>
 #include <EthernetBonjour.h>
 
+#define DEBUG true
 #define MAXROWS 6
 
 char* bonjourName = "hauntbox";      //bonjour name
@@ -25,20 +26,20 @@ int guiFlag = 0;  //GUI Flag tells us when there is a new program.txt/settings.t
 byte inputArray[] =       {1, 2, 3, 4, 5, 6};   //which input (0-6) is read by which row ({row0, row1, ...})
                                                   //0 = no input, 1 = input #1, 2 = input #2, etc
 byte inputOnOffArray[] =  {1, 1, 1, 1, 1, 1};   //when input is on/off
-unsigned int delayArray[] = {0, 0, 0, 0, 0, 0};   //actual delay in milliseconds
+unsigned long delayArray[] = {0, 0, 0, 0, 0, 0};   //actual delay in milliseconds
 byte outputArray[] =      {1, 2, 3, 4, 5, 6};   //which outputs (0-6) are controlled by which row ({row0, row1, ...})
                                                   //0 = no output, 1 = output #1, 2 = output #2, etc
 byte outputOnOffToggleArray[] = {1,1,1,1,1,1};  //What the output should do (on/off/toggle)
-int durationTypeArray[] = {0,1,2,0,1,2};             //The type of duration
+byte durationTypeArray[] = {0,1,2,0,1,2};             //The type of duration
                                                   //0 = until further notice, 1 = while input active, 2 = for ...
-unsigned int durationArray[] = {1000, 6000, 6000, 6000, 6000, 6000};  //actual effect duration in milliseconds
+unsigned long durationArray[] = {1000, 6000, 6000, 6000, 6000, 6000};  //actual effect duration in milliseconds
 
 //"Settings" arrays
 byte inputActiveHiLowArray[] =  {1, 1, 1, 1, 1, 0};   //What signal level is considered "on" for input # ({input1, input2, ...})
                                                       //1 = High, 0 = Low
 byte outputActiveHiLowArray[] = {1, 1, 1, 1, 1, 1};   //Output considered on when High (1) or Low (0)
-int inputTriggerThresholdArray[] = {100,100,100,100,100,100};//input trigger thresholds
-unsigned int inputRetriggerDelayArray[] = {0,0,0,0,0,0};  //retrigger time in milliseconds
+unsigned int inputTriggerThresholdArray[] = {100,100,100,100,100,100};//input trigger thresholds
+unsigned long inputRetriggerDelayArray[] = {0,0,0,0,0,0};  //retrigger time in milliseconds
 
 
 //Other arrays
@@ -261,7 +262,6 @@ void file_uploader_handler(TinyWebServer& web_server,
 	file.open(&root, fname, O_CREAT | O_WRITE | O_TRUNC);
 
         //IF PROGRAM.TXT OR SETTINGS.TXT WERE UPDATED, TRIGGER UPDATE ARRAYS
-        Serial.println(fname);
         if ((strcmp(fname,"PROGRAM.TXT") == 0) || (strcmp(fname,"SETTINGS.TXT") == 0)){    //strcmp compares the pointer to the string 0 means equal.
           tempGuiFlag = 1;
         }
@@ -306,7 +306,7 @@ void setup() {
   int i;
   
   Serial.begin(115200);
-  Serial << F("Free RAM: ") << FreeRam() << "\n";
+  Serial << F("Starting up Hauntbox. Free RAM: ") << FreeRam() << "\n";
 
   pinMode(SS_PIN, OUTPUT);	// set the SS pin as an output (necessary to keep the board as master and not SPI slave)
   digitalWrite(SS_PIN, HIGH);	// and ensure SS is high
@@ -688,10 +688,16 @@ void loop(){
     char* newvar = open_file("program.txt");  //store the program.txt in a var
     Serial.println(newvar);                   //print the file out
     convert(newvar,1);                        //convert the file to arrays
-    //newvar = 0;                               //erase the newvar
-    //newvar = open_file("settings.txt");       //store the settings.txt in a var
-    //Serial.println(newvar);                   //print the file out
-    //convert(newvar,0);                        //convert the file to arrays
+    Serial.println("made it through program.txt conversion");
+    newvar = 0;                               //erase the newvar
+    Serial.println("reset newvar to 0");
+    
+    newvar = open_file("settings.txt");       //store the settings.txt in a var
+    Serial.println("opening settings.txt");
+    Serial.println(newvar);                   //print the file out
+    Serial.println("printed settings.txt");
+    convert(newvar,0);                        //convert the file to arrays
+    Serial.println("made it through conversion of settings.txt");
 
     
     //----- Section AB2 -----
@@ -726,28 +732,48 @@ void loop(){
 
 //----- Section open SD file for conversion to arrays -----
 char* open_file(char* input_file){
-  char storage[150];                    //used to store read stuff
-  char ch;                              //used to store incoming byte
-  byte i = 0;                           //used as counter for building string
-  char* fail = "";                      //the failure return
+  Serial.print("\nopen_file(");
+  Serial.print(input_file);
+  Serial.print(") called\n");
+  char storage[400] = {0};             //used to store read stuff
+  char ch;                             //used to store incoming byte
+  int i = 0;                           //used as counter for building string
+  char* fail = "";                     //the failure return
   
-  Serial.print("SD.begin = ");
-  Serial.print(SD.begin(SD_CS));
-  Serial.print(", has_filesystem = ");
-  Serial.println(has_filesystem);
+  #ifdef DEBUG
+    Serial.print("SD.begin = ");
+    Serial.print(SD.begin(SD_CS));
+    Serial.print(", has_filesystem = ");
+    Serial.println(has_filesystem);
+  #endif
   
   File file = SD.open(input_file);
   
-  Serial.print("input_file = ");
-  Serial.print(input_file);
-  Serial.print(", file read = ");
-  Serial.println(file);
+  #ifdef DEBUG
+    Serial.print("input_file = ");
+    Serial.print(input_file);
+    Serial.print(", file read = ");
+    Serial.println(file);
+  #endif
   
   if (file) {                           //if there's a file
-    Serial.println(input_file);
+
+    #ifdef DEBUG
+      Serial.print("*****did we make it? File.available() = ");
+      Serial.println(file.available());
+      Serial.println(input_file);
+      Serial.println("we made it!");
+    #endif
+
     while (file.available()) {          //if there are unread bytes in the file
       ch = file.read();                 //read one
       storage[i] = ch;                  //append it to storage
+      #ifdef DEBUG
+        Serial.print(i);
+        Serial.print(" ");
+        Serial.println(ch);
+      #endif
+
       i ++;                             //inc counter
     }
     file.close();                      //close the file
