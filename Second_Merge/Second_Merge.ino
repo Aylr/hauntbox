@@ -111,6 +111,9 @@ TinyWebServer::PathHandler handlers[] = {
   {"/output_status", TinyWebServer::GET, &output_status_handler },
   {"/program", TinyWebServer::GET, &program_handler },
   {"/settings", TinyWebServer::GET, &settings_handler },
+  {"/manual", TinyWebServer::POST, &manual_handler },
+  {"/all_off", TinyWebServer::GET, &all_off_handler },
+  {"/all_on", TinyWebServer::GET, &all_on_handler },
   {"/upload/" "*", TinyWebServer::PUT, &TinyWebPutHandler::put_handler },
   {"/" "*", TinyWebServer::GET, &file_handler },
   {NULL},
@@ -204,8 +207,98 @@ boolean ram_handler(TinyWebServer& web_server) {
 }
 
 
+// -------------------- manual handler -------------------- 
+boolean manual_handler(TinyWebServer& web_server) {
+  web_server.send_error_code(200);
+  //web_server.send_content_type("text/plain");
+  //web_server.end_headers();
+
+  Client& client = web_server.get_client();
+  if (client.available()) {
+    bool tempOnOff = 0;             //keeps track of if we want it on or off
+    int tempOutput = 0;             //keeps track of which input
+    
+    char ch = (char)client.read();  //throw away the first two characters in "a=11"
+    ch = (char)client.read();       //throw away the first two characters in "a=11"
+    ch = (char)client.read();       //now get the first integer 1
+    char ch2 = (char)client.read(); //now get the second integer 1
+    
+    if (ch2 == '1'){                //this could be cleaned probably by using atoi
+      tempOnOff = 1;
+    }else{
+      tempOnOff = 0;
+    }
+    
+    if (ch == '1'){                 //this could be cleaned probably by using atoi
+      tempOutput = 1;
+    }else if (ch == '2'){
+      tempOutput = 2;
+    }else if (ch == '3'){
+      tempOutput = 3;
+    }else if (ch == '4'){
+      tempOutput = 4;
+    }else if (ch == '5'){
+      tempOutput = 5;
+    }else if (ch == '6'){
+      tempOutput = 6;
+    }
+    
+    #ifdef DEBUG
+      Serial.print("****** Manual Control recieved unconverted: ");
+      Serial.print(ch);
+      Serial.print(" ");
+      Serial.print(ch2);
+      Serial.print(" Converted: ");
+      Serial.print(tempOutput);
+      Serial.print(" ");
+      Serial.println(tempOnOff);
+    #endif
+
+    outputState[tempOutput-1] = tempOnOff;          //set map, remembering to shift by minus 1
+    outputSelectFunction(tempOutput-1, tempOnOff);  //set reality, remembering to shift by minus 1
+  }
+  return true;
+}
+
+
+// -------------------- all_off handler -------------------- 
+boolean all_off_handler(TinyWebServer& web_server) {  //turns all outputs off
+  web_server.send_error_code(200);
+  //web_server.send_content_type("text/plain");
+  //web_server.end_headers();
+  
+  #ifdef DEBUG
+    Serial.print("****** Manual Control: All Off");
+  #endif
+  
+  for (byte i=0;i<=5;i++){
+    outputState[i] = 0;          //set map
+    outputSelectFunction(i, 0);  //set reality
+  }
+  return true;
+}
+
+
+// -------------------- all_on handler -------------------- 
+boolean all_on_handler(TinyWebServer& web_server) {   //turns all outputs on
+  web_server.send_error_code(200);
+  //web_server.send_content_type("text/plain");
+  //web_server.end_headers();
+  
+  #ifdef DEBUG
+    Serial.print("****** Manual Control: All On");
+  #endif
+  
+  for (byte i=0;i<=5;i++){
+    outputState[i] = 1;          //set map
+    outputSelectFunction(i, 1);  //set reality
+  }
+  return true;
+}
+
+
 // -------------------- row status handler -------------------- 
-boolean row_status_handler(TinyWebServer& web_server) {
+boolean row_status_handler(TinyWebServer& web_server) {   //returns stateRow[]
   web_server.send_error_code(200);
   web_server.send_content_type("text/plain");
   web_server.end_headers();
@@ -222,7 +315,7 @@ boolean row_status_handler(TinyWebServer& web_server) {
 
 
 // -------------------- status handler -------------------- 
-boolean status_handler(TinyWebServer& web_server) {
+boolean status_handler(TinyWebServer& web_server) {   //returns trigState[];stateRow[];outputState[];
   web_server.send_error_code(200);
   web_server.send_content_type("text/plain");
   web_server.end_headers();
@@ -254,7 +347,7 @@ boolean status_handler(TinyWebServer& web_server) {
 
 
 // -------------------- output status handler -------------------- 
-boolean output_status_handler(TinyWebServer& web_server) {
+boolean output_status_handler(TinyWebServer& web_server) {  //returns outputState[]
   web_server.send_error_code(200);
   web_server.send_content_type("text/plain");
   web_server.end_headers();
@@ -531,6 +624,11 @@ void statusMessage(int n) {
    //A:22, B:24, C:26, D:28, E:30, F:32
 // Function that pairs the output pins to the row that is controlling for it
 void outputSelectFunction(int outputNumber, bool action) {
+  Serial.print("outputSelectFunction ");
+  Serial.print(outputNumber);
+  Serial.print(" ");
+  Serial.print(action);
+  Serial.print("\n");
   //takes an output (outputNumber) and an action:
     //0 = off
     //1 = on

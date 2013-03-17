@@ -452,6 +452,8 @@ $(function(){//shortcut for doc.ready
 						$("div.export pre.program").html("Please try again.");
 					}
 				});//end ajax
+		}else if (chosen == "manual"){	//"Manual" clicked
+			//anything special here?
 		}
 		set_active_nav(next_page);
 	}
@@ -578,6 +580,22 @@ $(function(){//shortcut for doc.ready
 		factory_defaults();
 	});
 	
+	$("div.manual button").click(function(){	//manual controls
+		var tempval = $(this).attr("value");
+		//console.log(tempval);
+
+		if (tempval == "all_on"){				//if all on
+			$.get("all_on");					//go to url "/all_on"
+		}else if (tempval == "all_off"){		//if all off
+			$.get("all_off");					//get url "/all_off"
+		}else{
+			$.post("manual", { a: tempval });	//otherwise post the input# and on/off
+												//the first integer is the input#, the second 1 = on, 0 = off
+												//example input 1 off: 10
+												//input 2 on: 21
+		}
+	});
+
 //##################################### Utility Functions #####################################
 	
 	function unsaved_modal(){	//displays the unsaved changes warning with save/discard buttons
@@ -979,6 +997,7 @@ $(function(){//shortcut for doc.ready
 			<ul class="nav">
 				<li class="active"><a href="#" class="program">Program</a></li>
 				<li><a href="#" class="settings">Settings</a></li>
+				<li><a href="#" class="manual">manual control</a></li>
 				<li><a href="#" class="export">Export</a></li>
 				<li><a href="#" class="help">Help</a></li>
 			</ul>
@@ -1124,6 +1143,48 @@ $(function(){//shortcut for doc.ready
 				<div id="status_settings"></div>
 			</div><!--//end div.settings -->
 
+			<div class="manual">
+				<div class="subheader">
+					<h2>Manual Control</h2>
+					<p>Need to test outputs?<br />Push their buttons.</p>
+				</div>
+				<div class="container">
+					<h3>Notes about manual control</h3>
+				<p>Please note that manual control does not stop the sensors from acting on outputs as you have them set to in the program page.</p>
+					<table>
+						<tr><th>Output</th><th>Control</th></tr>
+						<tr><td>1</td><td><div class="btn-group">
+								<button type="button" class="btn btn-large" value="11">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
+								<button type="button" class="btn-large btn" value="10">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
+							</div></td></tr>
+						<tr><td>2</td><td><div class="btn-group">
+								<button type="button" class="btn btn-large" value="21">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
+								<button type="button" class="btn-large btn" value="20">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
+							</div></td></tr>
+						<tr><td>3</td><td><div class="btn-group">
+								<button type="button" class="btn btn-large" value="31">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
+								<button type="button" class="btn-large btn" value="30">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
+							</div></td></tr>
+						<tr><td>4</td><td><div class="btn-group">
+								<button type="button" class="btn btn-large" value="41">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
+								<button type="button" class="btn-large btn" value="40">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
+							</div></td></tr>
+						<tr><td>5</td><td><div class="btn-group">
+								<button type="button" class="btn btn-large" value="51">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
+								<button type="button" class="btn-large btn" value="50">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
+							</div></td></tr>
+						<tr><td>6</td><td><div class="btn-group">
+								<button type="button" class="btn btn-large" value="61">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
+								<button type="button" class="btn-large btn" value="60">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
+							</div></td></tr>
+						<tr><td colspan="3"><div class="btn-group">
+								<button type="button" class="btn btn-large" value="all_on">&nbsp;&nbsp;&nbsp; ALL ON &nbsp;&nbsp;&nbsp;</button>
+								<button type="button" class="btn-large btn" value="all_off">&nbsp;&nbsp;&nbsp; ALL OFF &nbsp;&nbsp;&nbsp;</button>
+							</div></td></tr>
+					</table>	
+				</div>
+			</div><!--//end div.help -->
+
 			<div class="export">
 				<div class="subheader">
 					<h2>Export</h2>
@@ -1151,6 +1212,11 @@ $(function(){//shortcut for doc.ready
 					/ram		free ram
 					/row_status	current row state (as defined in firmware)
 					/output_status	current output state (on/off)
+					/status.htm 	live status (slows down normal operation)
+					/status 	returns intputState ; rowState ; outputState (used by status.htm)
+					/all_on 	turns all on
+					/all_off	turns all off
+					/manual 	send post request with integers to control manually
 				</pre>
 				</div>
 			</div><!--//end div.export -->
