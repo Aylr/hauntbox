@@ -91,7 +91,7 @@ const int SD_CS = 4;      // pin 4 is the SPI select pin for the SDcard
 const int ETHER_CS = 10;  // pin 10 is the SPI select pin for the Ethernet
 byte ip[] = { 192, 168, 0, 100 }; // Static fallback IP
 static uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xEE };
-char* browser_header = "HTTP/1.0 200 OK\nContent-Type: text/html\n";  //2 line header including mandatory blank line to signify data below
+char* html_browser_header = "HTTP/1.0 200 OK\nContent-Type: text/html\n";  //2 line header including mandatory blank line to signify data below
 
 //--------------------------- Define Handlers ----------------------------
 
@@ -167,8 +167,12 @@ boolean file_handler(TinyWebServer& web_server) {
 
 // -------------------- index handler -------------------- 
 boolean index_handler(TinyWebServer& web_server) {
-  if(has_filesystem){
+  if(has_filesystem){                             //if SD is working send main gui file
     send_file_name(web_server, "gui.htm");
+  }else{                                          //if SD has failed, send an informative help page
+    Client& client = web_server.get_client();
+    client.println(html_browser_header);
+    client.println("<html><body><h1>SD Card Failed</h1><ol><li>Verify your SD card works</li><li>Remove and reseat it in SD slot in hauntbox</li><li>Reset hauntbox</li><li>Reload this page in 30 seconds</li></ol></body></html>");
   }
   return true;
 }
@@ -515,6 +519,17 @@ void setup() {
          Serial << F("DHCP failed\n");
       }
     }
+  }else{
+    Serial << F("Setting up the Ethernet card...\n");
+    
+    if (Ethernet.begin(mac) == 0) {                          // Initialize ethernet with DHCP
+      Serial << F("DHCP failed\n");
+    }
+
+    #ifdef DEBUG
+      Serial.println("****** Warning: SD not working");
+    #endif
+    LEDFlasher(10,200,100);  //visually alert user that something is awry by flashing all LEDs
   }//end if has filesystem
    
   Serial.print("IP Address: ");
@@ -839,11 +854,17 @@ void loop(){
     guiFlag = 0;                                //reset guiFlag
   }
   
- 
-  if (has_filesystem) {  //This tiny section runs the entire web server. Must be in void loop()
-    web.process();
+  //This tiny section runs the entire web server. Must be in void loop()
+  //Please not the main line "web.process()" is the actual functioning block.
+  //It should normally be wrapped in a statement protecting it from running
+  //without an SD card, but in this case we want it to run even if there is no SD card
+  //so we can serve up a custom html page from index_handler
+  if (has_filesystem) {
+  //  web.process();
+  }else{
+        LEDFlasher(1,200,100);    //call the LEDFlasher function to visually alert user of SD issue
   }
-
+  web.process();
   
   EthernetBonjour.run();  //Runs zeroconf/bonjour. Must be in void loop()
 }// end void loop
@@ -1130,3 +1151,20 @@ char convert(char* readString, bool type){
   }
 
 }//end convert cupcake string to arrays function
+
+void LEDFlasher (int flashes, int timeOn, int timeOff){    //used to flash all input/output LEDs as a warning something is awry
+  for (int i=0;i<flashes;i++){
+    //turn all on
+    for (int j=0;j<=5;j++){
+      digitalWrite(inputLEDArray[j],HIGH);
+      digitalWrite(outputLEDArray[j],HIGH);
+    }
+    delay(timeOn);
+    //turn all off
+    for (int j=0;j<=5;j++){
+      digitalWrite(inputLEDArray[j],LOW);
+      digitalWrite(outputLEDArray[j],LOW);
+    }
+    delay(timeOff);
+  }//flashing loop
+}//end LEDFlasher function
