@@ -42,8 +42,10 @@ unsigned int inputTriggerThresholdArray[] = {100,100,100,100,100,100};//input tr
 unsigned long inputRetriggerDelayArray[] = {0,0,0,0,0,0};  //retrigger time in milliseconds
 
 
-//Other arrays
-byte inputLEDArray [] =  {39,32,33,34,35,36};   //the LEDs that indicate an input is triggered
+// Other arrays
+//---------intput & output indicator LEDs near screw terminals
+byte inputLEDArray [] =  {39,32,33,34,35,36};   //Array of arduino pins that correspond to the LEDs that indicate an input is triggered
+byte outputLEDArray [] = {47,46,45,44,43,42};   //Array of arduino pins that correspond to the LEDs that indicate an output is on
 
 
 //----------------------Define variables in code-----------------------------
@@ -88,7 +90,6 @@ int pinOut6 = 37; //Digital pin
 const int SD_CS = 4;      // pin 4 is the SPI select pin for the SDcard
 const int ETHER_CS = 10;  // pin 10 is the SPI select pin for the Ethernet
 byte ip[] = { 192, 168, 0, 100 }; // Static fallback IP
-char StorageString[100];    //used to parse incoming data from the web gui
 static uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xEE };
 char* browser_header = "HTTP/1.0 200 OK\nContent-Type: text/html\n";  //2 line header including mandatory blank line to signify data below
 
@@ -166,7 +167,9 @@ boolean file_handler(TinyWebServer& web_server) {
 
 // -------------------- index handler -------------------- 
 boolean index_handler(TinyWebServer& web_server) {
-  send_file_name(web_server, "gui.htm");
+  if(has_filesystem){
+    send_file_name(web_server, "gui.htm");
+  }
   return true;
 }
 
@@ -442,7 +445,19 @@ void setup() {
   pinMode(ETHER_CS, OUTPUT); 	// Set the CS pin as an output
   digitalWrite(ETHER_CS, HIGH); // Turn off the W5100 chip! (wait for configuration)                              
   pinMode(SD_CS, OUTPUT);       // Set the SDcard CS pin as an output
-  digitalWrite(SD_CS, HIGH); 	// Turn off the SD card! (wait for configuration)  
+  digitalWrite(SD_CS, HIGH); 	// Turn off the SD card! (wait for configuration)
+
+  //Set up arduino pins as outputs
+  pinMode(pinOut1, OUTPUT);
+  pinMode(pinOut2, OUTPUT);
+  pinMode(pinOut3, OUTPUT);
+  pinMode(pinOut4, OUTPUT);
+  pinMode(pinOut5, OUTPUT);
+  pinMode(pinOut6, OUTPUT);
+  for (int i = 0;i <=5;i++){  //quickly loop through inputLEDs and outoutLEDS
+    pinMode(inputLEDArray[i], OUTPUT);  //set inputLED as output
+    pinMode(outputLEDArray[i], OUTPUT); //set outoutLED as output
+  }
 
   // initialize the SD card.
   Serial << F("Setting up SD card...\n");
@@ -518,32 +533,9 @@ void setup() {
   EthernetBonjour.addServiceRecord(bonjourServiceRecord, 80, MDNSServiceTCP);   //Set the advertised port/service
 
   Serial << F("Ready to accept HTTP requests.\n");
-  
-   pinMode(pinOut1, OUTPUT);
-   pinMode(pinOut2, OUTPUT);
-   pinMode(pinOut3, OUTPUT);
-   pinMode(pinOut4, OUTPUT);
-   pinMode(pinOut5, OUTPUT);
-   pinMode(pinOut6, OUTPUT);
-   
-   //---------indicator LEDs
-   //1:23, 2:25, 3:27, 4:29, 5:31, 6:33
-   //A:22, B:24, C:26, D:28, E:30, F:32
-   // temporarlily disable a few to prevent overcurrent
-   
-   //pinMode(22, OUTPUT);
-   //1: pinMode(23, OUTPUT);
-   pinMode(24, OUTPUT);
-   pinMode(25, OUTPUT);
-   pinMode(26, OUTPUT);
-   pinMode(27, OUTPUT);
-   pinMode(28, OUTPUT);
-   //pinMode(29, OUTPUT);
-   //pinMode(30, OUTPUT);
-   //pinMode(31, OUTPUT);
-   //pinMode(32, OUTPUT);
-   //6: pinMode(33, OUTPUT);
 }
+
+
 //----- AA1b -- Initialize Output Function -----
 // Function that initializes the outputs states to "off"
 void initializeFunction() {
@@ -619,9 +611,6 @@ void statusMessage(int n) {
 }
 
 //----- Section AA4c -----
-   //---------indicator LEDs
-   //1:23, 2:25, 3:27, 4:29, 5:31, 6:33
-   //A:22, B:24, C:26, D:28, E:30, F:32
 // Function that pairs the output pins to the row that is controlling for it
 void outputSelectFunction(int outputNumber, bool action) {
   Serial.print("outputSelectFunction ");
@@ -640,38 +629,38 @@ void outputSelectFunction(int outputNumber, bool action) {
   if(action == 1) {         // turn output on
     if(y == 1) {           // "on" means turn output high
       if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
-      if(x == 1) {digitalWrite(pinOut1, HIGH); }//digitalWrite(23, HIGH); }
-      if(x == 2) {digitalWrite(pinOut2, HIGH); }//digitalWrite(25, HIGH); }
-      if(x == 3) {digitalWrite(pinOut3, HIGH); }//digitalWrite(27, HIGH); }
-      if(x == 4) {digitalWrite(pinOut4, HIGH); }//digitalWrite(29, HIGH); }
-      if(x == 5) {digitalWrite(pinOut5, HIGH); }//digitalWrite(31, HIGH); }
-      if(x == 6) {digitalWrite(pinOut6, HIGH); }}//digitalWrite(33, HIGH); } }
+      if(x == 1) {digitalWrite(pinOut1, HIGH); digitalWrite(outputLEDArray[0], HIGH); }
+      if(x == 2) {digitalWrite(pinOut2, HIGH); digitalWrite(outputLEDArray[1], HIGH); }
+      if(x == 3) {digitalWrite(pinOut3, HIGH); digitalWrite(outputLEDArray[2], HIGH); }
+      if(x == 4) {digitalWrite(pinOut4, HIGH); digitalWrite(outputLEDArray[3], HIGH); }
+      if(x == 5) {digitalWrite(pinOut5, HIGH); digitalWrite(outputLEDArray[4], HIGH); }
+      if(x == 6) {digitalWrite(pinOut6, HIGH); digitalWrite(outputLEDArray[5], HIGH); } }
     if(y == 0) {           // "on" means turn output low
       if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
-      if(x == 1) {digitalWrite(pinOut1, LOW); }//digitalWrite(23, LOW);}
-      if(x == 2) {digitalWrite(pinOut2, LOW); }//digitalWrite(25, LOW);}
-      if(x == 3) {digitalWrite(pinOut3, LOW); }//digitalWrite(27, LOW);}
-      if(x == 4) {digitalWrite(pinOut4, LOW); }//digitalWrite(29, LOW);}
-      if(x == 5) {digitalWrite(pinOut5, LOW); }//digitalWrite(31, LOW);}
-      if(x == 6) {digitalWrite(pinOut6, LOW); }}//digitalWrite(33, LOW);} }
+      if(x == 1) {digitalWrite(pinOut1, LOW); digitalWrite(outputLEDArray[0], LOW);}
+      if(x == 2) {digitalWrite(pinOut2, LOW); digitalWrite(outputLEDArray[1], LOW);}
+      if(x == 3) {digitalWrite(pinOut3, LOW); digitalWrite(outputLEDArray[2], LOW);}
+      if(x == 4) {digitalWrite(pinOut4, LOW); digitalWrite(outputLEDArray[3], LOW);}
+      if(x == 5) {digitalWrite(pinOut5, LOW); digitalWrite(outputLEDArray[4], LOW);}
+      if(x == 6) {digitalWrite(pinOut6, LOW); digitalWrite(outputLEDArray[5], LOW);} }
     return; }
   if(action == 0) {         //turn output off
     if(y == 1) {           // "off" means turn output low
       if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
-      if(x == 1) {digitalWrite(pinOut1, LOW); }//digitalWrite(23, LOW);}
-      if(x == 2) {digitalWrite(pinOut2, LOW); }//digitalWrite(25, LOW);}
-      if(x == 3) {digitalWrite(pinOut3, LOW); }//digitalWrite(27, LOW);}
-      if(x == 4) {digitalWrite(pinOut4, LOW); }//digitalWrite(29, LOW);}
-      if(x == 5) {digitalWrite(pinOut5, LOW); }//digitalWrite(31, LOW);}
-      if(x == 6) {digitalWrite(pinOut6, LOW); }}//digitalWrite(33, LOW);} }
+      if(x == 1) {digitalWrite(pinOut1, LOW); digitalWrite(outputLEDArray[0], LOW);}
+      if(x == 2) {digitalWrite(pinOut2, LOW); digitalWrite(outputLEDArray[1], LOW);}
+      if(x == 3) {digitalWrite(pinOut3, LOW); digitalWrite(outputLEDArray[2], LOW);}
+      if(x == 4) {digitalWrite(pinOut4, LOW); digitalWrite(outputLEDArray[3], LOW);}
+      if(x == 5) {digitalWrite(pinOut5, LOW); digitalWrite(outputLEDArray[4], LOW);}
+      if(x == 6) {digitalWrite(pinOut6, LOW); digitalWrite(outputLEDArray[5], LOW);} }
     if(y == 0) {           // "off" means turn output high
       if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
-      if(x == 1) {digitalWrite(pinOut1, HIGH); }//digitalWrite(23, HIGH); }
-      if(x == 2) {digitalWrite(pinOut2, HIGH); }//digitalWrite(25, HIGH); }
-      if(x == 3) {digitalWrite(pinOut3, HIGH); }//digitalWrite(27, HIGH); }
-      if(x == 4) {digitalWrite(pinOut4, HIGH); }//digitalWrite(29, HIGH); }
-      if(x == 5) {digitalWrite(pinOut5, HIGH); }//digitalWrite(31, HIGH); }
-      if(x == 6) {digitalWrite(pinOut6, HIGH); }}//digitalWrite(33, HIGH); } }
+      if(x == 1) {digitalWrite(pinOut1, HIGH); digitalWrite(outputLEDArray[0], HIGH); }
+      if(x == 2) {digitalWrite(pinOut2, HIGH); digitalWrite(outputLEDArray[1], HIGH); }
+      if(x == 3) {digitalWrite(pinOut3, HIGH); digitalWrite(outputLEDArray[2], HIGH); }
+      if(x == 4) {digitalWrite(pinOut4, HIGH); digitalWrite(outputLEDArray[3], HIGH); }
+      if(x == 5) {digitalWrite(pinOut5, HIGH); digitalWrite(outputLEDArray[4], HIGH); }
+      if(x == 6) {digitalWrite(pinOut6, HIGH); digitalWrite(outputLEDArray[5], HIGH); } }
     return; }
   }
 
@@ -788,17 +777,12 @@ void loop(){
   for(int z = 0; z < rn; z++) {              //runs loop for each row
     trigState[z] = decipherInputSensor(z); //Call function and pass(Row number) to see if input is on or off
       if(trigState[z] == 1) {                //If input is "on"
-        digitalWrite(inputLEDArray[z],HIGH);  //turn on appropriate LED array
+        digitalWrite(inputLEDArray[z],HIGH);  //turn on appropriate input LED
       }
-      if(trigState[z] == 0) {               //If input is off
-        digitalWrite(inputLEDArray[z],LOW);  //turn off appropriate LED array
+      if(trigState[z] == 0) {               //If input is "off"
+        digitalWrite(inputLEDArray[z],LOW);  //turn off appropriate input LED
       }
   }
-  
-  
-  
-  
-  
   
   
   //----- Section AA6 ----- Update the Status variables for GUI to read
@@ -856,11 +840,12 @@ void loop(){
   }
   
  
- 
-   if (has_filesystem) {  //This tiny section runs the entire web server. Must be in void loop()
+  if (has_filesystem) {  //This tiny section runs the entire web server. Must be in void loop()
     web.process();
   }
-    EthernetBonjour.run();  //Runs zeroconf/bonjour. Must be in void loop()
+
+  
+  EthernetBonjour.run();  //Runs zeroconf/bonjour. Must be in void loop()
 }// end void loop
 
 
