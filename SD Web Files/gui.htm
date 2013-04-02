@@ -203,6 +203,9 @@
 $(function(){//shortcut for doc.ready
 	//##################################### Important Variables ##################################### 
 	
+	var initial_rows = 6;					//how many rows to start with
+	var max_rows = 12;						//maximum number of rows (based on arduino capability)
+	var min_rows = 1;						//minimum number of rows (based on usability)
 	var increment_on_hold_speed = 50;		//auto ++ing value every n milliseconds
 	var increment_hold_delay = 1000;		//the delay in milliseconds (timeout) before auto ++ing
 	var interval = null, timeout = null;	//vars for auto incrementing and auto delay
@@ -218,6 +221,7 @@ $(function(){//shortcut for doc.ready
 	
 	var default_program = "0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0,0,0,0,0,0;1,1,1,1,1,1;0,1,2,0,1,2;0,1,3,5,10,30;2;00"
 	var default_settings = "1,1,1,1,1,1,1,1,1,1,1,1;garage,my room,hall,cemetery,cornfield,swamp;UV,light,strobe,sound,air horn,zombie;" + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + ";1,1,1,1,1,1;2;00;"
+	var local_input_names = local_output_names = new Array();
 
 	//##################################### Mobile Detection #####################################
 	function detectmobile() { 
@@ -239,8 +243,10 @@ $(function(){//shortcut for doc.ready
 	$("#display_container").children().hide();			//load with all "tabs" hidden
 	$(".inner_sentence").fadeTo(0,.5);
 	
-	for (i=1;i<6;i++){						//dynamically build the program rows
+	for (i=1;i<initial_rows;i++){						//dynamically build the program rows
 		$("div.program .sentence").first().clone({deepWithDataAndEvents: true}).appendTo(".sentence_container");
+	}
+	for (i=1;i<6;i++){						//dynamically build the settings rows
 		//the settings rows are complicated by the radios that must be uniquely named
 		$("div.settings .inputs_container .sentence").first().clone({deepWithDataAndEvents: true}).appendTo("div.settings .inputs_container").children("span").html("Input " + ABC[i]).parent().children("input[type=radio]").attr("name","highlow" + (i+1));
 		$("div.settings .outputs_container .sentence").first().clone({deepWithDataAndEvents: true}).appendTo("div.settings .outputs_container").children("span").html("Output " + (i+1)).parent().children("input[type=radio]").attr("name","output_highlow" + (i+1));
@@ -252,7 +258,7 @@ $(function(){//shortcut for doc.ready
 		//including intelligent defaults and populate the form correctly
 
 		//Data receiving protocol (Arduino --> Browser)
-		//Input array;Input on/off;On delay;Output array;Output on/off;duration type;Duration;status code;Free RAM;
+		//Input array;Input on/off;On delay;Output array;Output on/off/toggle;duration type;Duration;status code;Free RAM;
 		//0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0,0,0,0,0,0;1,1,1,1,1,1;2,2,2,2,2,2;0,0,0,0,0,0;0;182;
 
 		//status codes
@@ -359,6 +365,8 @@ $(function(){//shortcut for doc.ready
 			console.log(io_voltage_thresholds);
 			console.log(retrigger_delays);
 			*/
+			local_input_names = input_names;
+			local_output_names = output_names;
 		
 			set_io_names("select.sensor",input_names);				//call the set io name functions
 			set_io_names("select.output",output_names);
@@ -376,7 +384,24 @@ $(function(){//shortcut for doc.ready
 			status_message(parseInt(data[data.length - 3]));		//update the status alert (the 3rd to last element)
 		}
 	};//end load_settings()
+
+	function set_manual_output_names(){			//sets real names of outputs on the manual control page
+		var i = 0;
+		$("div.manual td.manual_control_name").each(function(){
+			$(this).html(local_output_names[i]);
+			i++;
+		});
+	}//end set_manual_output_names
 	
+	function set_virtual_trigger_names(){			//sets real names of sensors on the virtual trigger page
+		var i = 0;
+		$("div.virtual_trigger td.virtual_trigger_name").each(function(){
+			$(this).html(local_input_names[i]);
+			i++;
+		});
+	}//end set_virtual_trigger_names
+	
+
 	set_voltage_thresholds();			//setup the settings form with proper threshold values
 	load_settings();					//load the data and populate form
 
@@ -454,6 +479,9 @@ $(function(){//shortcut for doc.ready
 				});//end ajax
 		}else if (chosen == "manual"){	//"Manual" clicked
 			//anything special here?
+			set_manual_output_names();
+		}else if (chosen == "virtual_trigger"){	//"virtual trigger" clicked
+			set_virtual_trigger_names();
 		}
 		set_active_nav(next_page);
 	}
@@ -804,16 +832,16 @@ $(function(){//shortcut for doc.ready
 	
 	function set_io_names(select,names){					//this function sets the custom i/o names from the settings arrays
 		var i = 0;											//inititalize counter variable
-		tempPrefaces = [];
+		var io_name_preface = [];
 		if(select=="select.sensor") {
-			tempPrefaces = ["","A: ","B: ","C: ","D: ","E: ","F: "];
+			io_name_preface = ["","A: ","B: ","C: ","D: ","E: ","F: "];
 		}else if(select=="select.output"){
-			tempPrefaces = ["","1: ","2: ","3: ","4: ","5: ","6: "];
+			io_name_preface = ["","1: ","2: ","3: ","4: ","5: ","6: "];
 		}
 		names.unshift("-");									//add the "-" to the beginning for the default choice
 		$(select).each(function(){							//loop through each select.sensor
 			$(this).children().each(function(){				//loop through each dropdown option
-				$(this).html(tempPrefaces[i] + names[i]);		//set the actual html names
+				$(this).html(io_name_preface[i] + names[i]);		//set the actual html names
 				i ++;										//increment i
 			});//end each option
 			i = 0;											//reset i for next group of options
@@ -987,6 +1015,42 @@ $(function(){//shortcut for doc.ready
 			$(this).next().fadeTo(100,.3).find("input, select").prop("disabled", true);
 		}
 	});
+
+	function count_rows(){		//counts rows in program page
+		var current_rows = $("div.program div.sentence_container").children().size();
+		return current_rows;
+	};
+
+	function update_row_buttons(temp_count2){	//updates the add/subtract row buttons
+		if (temp_count2 < max_rows){	//check "add row" button
+			$("div.program button.add_row").prop("disabled", false);	//enable +
+		}else{
+			$("div.program button.add_row").prop("disabled", true);	//disable +
+		}
+
+		if (temp_count2 > min_rows){	//check "subtract row" button
+			$("div.program button.subtract_row").prop("disabled", false);	//enable +
+		}else{
+			$("div.program button.subtract_row").prop("disabled", true);	//disable +
+		}
+		$("div.program .button_container span").html("Rows: " + temp_count2);
+	};
+
+	$("div.program .button_container button.add_row").click(function(){		//adds a row to the program page
+		var temp_count = count_rows();
+		if (temp_count < max_rows){
+			$("div.program .sentence").last().clone({deepWithDataAndEvents: true}).appendTo("div.sentence_container");
+		}
+		update_row_buttons(temp_count + 1);
+	});
+
+	$("div.program .button_container button.subtract_row").click(function(){	//subtracts a row
+		var temp_count = count_rows();
+		if (temp_count > min_rows){
+			$("div.program .sentence").last().remove();
+		}
+		update_row_buttons(temp_count - 1);
+	});
 });//doc.ready
 </script>
 </head>
@@ -998,6 +1062,7 @@ $(function(){//shortcut for doc.ready
 				<li class="active"><a href="#" class="program">Program</a></li>
 				<li><a href="#" class="settings">Settings</a></li>
 				<li><a href="#" class="manual">manual control</a></li>
+				<li><a href="#" class="virtual_trigger">virtual trigger</a></li>
 				<li><a href="#" class="export">Export</a></li>
 				<li><a href="#" class="help">Help</a></li>
 			</ul>
@@ -1083,10 +1148,13 @@ $(function(){//shortcut for doc.ready
 							<span class="row_status"></span>
 						</div>
 					</div>
-
 				</div>
 				
 				<div class="button_container">
+					<button class="add_row" type="button"> + </button>
+					<button class="subtract_row" type="button"> - </button>
+
+					<span class="row_count">Rows: </span>
 					<button class="save_program" name="save" type="button">Save Program</button>
 					<button id="refresh_program" name="refresh" type="button">Refresh Program</button>
 				</div>
@@ -1149,31 +1217,31 @@ $(function(){//shortcut for doc.ready
 					<p>Need to test outputs?<br />Push their buttons.</p>
 				</div>
 				<div class="container">
-					<h3>Notes about manual control</h3>
-				<p>Please note that manual control does not stop the sensors from acting on outputs as you have them set to in the program page.</p>
+					<h3>Notes about manual output control</h3>
+				<p>This mode completely ignores the sensors as you have them set to in the program page.</p>
 					<table>
 						<tr><th>Output</th><th>Control</th></tr>
-						<tr><td>1</td><td><div class="btn-group">
+						<tr><td class="manual_control_name">1</td><td><div class="btn-group">
 								<button type="button" class="btn btn-large" value="11">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
 								<button type="button" class="btn-large btn" value="10">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
 							</div></td></tr>
-						<tr><td>2</td><td><div class="btn-group">
+						<tr><td class="manual_control_name">2</td><td><div class="btn-group">
 								<button type="button" class="btn btn-large" value="21">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
 								<button type="button" class="btn-large btn" value="20">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
 							</div></td></tr>
-						<tr><td>3</td><td><div class="btn-group">
+						<tr><td class="manual_control_name">3</td><td><div class="btn-group">
 								<button type="button" class="btn btn-large" value="31">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
 								<button type="button" class="btn-large btn" value="30">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
 							</div></td></tr>
-						<tr><td>4</td><td><div class="btn-group">
+						<tr><td class="manual_control_name">4</td><td><div class="btn-group">
 								<button type="button" class="btn btn-large" value="41">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
 								<button type="button" class="btn-large btn" value="40">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
 							</div></td></tr>
-						<tr><td>5</td><td><div class="btn-group">
+						<tr><td class="manual_control_name">5</td><td><div class="btn-group">
 								<button type="button" class="btn btn-large" value="51">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
 								<button type="button" class="btn-large btn" value="50">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
 							</div></td></tr>
-						<tr><td>6</td><td><div class="btn-group">
+						<tr><td class="manual_control_name">6</td><td><div class="btn-group">
 								<button type="button" class="btn btn-large" value="61">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
 								<button type="button" class="btn-large btn" value="60">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
 							</div></td></tr>
@@ -1183,7 +1251,42 @@ $(function(){//shortcut for doc.ready
 							</div></td></tr>
 					</table>	
 				</div>
-			</div><!--//end div.help -->
+			</div><!--//end div.manual -->
+
+			<div class="virtual_trigger">
+				<div class="subheader">
+					<h2>Virtual Trigger</h2>
+					<p>Need to trigger an input?<br />Push their buttons.</p>
+				</div>
+				<div class="container">
+					<h3>Notes about virtual triggers</h3>
+				<p>In this mode the hauntbox is doing it's normal thing, listing to sensors and doing what you told it in the program page. Here you can manually set off a sensor for added fun.</p>
+					<table>
+						<tr><th>Input</th><th>Control</th></tr>
+						<tr><td class="virtual_trigger_name">1</td><td><div class="btn-group">
+								<button type="button" class="btn btn-large" value="11">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
+							</div></td></tr>
+						<tr><td class="virtual_trigger_name">2</td><td><div class="btn-group">
+								<button type="button" class="btn btn-large" value="21">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
+							</div></td></tr>
+						<tr><td class="virtual_trigger_name">3</td><td><div class="btn-group">
+								<button type="button" class="btn btn-large" value="31">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
+							</div></td></tr>
+						<tr><td class="virtual_trigger_name">4</td><td><div class="btn-group">
+								<button type="button" class="btn btn-large" value="41">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
+							</div></td></tr>
+						<tr><td class="virtual_trigger_name">5</td><td><div class="btn-group">
+								<button type="button" class="btn btn-large" value="51">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
+							</div></td></tr>
+						<tr><td class="virtual_trigger_name">6</td><td><div class="btn-group">
+								<button type="button" class="btn btn-large" value="61">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
+							</div></td></tr>
+						<tr><td colspan="3"><div class="btn-group">
+								<button type="button" class="btn btn-large" value="all_on">&nbsp;&nbsp;&nbsp; ALL Trigger &nbsp;&nbsp;&nbsp;</button>
+							</div></td></tr>
+					</table>	
+				</div>
+			</div><!--//end div.virtual_trigger -->
 
 			<div class="export">
 				<div class="subheader">
