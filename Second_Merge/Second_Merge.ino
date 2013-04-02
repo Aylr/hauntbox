@@ -12,7 +12,8 @@
 #include <EthernetBonjour.h>
 
 #define DEBUG true
-#define MAXROWS 6
+#define MAXROWS 12
+#define MINROWS 6
 
 char* bonjourName = "hauntbox";      //bonjour name
 char* bonjourServiceRecord = "hauntbox._http";  //bonjour name (needs to have the "._http" at the end)
@@ -49,13 +50,13 @@ byte outputLEDArray [] = {47,46,45,44,43,42};   //Array of arduino pins that cor
 
 
 //----------------------Define variables in code-----------------------------
-int rn = 6;  //number of rows
+int currentRowCount = 6;  //current number of rows (starts at 6 and modified by gui)
 bool outputState[6] = {0,0,0,0,0,0};   //array to hold on/off (1/0) state of every given output. Manipulated by any/multiple rules
                 //***only 6 outputs!!!
-int stateRow[6];                       //array that defines each row's state. Gets initialized in initializeFunction called from main function
+int stateRow[MAXROWS];              //array that defines each row's state. Gets initialized in initializeFunction called from main function
 int trigState[6];                      //gets initialized immediately before it is used
-unsigned long timeStampDelayRow[6];    //gets initialized immediately before it is used
-unsigned long timeStampDurationRow[6]; //gets initialized immediately before it is used
+unsigned long timeStampDelayRow[MAXROWS];    //gets initialized immediately before it is used
+unsigned long timeStampDurationRow[MAXROWS]; //gets initialized immediately before it is used
 unsigned long nowTime;
 unsigned long netTime;
 int statesInitialized = 0;      //keeps track if the states have been initialized
@@ -104,7 +105,7 @@ TinyWebServer::PathHandler handlers[] = {
   // Work around Arduino's IDE preprocessor bug in handling /* inside strings.
   //
   // `put_handler' is defined in TinyWebServer
- // {"/", TinyWebServer::GET, &index_handler },
+  // {"/", TinyWebServer::GET, &index_handler },
   {"/", TinyWebServer::GET, &index_handler },
   {"/ram", TinyWebServer::GET, &ram_handler },
   {"/row_status", TinyWebServer::GET, &row_status_handler },
@@ -529,7 +530,7 @@ void setup() {
     #ifdef DEBUG
       Serial.println("****** Warning: SD not working");
     #endif
-    LEDFlasher(10,200,100);  //visually alert user that something is awry by flashing all LEDs
+    LEDFlasher(10,200,200);  //visually alert user that something is awry by flashing all LEDs
   }//end if has filesystem
    
   Serial.print("IP Address: ");
@@ -691,7 +692,7 @@ void loop(){
   
   //----- Section AA4a ----- Reading Inputs and Writing to Outputs -----
   tempStampA = millis();
-  for(int z = 0; z < rn; z++) {              //runs loop for each row
+  for(int z = 0; z < currentRowCount; z++) {              //runs loop for each row
     if(stateRow[z] == 1) {                   //STATE 1 = Waiting for a trigger
       trigState[z] = inputTakeAction(z); //Call function and pass(Row number) to see if input is triggered
       if(trigState[z] == 1) {                //If triggered
@@ -789,7 +790,7 @@ void loop(){
   }
     
   //----- Section AA5 ----- Update the Status LEDs on shield -----
-  for(int z = 0; z < rn; z++) {              //runs loop for each row
+  for(int z = 0; z < currentRowCount; z++) {              //runs loop for each row
     trigState[z] = decipherInputSensor(z); //Call function and pass(Row number) to see if input is on or off
       if(trigState[z] == 1) {                //If input is "on"
         digitalWrite(inputLEDArray[z],HIGH);  //turn on appropriate input LED
@@ -862,7 +863,7 @@ void loop(){
   if (has_filesystem) {
   //  web.process();
   }else{
-        LEDFlasher(1,200,100);    //call the LEDFlasher function to visually alert user of SD issue
+        LEDFlasher(1,200,200);    //call the LEDFlasher function to visually alert user of SD issue
   }
   web.process();
   
