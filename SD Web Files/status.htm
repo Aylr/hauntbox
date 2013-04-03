@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<!--<meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+    <title>Hauntbox</title>
+<script src="jqry171.js"></script>
+
+<style type="text/css">
+	
+</style>
+
+<script>
+$(function(){//shortcut for doc.ready
+	
+	function load_status(){
+		console.log("loading status");
+				
+		$.ajax({
+			url: '/status',
+			type: 'GET',
+			success: function(data){
+				process_status(data);
+			},
+			error: function(data){
+				//failure ALERT HERE..............
+			}
+		});
+		
+		function process_status(string){
+			var input_status = row_state = output_status = new Array();
+		
+			var raw_incoming_status = string.split(";")		//split into substrings
+			
+			var input_status = raw_incoming_status[0].split(",");	//split substrings into arrays of strings
+			var row_state = raw_incoming_status[1].split(",");
+			var output_status = raw_incoming_status[2].split(",");
+			
+				
+			array_of_strings_to_ints(input_status);				//run all the arrays through the integerizer
+			array_of_strings_to_ints(row_state);
+	 		array_of_strings_to_ints(output_status);
+			
+			console.log(input_status);
+			console.log(row_state);
+			console.log(output_status);
+			
+			//set_status("ul.input li",input_status);			//set each input with the appropriate array
+			//set_status("ul.row li",row_state);
+			//set_status("ul.output li",output_status);
+			set_status("td.input",input_status,1);			//set each input with the appropriate array
+			set_status("td.row",row_state);
+			set_status("td.output",output_status,1);
+
+			
+		}//end process_status()
+		
+	};//end load_status()
+
+
+	function set_status(selector,array,color){			//this takes a jQuery selector (an input or select) and sets it w/ values from an array
+		j = 0;										//init a counter var
+		$(selector).each(function(){				//loop through each <select>
+			for (i in array){						//loop through each element in array
+				if (j == i){						//if this element # corresponds w/ this element
+					$(this).html(array[i]);			//set the value
+					
+					if (color == 1){
+						if (array[i] == 1){
+							$(this).css("background","green");
+						}else{
+							$(this).css("background", "red");
+						}
+						//set_color($(this),array[i]);
+					};
+				};
+			};
+			j ++;									//increment counter
+		});
+	};//end set_status()
+
+	function set_color(selector,data){
+		if (selector == "td.output" || selector == "td.input"){
+			if (data == 1){
+				selector.style("color: green");
+			}else{
+				selector.style("color: red");
+			}
+		}
+	};
+	
+	
+	load_status();	//update the status data
+	
+	setInterval(function(){		//update the status data every n milliseconds
+		load_status();
+	},2000);
+	
+	
+//##################################### Utility Functions #####################################
+	
+	function array_of_strings_to_ints(dirty_array){			//converts arrays of strings into arrays of integers ie: ["1","2","3",...] --> [1,2,3,...]
+		for (i in dirty_array){								//for each element in the array
+			dirty_array[i] = parseInt(dirty_array[i]);		//convert strings to int "1" --> 1
+		}
+	}
+	
+	
+});//doc.ready
+</script>
+</head>
+
+<body>
+	<div class="container body_container">	
+
+		<div id="display_container">
+			
+			<div class="status">
+				<table>
+					<tr><th>Inputs 0/1</th><th>Row States 1-6</th><th>Outputs 0/1</th></tr>
+					<tr><td class="input"></td><td class="row"></td><td class="output"></td></tr>
+					<tr><td class="input"></td><td class="row"></td><td class="output"></td></tr>
+					<tr><td class="input"></td><td class="row"></td><td class="output"></td></tr>
+					<tr><td class="input"></td><td class="row"></td><td class="output"></td></tr>
+					<tr><td class="input"></td><td class="row"></td><td class="output"></td></tr>
+					<tr><td class="input"></td><td class="row"></td><td class="output"></td></tr>
+					<tr><td class="input"></td><td class="row"></td><td class="output"></td></tr>
+					<tr><td class="input"></td><td class="row"></td><td class="output"></td></tr>
+				</table>
+			</div><!--//end div.status -->
+		</div><!--//end display_container -->
+	</div><!--//end .container -->
+</body>
+</html>
