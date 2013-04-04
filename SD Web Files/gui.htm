@@ -52,7 +52,7 @@
 		/* the checkbox on each row */
 		margin: 0 2px 0 0;
 	}
-	.sentence_headings, div.export .container, div.help .container {
+	.sentence_headings, div.help .container {
 		margin-left: 23px;/*enough room for a checkbox*/
 	/*	margin-top: 23px; /* white space! */
 	}
@@ -389,21 +389,21 @@ $(function(){//shortcut for doc.ready
 		}
 	};//end load_settings()
 
-	function set_manual_output_names(){			//sets real names of outputs on the manual control page
+	function set_override_output_names(){			//sets real names of outputs on the override page
 		var i = 0;
-		$("div.manual td.manual_control_name").each(function(){
+		$("div.override td.override_output_name").each(function(){
 			$(this).html(local_output_names[i]);
 			i++;
 		});
-	}//end set_manual_output_names
+	}//end set_override_output_names
 	
-	function set_virtual_trigger_names(){			//sets real names of sensors on the virtual trigger page
+	function set_override_input_names(){			//sets real names of inputs on the override page
 		var i = 0;
-		$("div.virtual_trigger td.virtual_trigger_name").each(function(){
+		$("div.override td.override_input_name").each(function(){
 			$(this).html(local_input_names[i]);
 			i++;
 		});
-	}//end set_virtual_trigger_names
+	}//end set_override_input_names
 	
 
 	set_voltage_thresholds();			//setup the settings form with proper threshold values
@@ -434,7 +434,7 @@ $(function(){//shortcut for doc.ready
 			load_settings();					//load the data and populate form
 		}else if (chosen == "program"){	//"Program" clicked
 			load_settings();					//load the data and populate form
-		}else if (chosen == "export"){	//"Export" clicked
+		}else if (chosen == "help"){	//"Export" clicked
 			//load exports
 				$.ajax({
 					url: '/settings.txt',
@@ -446,20 +446,20 @@ $(function(){//shortcut for doc.ready
 					success: function(data){
 						//hide alert
 						//$("div.alert").alert('close');
-						$("div.export pre.settings").html(data);
+						$("div.help pre.settings").html(data);
 						console.log("file: " + data);
 
 						//Nest the other .ajax call to program.txt here...
 					},
 					statusCode: {
 						404: function(){
-							$("div.export pre.settings").html("File not found");
+							$("div.help pre.settings").html("File not found");
 							status_message(99);
 						}
 					},
 					error: function(){
 						//alert: fail
-						$("div.export pre.settings").html("Please try again.");
+						$("div.help pre.settings").html("Please try again.");
 					}
 				});
 
@@ -473,20 +473,20 @@ $(function(){//shortcut for doc.ready
 					success: function(data){
 						//hide alert
 						//$("div.alert").alert('close');
-						$("div.export pre.program").html(data);
+						$("div.help pre.program").html(data);
 						console.log("file: " + data);
 					},
 					error: function(){
 						//alert: fail
-						$("div.export pre.program").html("Please try again.");
+						$("div.help pre.program").html("Please try again.");
 					}
 				});//end ajax
-		}else if (chosen == "manual"){	//"Manual" clicked
+		}else if (chosen == "override"){	//"override" clicked
 			//anything special here?
-			set_manual_output_names();
-		}else if (chosen == "virtual_trigger"){	//"virtual trigger" clicked
-			set_virtual_trigger_names();
+			set_override_output_names();
+			set_override_input_names();
 		}
+
 		set_active_nav(next_page);
 	}
 	
@@ -612,7 +612,7 @@ $(function(){//shortcut for doc.ready
 		factory_defaults();
 	});
 	
-	$("div.manual button").click(function(){	//manual controls
+	$("div.override button").click(function(){	//override controls
 		var tempval = $(this).attr("value");
 		//console.log(tempval);
 
@@ -1063,11 +1063,9 @@ $(function(){//shortcut for doc.ready
 	<div class="container body_container">	
 		<div class="navbar">
 			<ul class="nav">
+				<li><a href="#" class="settings">Setup</a></li>
 				<li class="active"><a href="#" class="program">Program</a></li>
-				<li><a href="#" class="settings">Settings</a></li>
-				<li><a href="#" class="manual">manual control</a></li>
-				<li><a href="#" class="virtual_trigger">virtual trigger</a></li>
-				<li><a href="#" class="export">Export</a></li>
+				<li><a href="#" class="override">Override</a></li>
 				<li><a href="#" class="help">Help</a></li>
 			</ul>
 			<p class="logo"><img src="hblogo.png" width="150" height="87" /></p>
@@ -1167,7 +1165,7 @@ $(function(){//shortcut for doc.ready
 			
 			<div class="settings">
 				<div class="subheader">
-					<h2>Settings</h2>
+					<h2>Setup</h2>
 					<p>These are the guts of the HauntBox. You can rename your inputs &amp; outputs.<br />Also set whether digital HIGH or LOW will trigger the input, and set the minimum time between triggers.</p>
 				</div>
 
@@ -1215,118 +1213,86 @@ $(function(){//shortcut for doc.ready
 				<div id="status_settings"></div>
 			</div><!--//end div.settings -->
 
-			<div class="manual">
+			<div class="override">
 				<div class="subheader">
-					<h2>Manual Control</h2>
-					<p>Need to test outputs?<br />Push their buttons.</p>
+					<h2>Override</h2>
+					<p>Want to take over?<br />Go ahead, push some buttons.</p>
 				</div>
-				<div class="container">
-					<h3>Notes about manual output control</h3>
-				<p>This mode completely ignores the sensors as you have them set to in the program page.</p>
-					<table>
-						<tr><th>Output</th><th>Control</th></tr>
-						<tr><td class="manual_control_name">1</td><td><div class="btn-group">
-								<button type="button" class="btn btn-large" value="11">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
-								<button type="button" class="btn-large btn" value="10">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
-							</div></td></tr>
-						<tr><td class="manual_control_name">2</td><td><div class="btn-group">
-								<button type="button" class="btn btn-large" value="21">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
-								<button type="button" class="btn-large btn" value="20">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
-							</div></td></tr>
-						<tr><td class="manual_control_name">3</td><td><div class="btn-group">
-								<button type="button" class="btn btn-large" value="31">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
-								<button type="button" class="btn-large btn" value="30">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
-							</div></td></tr>
-						<tr><td class="manual_control_name">4</td><td><div class="btn-group">
-								<button type="button" class="btn btn-large" value="41">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
-								<button type="button" class="btn-large btn" value="40">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
-							</div></td></tr>
-						<tr><td class="manual_control_name">5</td><td><div class="btn-group">
-								<button type="button" class="btn btn-large" value="51">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
-								<button type="button" class="btn-large btn" value="50">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
-							</div></td></tr>
-						<tr><td class="manual_control_name">6</td><td><div class="btn-group">
-								<button type="button" class="btn btn-large" value="61">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
-								<button type="button" class="btn-large btn" value="60">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
-							</div></td></tr>
-						<tr><td colspan="3"><div class="btn-group">
-								<button type="button" class="btn btn-large" value="all_on">&nbsp;&nbsp;&nbsp; ALL ON &nbsp;&nbsp;&nbsp;</button>
-								<button type="button" class="btn-large btn" value="all_off">&nbsp;&nbsp;&nbsp; ALL OFF &nbsp;&nbsp;&nbsp;</button>
-							</div></td></tr>
-					</table>	
-				</div>
-			</div><!--//end div.manual -->
 
-			<div class="virtual_trigger">
-				<div class="subheader">
-					<h2>Virtual Trigger</h2>
-					<p>Need to trigger an input?<br />Push their buttons.</p>
-				</div>
 				<div class="container">
-					<h3>Notes about virtual triggers</h3>
-				<p>In this mode the hauntbox is doing it's normal thing, listing to sensors and doing what you told it in the program page. Here you can manually set off a sensor for added fun.</p>
-					<table>
-						<tr><th>Input</th><th>Control</th></tr>
-						<tr><td class="virtual_trigger_name">1</td><td><div class="btn-group">
-								<button type="button" class="btn btn-large" value="11">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
-							</div></td></tr>
-						<tr><td class="virtual_trigger_name">2</td><td><div class="btn-group">
-								<button type="button" class="btn btn-large" value="21">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
-							</div></td></tr>
-						<tr><td class="virtual_trigger_name">3</td><td><div class="btn-group">
-								<button type="button" class="btn btn-large" value="31">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
-							</div></td></tr>
-						<tr><td class="virtual_trigger_name">4</td><td><div class="btn-group">
-								<button type="button" class="btn btn-large" value="41">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
-							</div></td></tr>
-						<tr><td class="virtual_trigger_name">5</td><td><div class="btn-group">
-								<button type="button" class="btn btn-large" value="51">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
-							</div></td></tr>
-						<tr><td class="virtual_trigger_name">6</td><td><div class="btn-group">
-								<button type="button" class="btn btn-large" value="61">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
-							</div></td></tr>
-						<tr><td colspan="3"><div class="btn-group">
-								<button type="button" class="btn btn-large" value="all_on">&nbsp;&nbsp;&nbsp; ALL Trigger &nbsp;&nbsp;&nbsp;</button>
-							</div></td></tr>
-					</table>	
+					<div class="row">
+						<div class="offset1">
+							<div class="btn-group" data-toggle="buttons-radio">
+								<button type="button" class="btn">Automatic (normal)</button>
+								<button type="button" class="btn">Manual (disables inputs)</button>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="override_triggers span4">
+							<h3>Inputs</h3>
+							<table>
+								<!--<tr><th>Input</th><th>Control</th></tr>-->
+								<tr><td class="override_input_name">1</td><td><div class="btn-group">
+										<button type="button" class="btn btn-large" value="11">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
+									</div></td></tr>
+								<tr><td class="override_input_name">2</td><td><div class="btn-group">
+										<button type="button" class="btn btn-large" value="21">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
+									</div></td></tr>
+								<tr><td class="override_input_name">3</td><td><div class="btn-group">
+										<button type="button" class="btn btn-large" value="31">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
+									</div></td></tr>
+								<tr><td class="override_input_name">4</td><td><div class="btn-group">
+										<button type="button" class="btn btn-large" value="41">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
+									</div></td></tr>
+								<tr><td class="override_input_name">5</td><td><div class="btn-group">
+										<button type="button" class="btn btn-large" value="51">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
+									</div></td></tr>
+								<tr><td class="override_input_name">6</td><td><div class="btn-group">
+										<button type="button" class="btn btn-large" value="61">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
+									</div></td></tr>
+								<tr><td colspan="3"><div class="btn-group">
+										<button type="button" class="btn btn-large" value="all_on">&nbsp;&nbsp;&nbsp; Trigger ALL &nbsp;&nbsp;&nbsp;</button>
+									</div></td></tr>
+							</table>
+						</div>
+						<div class="override_outputs span4">
+							<h3>Outputs</h3>
+							<table>
+								<!--<tr><th>Output</th><th>Control</th></tr>-->
+								<tr><td class="override_output_name">1</td><td><div class="btn-group">
+										<button type="button" class="btn btn-large" value="11">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
+										<button type="button" class="btn-large btn" value="10">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
+									</div></td></tr>
+								<tr><td class="override_output_name">2</td><td><div class="btn-group">
+										<button type="button" class="btn btn-large" value="21">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
+										<button type="button" class="btn-large btn" value="20">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
+									</div></td></tr>
+								<tr><td class="override_output_name">3</td><td><div class="btn-group">
+										<button type="button" class="btn btn-large" value="31">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
+										<button type="button" class="btn-large btn" value="30">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
+									</div></td></tr>
+								<tr><td class="override_output_name">4</td><td><div class="btn-group">
+										<button type="button" class="btn btn-large" value="41">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
+										<button type="button" class="btn-large btn" value="40">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
+									</div></td></tr>
+								<tr><td class="override_output_name">5</td><td><div class="btn-group">
+										<button type="button" class="btn btn-large" value="51">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
+										<button type="button" class="btn-large btn" value="50">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
+									</div></td></tr>
+								<tr><td class="override_output_name">6</td><td><div class="btn-group">
+										<button type="button" class="btn btn-large" value="61">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
+										<button type="button" class="btn-large btn" value="60">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
+									</div></td></tr>
+								<tr><td colspan="3"><div class="btn-group">
+										<button type="button" class="btn btn-large" value="all_on">&nbsp;&nbsp;&nbsp; ALL ON &nbsp;&nbsp;&nbsp;</button>
+										<button type="button" class="btn-large btn" value="all_off">&nbsp;&nbsp;&nbsp; ALL OFF &nbsp;&nbsp;&nbsp;</button>
+									</div></td></tr>
+							</table>
+						</div>
+					</div>
 				</div>
-			</div><!--//end div.virtual_trigger -->
-
-			<div class="export">
-				<div class="subheader">
-					<h2>Export</h2>
-					<p>Have an awesome Hauntbox gig setup?<br />Export it for use later.</p>
-				</div>
-				<div class="container">
-				
-				<h3>Your current settings</h3>
-				<p>Copy and paste this into a text file for safekeeping or right click <a href="settings.txt">settings.txt</a> and save this file.</p>
-				
-				<pre class="settings">Settings string...........</pre>
-				
-
-				<h3>Your current program</h3>
-				<p>Copy and paste this into a text file for safekeeping or right click <a href="program.txt">program.txt</a> and save this file.</p>
-				<pre class="program">Program string...........</pre>
-				
-				
-				<h3>URL schema</h3>
-				<pre>
-					/program	current program + status + ram
-					/settings	current settings + status + ram
-					/program.txt	current program file
-					/settings.txt	current settings file
-					/ram		free ram
-					/row_status	current row state (as defined in firmware)
-					/output_status	current output state (on/off)
-					/status.htm 	live status (slows down normal operation)
-					/status 	returns intputState ; rowState ; outputState (used by status.htm)
-					/all_on 	turns all on
-					/all_off	turns all off
-					/manual 	send post request with integers to control manually
-				</pre>
-				</div>
-			</div><!--//end div.export -->
+			</div><!--//end div.override -->
 			
 			<div class="help">
 				<div class="subheader">
@@ -1334,20 +1300,45 @@ $(function(){//shortcut for doc.ready
 					<p>Stumped?<br />Find some answers.</p>
 				</div>
 				<div class="container">
-				<p>Please visit <a href="http://hauntbox.net/">hauntbox.net</a> for our store.</p>
-				
-				<p>Please consider adding to our <a href="https://github.com/Aylr/theHB/wiki">wiki</a> and you can find, hack, and contribute to our code at <a href="https://github.com/Aylr/theHB/">github</a>.</p>
-				
-				<button type="button" class="factory_defaults btn btn-danger">Reset to factory defaults</button>
-				
-				<p>kickstarter</p>
-				<p>email</p>
-				<p><a href="https://twitter.com/hauntbox" class="twitter-follow-button" data-show-count="false">Follow @hauntbox</a>
-				<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-				<br />
-				<a href="https://twitter.com/intent/tweet?screen_name=hauntbox" class="twitter-mention-button" data-size="large" data-related="hauntbox">Tweet to @hauntbox</a>
-				<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-				</p>
+					<p>Please visit <a href="http://hauntbox.net/">hauntbox.net</a> for our store.</p>
+					
+					<p>Please consider adding to our <a href="https://github.com/Aylr/theHB/wiki">wiki</a> and you can find, hack, and contribute to our code at <a href="https://github.com/Aylr/theHB/">github</a>.</p>
+					
+					<button type="button" class="factory_defaults btn btn-danger">Reset to factory defaults</button>
+					
+					<p>kickstarter</p>
+					<p>email</p>
+					<p><a href="https://twitter.com/hauntbox" class="twitter-follow-button" data-show-count="false">Follow @hauntbox</a>
+					<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+					<br />
+					<a href="https://twitter.com/intent/tweet?screen_name=hauntbox" class="twitter-mention-button" data-size="large" data-related="hauntbox">Tweet to @hauntbox</a>
+					<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+					</p>
+
+					<h3>URL schema</h3>
+					<pre>
+						/program	current program + status + ram
+						/settings	current settings + status + ram
+						/program.txt	current program file
+						/settings.txt	current settings file
+						/ram		free ram
+						/row_status	current row state (as defined in firmware)
+						/output_status	current output state (on/off)
+						/status.htm 	live status (slows down normal operation)
+						/status 	returns intputState ; rowState ; outputState (used by status.htm)
+						/all_on 	turns all on
+						/all_off	turns all off
+						/manual 	send post request with integers to control manually
+					</pre>
+
+					<h3>Your current settings</h3>
+					<p>Copy and paste this into a text file for safekeeping or right click <a href="settings.txt">settings.txt</a> and save this file.</p>
+					
+					<pre class="settings">Settings string...........</pre>
+
+					<h3>Your current program</h3>
+					<p>Copy and paste this into a text file for safekeeping or right click <a href="program.txt">program.txt</a> and save this file.</p>
+					<pre class="program">Program string...........</pre>
 				</div>
 			</div><!--//end div.help -->
 		</div><!--//end display_container -->
