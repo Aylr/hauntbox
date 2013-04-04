@@ -334,7 +334,7 @@ $(function(){//shortcut for doc.ready
 			console.log(duration);
 			
 			
-			set_inputs("input[name=enable_disable]",enable_disable_array);	//NEEDS TO BE PATCHED IN
+			set_inputs("input[name='enable_disable']",enable_disable_array);	//NEEDS TO BE PATCHED IN
 			set_inputs("select.sensor",input_array);			//set each input with the appropriate array
 			set_inputs("select.sensor_state",input_onoff);
 			set_inputs("input.wait_time",on_delay);
@@ -688,7 +688,7 @@ $(function(){//shortcut for doc.ready
 		var file = type + ".txt"	//make a file name based on the save type
 		
 		if (type == "program"){
-			column_names = ["div.program select.sensor", "div.program select.sensor_state", "div.program input.wait_time", "div.program select.output", "div.program select.output_state", "div.program select.duration_type", "div.program input.output_duration"];
+			column_names = ["div.program input[name='enable_disable']", "div.program select.sensor", "div.program select.sensor_state", "div.program input.wait_time", "div.program select.output", "div.program select.output_state", "div.program select.duration_type", "div.program input.output_duration"];
 		}else if (type == "settings"){
 			column_names = ["div.settings input[type='radio']:checked", "div.settings input.input_name", "div.settings input.output_name", "div.settings select.threshold", "div.settings input.retrigger"];
 		}		
@@ -886,9 +886,9 @@ $(function(){//shortcut for doc.ready
 					//if the selector is a CHECKBOX (used for the enable/disable checkbox in program)
 					if ($(selector).attr("type") == "checkbox"){
 						if (array[i] == 1){
-							$(this).attr("checked", "checked");
+							$(this).attr("checked", true).val(1);
 						}else{
-							$(this).removeAttr("checked");
+							$(this).attr("checked", false).val(0);
 						}
 					}
 
@@ -1042,9 +1042,9 @@ $(function(){//shortcut for doc.ready
 	
 	$("input[name='enable_disable']").click(function(){
 		if($(this).attr("checked") == "checked"){
-			$(this).next().fadeTo(100,1).find("input, select").prop("disabled", false);
+			$(this).attr("checked", true).val(1).next().fadeTo(100,1).find("input, select").prop("disabled", false);
 		} else {
-			$(this).next().fadeTo(100,.3).find("input, select").prop("disabled", true);
+			$(this).attr("checked", false).val(0).next().fadeTo(100,.3).find("input, select").prop("disabled", true);
 		}
 	});
 
