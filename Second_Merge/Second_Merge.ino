@@ -24,6 +24,7 @@ int d = 0;  //Delay used in testing of code.  Set to 0 if not testing code.
 int guiFlag = 0;  //GUI Flag tells us when there is a new program.txt/settings.txt from the GUI
 
 //"Program" arrays
+bool enableDisableArray[] = {1,1,1,1,1,1};
 byte inputArray[] =       {1, 2, 3, 4, 5, 6};   //which input (0-6) is read by which row ({row0, row1, ...})
                                                   //0 = no input, 1 = input #1, 2 = input #2, etc
 byte inputOnOffArray[] =  {1, 1, 1, 1, 1, 1};   //when input is on/off
@@ -693,99 +694,85 @@ void loop(){
   //----- Section AA4a ----- Reading Inputs and Writing to Outputs -----
   tempStampA = millis();
   for(int z = 0; z < currentRowCount; z++) {              //runs loop for each row
-    if(stateRow[z] == 1) {                   //STATE 1 = Waiting for a trigger
-      trigState[z] = inputTakeAction(z); //Call function and pass(Row number) to see if input is triggered
-      if(trigState[z] == 1) {                //If triggered
-        stateRow[z] = 2;                     //Moves to next state
-      }
-      if(trigState[z] == 0) {               //If not triggered
-      //Do nothing
-      }
-    }
-    else if(stateRow[z] == 2) {             //STATE 2 = Trigger message just received
-      timeStampDelayRow[z] = millis();      //Gets time stamp
-      stateRow[z] = 3;                      //Moves on to next state
-    }
-    else if(stateRow[z] == 3) {             //STATE 3 = Delay vs. timeStamp
-      nowTime = millis();
-      netTime = nowTime - timeStampDelayRow[z];
-      if(netTime >= delayArray[z] * 1000) {   //Tests to see if time > delay
-        stateRow[z] = 4;                    //If we've met our delay, go to next state
-      }
-    }
-    else if(stateRow[z] == 4) {             //STATE 4 = Change output (make it on/off/toggle)
-      if (outputOnOffToggleArray[z] == 0)       //if it should be off
-      {
-        outputState[z] = 0;
-      }
-      else if(outputOnOffToggleArray[z] == 1){  //if it should be on
-        outputState[z] = 1;
-      }
-      else if(outputOnOffToggleArray[z] == 2){  //if it should toggle
-        outputState[z] = !outputState[z]; //flip the bit
-      }
-      outputSelectFunction(z, outputState[z]);    //enact the change
-      timeStampDurationRow[z] = millis();   //Get timestamp
-      stateRow[z] = 5;                      //Moves on to next state
-    }
-    else if(stateRow[z] == 5) {             //STATE 5 = Duration of output "on"
-      //switch for 3 different duration types
-      if (durationTypeArray[z] == 0) {  //"until further notice"
-        stateRow[z] = 6;  //move to next state (retrigger delay)
-      }
-      else if(durationTypeArray[z] == 1) {  //"while input triggered"
-        if(trigState[z] == 0){  //trigger has stopped active
-          if (outputOnOffToggleArray[z] == 1) //if on, turn back off
-          {
-            outputState[z] = 0;
-            outputSelectFunction(z, 0);
-          }
-          else if(outputOnOffToggleArray[z] == 0){ //if off, turn back on
-            outputState[z] = 1;
-            outputSelectFunction(z, 1);
-          }
-          else if(outputOnOffToggleArray[z] == 2){  //if toggle
-            outputState[z] = !outputState[z]; //change the current state
-            outputSelectFunction(z, outputState[z]);
-          }
-          
-          stateRow[z] = 6; //move to next state (retrigger delay)
+    if(enableDisableArray[z] == 1) {   //only run the state machine for a row that's enabled
+      if(stateRow[z] == 1) {                   //STATE 1 = Waiting for a trigger
+        trigState[z] = inputTakeAction(z); //Call function and pass(Row number) to see if input is triggered
+        if(trigState[z] == 1) {                //If triggered
+          stateRow[z] = 2;                     //Moves to next state
         }
-      }
-      else if (durationTypeArray[z] == 2) {    //"for...seconds"
+        if(trigState[z] == 0) {               //If not triggered
+        //Do nothing
+        }
+      }else if(stateRow[z] == 2) {             //STATE 2 = Trigger message just received
+        timeStampDelayRow[z] = millis();      //Gets time stamp
+        stateRow[z] = 3;                      //Moves on to next state
+      }else if(stateRow[z] == 3) {             //STATE 3 = Delay vs. timeStamp
         nowTime = millis();
-        netTime = nowTime - timeStampDurationRow[z];
-        if(netTime >= durationArray[z] * 1000) {
-          if (outputOnOffToggleArray[z] == 1) //if on, turn back off
-          {
-            outputState[z] = 0;
-            outputSelectFunction(z, 0);
-          }
-          else if(outputOnOffToggleArray[z] == 0){ //if off, turn back on
-            outputState[z] = 1;
-            outputSelectFunction(z, 1);
-          }
-          else if(outputOnOffToggleArray[z] == 2){  //if toggle
-            outputState[z] = !outputState[z]; //change the current state
-            outputSelectFunction(z, outputState[z]);
-          }
-
-          stateRow[z] = 6;    //move to next state (retrigger delay)
+        netTime = nowTime - timeStampDelayRow[z];
+        if(netTime >= delayArray[z] * 1000) {   //Tests to see if time > delay
+          stateRow[z] = 4;                    //If we've met our delay, go to next state
         }
+      }else if(stateRow[z] == 4) {             //STATE 4 = Change output (make it on/off/toggle)
+        if (outputOnOffToggleArray[z] == 0){       //if it should be off
+          outputState[z] = 0;
+        }else if(outputOnOffToggleArray[z] == 1){  //if it should be on
+          outputState[z] = 1;
+        }else if(outputOnOffToggleArray[z] == 2){  //if it should toggle
+          outputState[z] = !outputState[z]; //flip the bit
+        }
+        outputSelectFunction(z, outputState[z]);    //enact the change
+        timeStampDurationRow[z] = millis();   //Get timestamp
+        stateRow[z] = 5;                      //Moves on to next state
+      }else if(stateRow[z] == 5) {             //STATE 5 = Duration of output "on"
+        //switch for 3 different duration types
+        if (durationTypeArray[z] == 0) {  //"until further notice"
+          stateRow[z] = 6;  //move to next state (retrigger delay)
+        }else if(durationTypeArray[z] == 1) {  //"while input triggered"
+          if(trigState[z] == 0){  //trigger has stopped active
+            if (outputOnOffToggleArray[z] == 1) //if on, turn back off
+            {
+              outputState[z] = 0;
+              outputSelectFunction(z, 0);
+            }
+            else if(outputOnOffToggleArray[z] == 0){ //if off, turn back on
+              outputState[z] = 1;
+              outputSelectFunction(z, 1);
+            }
+            else if(outputOnOffToggleArray[z] == 2){  //if toggle
+              outputState[z] = !outputState[z]; //change the current state
+              outputSelectFunction(z, outputState[z]);
+            }
+            
+            stateRow[z] = 6; //move to next state (retrigger delay)
+          }
+        }else if (durationTypeArray[z] == 2) {    //"for...seconds"
+          nowTime = millis();
+          netTime = nowTime - timeStampDurationRow[z];
+          if(netTime >= durationArray[z] * 1000) {
+            if (outputOnOffToggleArray[z] == 1) { //if on, turn back off
+              outputState[z] = 0;
+              outputSelectFunction(z, 0);
+            }else if(outputOnOffToggleArray[z] == 0){ //if off, turn back on
+              outputState[z] = 1;
+              outputSelectFunction(z, 1);
+            }else if(outputOnOffToggleArray[z] == 2){  //if toggle
+              outputState[z] = !outputState[z]; //change the current state
+              outputSelectFunction(z, outputState[z]);
+            }
+
+            stateRow[z] = 6;    //move to next state (retrigger delay)
+          }
+        }
+      }else if(stateRow[z] == 6) {             //STATE 6 = retrigger delay holding state (kind of like a lobby)
+        nowTime = millis();
+        netTime = nowTime - timeStampDelayRow[z];
+        if(netTime >= inputRetriggerDelayArray[z] * 1000) {          //Tests to see if time > delay
+          stateRow[z] = 1;                    //If we've met our delay, go back to waiting for trigger state
+        }
+      }else {                                  //STATE = ??? if state is not 1-6, set to 1 (waiting)
+        stateRow[z] = 1;
+        delay (d);
       }
-    }
-    else if(stateRow[z] == 6) {             //STATE 6 = retrigger delay holding state (kind of like a lobby)
-      nowTime = millis();
-      netTime = nowTime - timeStampDelayRow[z];
-      if(netTime >= inputRetriggerDelayArray[z] * 1000) {          //Tests to see if time > delay
-        stateRow[z] = 1;                    //If we've met our delay, go back to waiting for trigger state
-      }
-    }
-    else {                                 //if state is not 1-6, set to 1 (waiting)
-      stateRow[z] = 1;                     // this is to increase robustness
-//m      Serial.print("Initializing Row State ");
-//m      Serial.println(z);
-      delay (d);
     }
   }
     
@@ -1052,11 +1039,18 @@ char convert(char* readString, bool type){
     for (i = 0; i < 6; i++) {
       if (tok == NULL)
         break;
+      enableDisableArray[i] = (byte)atoi(tok);
+      tok = strtok(NULL, ",");
+    }
+    tok = strtok(col[1], ",");
+    for (i = 0; i < 6; i++) {
+      if (tok == NULL)
+        break;
       inputArray[i] = (byte)atoi(tok);
       tok = strtok(NULL, ",");
     }
     // inputOnOffArray
-    tok = strtok(col[1], ",");
+    tok = strtok(col[2], ",");
     for (i = 0; i < 6; i++) {
       if (tok == NULL)
         break;
@@ -1064,7 +1058,7 @@ char convert(char* readString, bool type){
       tok = strtok(NULL, ",");
     }
     // delayArray
-    tok = strtok(col[2], ",");
+    tok = strtok(col[3], ",");
     for (i = 0; i < 6; i++) {
       if (tok == NULL)
         break;
@@ -1072,7 +1066,7 @@ char convert(char* readString, bool type){
       tok = strtok(NULL, ",");
     }
     // outputArray
-    tok = strtok(col[3], ",");
+    tok = strtok(col[4], ",");
     for (i = 0; i < 6; i++) {
       if (tok == NULL)
         break;
@@ -1080,7 +1074,7 @@ char convert(char* readString, bool type){
       tok = strtok(NULL, ",");
     }
     // outputOnOffToggleArray
-    tok = strtok(col[4], ",");
+    tok = strtok(col[5], ",");
     for (i = 0; i < 6; i++) {
       if (tok == NULL)
         break;
@@ -1088,7 +1082,7 @@ char convert(char* readString, bool type){
       tok = strtok(NULL, ",");
     }
     // durationTypeArray
-    tok = strtok(col[5], ",");
+    tok = strtok(col[6], ",");
     for (i = 0; i < 6; i++) {
       if (tok == NULL)
         break;
@@ -1096,7 +1090,7 @@ char convert(char* readString, bool type){
       tok = strtok(NULL, ",");
     }
     // durationArray
-    tok = strtok(col[6], ",");
+    tok = strtok(col[7], ",");
     for (i = 0; i < 6; i++) {
       if (tok == NULL)
         break;
@@ -1105,42 +1099,41 @@ char convert(char* readString, bool type){
     }
     
     // Now print out all the values to make sure it all worked
+    Serial.print("enableDisableArray: ");
+    for (i = 0; i < 6; i++){
+      Serial.print(enableDisableArray[i]);
+      Serial.print(" ");
+    }
     Serial.print("inputArray: ");
     for (i = 0; i < 6; i++){
       Serial.print(inputArray[i]);
       Serial.print(" ");
     }
-    
     Serial.print("\ninputOnOffArray: ");
     for (i = 0; i < 6; i++){
       Serial.print(inputOnOffArray[i]);
       Serial.print(" ");
     }
-    
     Serial.print("\ndelayArray: ");
     for (i = 0; i < 6; i++){
       Serial.print(delayArray[i]);
       Serial.print(" ");
     }
-    
     Serial.print("\noutputArray: ");
     for (i = 0; i < 6; i++){
       Serial.print(outputArray[i]);
       Serial.print(" ");
     }
-    
     Serial.print("\noutputOnOffToggleArray: ");
     for (i = 0; i < 6; i++){
       Serial.print(outputOnOffToggleArray[i]);
       Serial.print(" ");
     }
-    
     Serial.print("\ndurationTypeArray: ");
     for (i = 0; i < 6; i++){
       Serial.print(durationTypeArray[i]);
       Serial.print(" ");
     }
-    
     Serial.print("\ndurationArray: ");
     for (i = 0; i < 6; i++){
       Serial.print(durationArray[i]);
