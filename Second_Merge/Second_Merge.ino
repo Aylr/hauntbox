@@ -22,26 +22,24 @@ int d = 0;  //Delay used in testing of code.  Set to 0 if not testing code.
 
 //--------------------Define/get variables from GUI-------------------------------------
 int guiFlag = 0;  //GUI Flag tells us when there is a new program.txt/settings.txt from the GUI
+int currentRowCount = 6;  //current number of rows (starts at 6 and modified by gui)
+
 
 //"Program" arrays
-bool enableDisableArray[] = {1,1,1,1,1,1};
-byte inputArray[] =       {1, 2, 3, 4, 5, 6};   //which input (0-6) is read by which row ({row0, row1, ...})
-                                                  //0 = no input, 1 = input #1, 2 = input #2, etc
-byte inputOnOffArray[] =  {1, 1, 1, 1, 1, 1};   //when input is on/off
-unsigned long delayArray[] = {0, 0, 0, 0, 0, 0};   //actual delay in milliseconds
-byte outputArray[] =      {1, 2, 3, 4, 5, 6};   //which outputs (0-6) are controlled by which row ({row0, row1, ...})
-                                                  //0 = no output, 1 = output #1, 2 = output #2, etc
-byte outputOnOffToggleArray[] = {1,1,1,1,1,1};  //What the output should do (on/off/toggle)
-byte durationTypeArray[] = {0,1,2,0,1,2};             //The type of duration
-                                                  //0 = until further notice, 1 = while input active, 2 = for ...
-unsigned long durationArray[] = {1000, 6000, 6000, 6000, 6000, 6000};  //actual effect duration in milliseconds
+bool enableDisableArray[MAXROWS] = {1,1,1,1,1,1};       //if a row is enabled or disabled
+byte inputArray[MAXROWS] =       {1, 2, 3, 4, 5, 6};    //which input (0-6) is selected (0 = none, 1 = input #1, 2 = input #2, ...)
+byte inputOnOffArray[MAXROWS] =  {1, 1, 1, 1, 1, 1};    //when input is on/off
+unsigned long delayArray[MAXROWS] = {0, 0, 0, 0, 0, 0}; //actual delay in milliseconds
+byte outputArray[MAXROWS] =      {1, 2, 3, 4, 5, 6};    //which outputs (0-6) is selected (0 = none, 1 = output #1, 2 = output #2, ...)
+byte outputOnOffToggleArray[MAXROWS] = {1,1,1,1,1,1};   //What the output should do (on/off/toggle)
+byte durationTypeArray[MAXROWS] = {0,1,2,0,1,2};        //The type of duration (0 = until further notice, 1 = while input active, 2 = for ...)
+unsigned long durationArray[MAXROWS] = {1000, 6000, 6000, 6000, 6000, 6000};  //actual effect duration in milliseconds
 
 //"Settings" arrays
-byte inputActiveHiLowArray[] =  {1, 1, 1, 1, 1, 0};   //What signal level is considered "on" for input # ({input1, input2, ...})
-                                                      //1 = High, 0 = Low
-byte outputActiveHiLowArray[] = {1, 1, 1, 1, 1, 1};   //Output considered on when High (1) or Low (0)
-unsigned int inputTriggerThresholdArray[] = {100,100,100,100,100,100};//input trigger thresholds
-unsigned long inputRetriggerDelayArray[] = {0,0,0,0,0,0};  //retrigger time in milliseconds
+byte inputActiveHiLowArray[] =  {1, 1, 1, 1, 1, 0};         //What signal level is considered "on" for each input (1 = High, 0 = Low)
+byte outputActiveHiLowArray[] = {1, 1, 1, 1, 1, 1};         //Output considered on when High (1) or Low (0)
+unsigned int inputTriggerThresholdArray[] = {100,100,100,100,100,100};  //input trigger thresholds
+unsigned long inputRetriggerDelayArray[] = {0,0,0,0,0,0};               //retrigger time in milliseconds
 
 
 // Other arrays
@@ -51,7 +49,6 @@ byte outputLEDArray [] = {47,46,45,44,43,42};   //Array of arduino pins that cor
 
 
 //----------------------Define variables in code-----------------------------
-int currentRowCount = 6;  //current number of rows (starts at 6 and modified by gui)
 bool outputState[6] = {0,0,0,0,0,0};   //array to hold on/off (1/0) state of every given output. Manipulated by any/multiple rules
                 //***only 6 outputs!!!
 int stateRow[MAXROWS];              //array that defines each row's state. Gets initialized in initializeFunction called from main function
@@ -918,7 +915,7 @@ char convert(char* readString, bool type){
   //converts readString (data) into program or settings arrays
   //type: 0 = settings, 1 = program
 
-  char* col[7];
+  char* col[8];
   char* tok;
   byte i = 0;
  
@@ -941,7 +938,7 @@ char convert(char* readString, bool type){
   // This may help it fail more gracefully.
   tok = strtok(readString, ";");
   col[0] = tok;
-  for (i = 1; i < 7; i++) {
+  for (i = 1; i < 8; i++) {
     if (tok == NULL)
       break;
     tok = strtok(NULL, ";");
@@ -1034,14 +1031,20 @@ char convert(char* readString, bool type){
     // into the appropriate data type.  (That's what the (byte) before
     // atoi(tok) is doing.)  It would be more graceful to create a function
     // to do this, rather than repeat it 6 times.
+
+    currentRowCount = 0; //reset to zero, then we'll count them on the first array
     // inputArray
     tok = strtok(col[0], ",");
     for (i = 0; i < 6; i++) {
       if (tok == NULL)
         break;
       enableDisableArray[i] = (byte)atoi(tok);
+      currentRowCount = i + 1;
       tok = strtok(NULL, ",");
     }
+    Serial.print("currentRowCount: ");
+    Serial.println(currentRowCount);
+    
     tok = strtok(col[1], ",");
     for (i = 0; i < 6; i++) {
       if (tok == NULL)
