@@ -506,9 +506,6 @@ void setup() {
         ip[i] = (byte)atoi(val[i]);
       }
       
-      //Placeholders for actual code that should validate the IP address
-      //test for real IP which should look like this: byte ip[] = { 192, 168, 0, 100 };
-      
       Serial << F("Static IP on\n");
       Serial << ip_temp;
       Ethernet.begin(mac,ip);                                 //setup with static address
@@ -706,7 +703,7 @@ void loop(){
       }else if(stateRow[z] == 3) {             //STATE 3 = Delay vs. timeStamp
         nowTime = millis();
         netTime = nowTime - timeStampDelayRow[z];
-        if(netTime >= delayArray[z] * 1000) {   //Tests to see if time > delay
+        if(netTime >= delayArray[z]) {   //Tests to see if time > delay
           stateRow[z] = 4;                    //If we've met our delay, go to next state
         }
       }else if(stateRow[z] == 4) {             //STATE 4 = Change output (make it on/off/toggle)
@@ -745,7 +742,7 @@ void loop(){
         }else if (durationTypeArray[z] == 2) {    //"for...seconds"
           nowTime = millis();
           netTime = nowTime - timeStampDurationRow[z];
-          if(netTime >= durationArray[z] * 1000) {
+          if(netTime >= durationArray[z]) {
             if (outputOnOffToggleArray[z] == 1) { //if on, turn back off
               outputState[z] = 0;
               outputSelectFunction(z, 0);
@@ -763,7 +760,7 @@ void loop(){
       }else if(stateRow[z] == 6) {             //STATE 6 = retrigger delay holding state (kind of like a lobby)
         nowTime = millis();
         netTime = nowTime - timeStampDelayRow[z];
-        if(netTime >= inputRetriggerDelayArray[z] * 1000) {          //Tests to see if time > delay
+        if(netTime >= inputRetriggerDelayArray[z]) {          //Tests to see if time > delay
           stateRow[z] = 1;                    //If we've met our delay, go back to waiting for trigger state
         }
       }else {                                  //STATE = ??? if state is not 1-6, set to 1 (waiting)
@@ -1044,7 +1041,7 @@ char convert(char* readString, bool type){
     }
     Serial.print("currentRowCount: ");
     Serial.println(currentRowCount);
-    
+
     tok = strtok(col[1], ",");
     for (i = 0; i < 6; i++) {
       if (tok == NULL)
