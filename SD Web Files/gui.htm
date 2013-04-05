@@ -702,7 +702,13 @@ $(function(){//shortcut for doc.ready
 		for (var i=0, tot=column_names.length; i < tot; i++) {		
 			$(column_names[i]).each(function(){	//loop through a single column
 				counter ++;						//increment counter
-				post_data += $(this).val();		//append value of input
+				if(column_names[i] == "div.program input.wait_time" || column_names[i] == "div.program input.output_duration" || column_names == "div.settings input.retrigger"){
+					//undecimalify
+					post_data += $(this).val() * 1000;	//the singular conversion from seconds to milliseconds
+				}else{
+					post_data += $(this).val();		//append value of input
+				}
+				
 				if(counter == $(column_names[i]).length){			//append appropriate element or row delimiter
 					post_data += ";";			//row delimiter
 					counter = 0;				//reset counter
