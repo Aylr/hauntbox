@@ -114,6 +114,8 @@ TinyWebServer::PathHandler handlers[] = {
   {"/manual", TinyWebServer::POST, &manual_handler },
   {"/all_off", TinyWebServer::GET, &all_off_handler },
   {"/all_on", TinyWebServer::GET, &all_on_handler },
+  {"/trigger_all", TinyWebServer::GET, &trigger_all_handler },
+  {"/trigger", TinyWebServer::POST, &trigger_handler },
   {"/upload/" "*", TinyWebServer::PUT, &TinyWebPutHandler::put_handler },
   {"/" "*", TinyWebServer::GET, &file_handler },
   {NULL},
@@ -262,6 +264,80 @@ boolean manual_handler(TinyWebServer& web_server) {
 
     outputState[tempOutput-1] = tempOnOff;          //set map, remembering to shift by minus 1
     outputSelectFunction(tempOutput-1, tempOnOff);  //set reality, remembering to shift by minus 1
+  }
+  return true;
+}
+
+// -------------------- trigger handler -------------------- 
+boolean trigger_handler(TinyWebServer& web_server) {
+  web_server.send_error_code(200);
+  //web_server.send_content_type("text/plain");
+  //web_server.end_headers();
+
+  Client& client = web_server.get_client();
+  if (client.available()) {
+    int tempInput = 0;             //keeps track of which input
+    
+    char ch = (char)client.read();  //throw away the first two characters in "a=11"
+    ch = (char)client.read();       //throw away the first two characters in "a=11"
+    ch = (char)client.read();       //now get the first integer 1
+    
+    if (ch == '1'){                 //this could be cleaned probably by using atoi
+      tempInput = 1;
+    }else if (ch == '2'){
+      tempInput = 2;
+    }else if (ch == '3'){
+      tempInput = 3;
+    }else if (ch == '4'){
+      tempInput = 4;
+    }else if (ch == '5'){
+      tempInput = 5;
+    }else if (ch == '6'){
+      tempInput = 6;
+    }
+    
+    #ifdef DEBUG
+      Serial.print("****** Manual trigger recieved unconverted: ");
+      Serial.print(ch);
+      Serial.print(" Converted: ");
+      Serial.println(tempInput);
+    #endif
+
+    //CODE GOES HERE TO ALTER STATE MACHINE BY TRIGGERING
+      for (byte i=0; i < currentRowCount; i++){
+        Serial.print(i);
+        Serial.print(" ");
+        if (inputArray[i] == tempInput){ //inputArray = {1,1,2}
+          stateRow[i] = 2;
+          Serial.println("match");
+        }
+      }
+    /*
+    for state
+
+
+    
+    You'll have to map an input to its row(s) and change state to 2 (trigger message received)
+
+    */
+  }
+  return true;
+}
+
+
+// -------------------- trigger_all handler -------------------- 
+boolean trigger_all_handler(TinyWebServer& web_server) {   //turns all outputs on
+  web_server.send_error_code(200);
+  //web_server.send_content_type("text/plain");
+  //web_server.end_headers();
+  
+  #ifdef DEBUG
+    Serial.print("****** Manual Trigger: ALL");
+  #endif
+  
+  for (byte i=0;i<=currentRowCount;i++){
+    //set all to state 2
+    stateRow[i] = 2;
   }
   return true;
 }
@@ -1037,6 +1113,7 @@ char convert(char* readString, bool type){
         break;
       enableDisableArray[i] = (byte)atoi(tok);
       currentRowCount = i + 1;
+      
       tok = strtok(NULL, ",");
     }
     Serial.print("currentRowCount: ");
@@ -1162,3 +1239,4 @@ void LEDFlasher (int flashes, int timeOn, int timeOff){    //used to flash all i
     delay(timeOff);
   }//flashing loop
 }//end LEDFlasher function
+
