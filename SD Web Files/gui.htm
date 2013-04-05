@@ -631,7 +631,7 @@ $(function(){//shortcut for doc.ready
 		factory_defaults();
 	});
 	
-	$("div.override button").click(function(){	//override controls
+	$("div.override_outputs button").click(function(){	//override controls
 		var tempval = $(this).attr("value");
 		//console.log(tempval);
 
@@ -640,13 +640,23 @@ $(function(){//shortcut for doc.ready
 		}else if (tempval == "all_off"){		//if all off
 			$.get("all_off");					//get url "/all_off"
 		}else{
-			$.post("manual", { a: tempval });	//otherwise post the input# and on/off
-												//the first integer is the input#, the second 1 = on, 0 = off
-												//example input 1 off: 10
+			$.post("manual", { a: tempval });	//otherwise post the output# and on/off
+												//the first integer is the output#, the second 1 = on, 0 = off
+												//example output 1 off: 10
 												//input 2 on: 21
 		}
 	});
 
+	$("div.override_triggers button").click(function(){
+		//api for manual triggers
+		var tempval = $(this).attr("value");
+
+		if (tempval == "all"){				//if trigger all
+			$.get("trigger_all");			//go to url "/trigger_all"
+		}else{
+			$.post("trigger", { a: tempval });	//otherwise post the input# and on/off
+		}
+	});
 //##################################### Utility Functions #####################################
 	
 	function unsaved_modal(){	//displays the unsaved changes warning with save/discard buttons
@@ -708,7 +718,7 @@ $(function(){//shortcut for doc.ready
 				}else{
 					post_data += $(this).val();		//append value of input
 				}
-				
+
 				if(counter == $(column_names[i]).length){			//append appropriate element or row delimiter
 					post_data += ";";			//row delimiter
 					counter = 0;				//reset counter
@@ -886,7 +896,12 @@ $(function(){//shortcut for doc.ready
 					
 					//Do NOT set the value of the radios, it messes them up!!!!
 					if ($(selector).attr("type") != "radio") {
-						$(this).val(array[i]);			//set the value
+						//if the selector is a time field, convert data from milliseconds back to seconds
+						if (selector == "input.wait_time" || selector == "input.output_duration" || selector == "div.settings input.retrigger"){
+							$(this).val(array[i]/1000);
+						}else{
+							$(this).val(array[i]);			//set the value of normal fields (not radios or time fields)
+						}
 					}
 
 					//if the selector is a CHECKBOX (used for the enable/disable checkbox in program)
@@ -901,7 +916,7 @@ $(function(){//shortcut for doc.ready
 					//if the selector is a CHECKED radio (as on the settings page)
 					if ($(selector).attr("type") == "radio" && array[i] == 1){
 						$(this).attr("checked", "checked"); //Check it (the browser unchecks the other)
-					};
+					}
 
 					//if the selector is the duration type, we have to do some fancy stuff about the hidden fields
 					if (selector == "select.duration_type") {
@@ -1255,7 +1270,7 @@ $(function(){//shortcut for doc.ready
 
 				<div class="container">
 					<div class="row">
-						<div class="offset1">
+						<div class="">
 							<div class="btn-group" data-toggle="buttons-radio">
 								<button type="button" class="btn">Automatic (normal)</button>
 								<button type="button" class="btn">Manual (disables inputs)</button>
@@ -1265,28 +1280,32 @@ $(function(){//shortcut for doc.ready
 					<div class="row">
 						<div class="override_triggers span4">
 							<h3>Inputs</h3>
+							<div class="btn-group" data-toggle="buttons-radio">
+								<button type="button" class="btn">Automatic (normal)</button>
+								<button type="button" class="btn">Manual (disables inputs)</button>
+							</div>
 							<table>
 								<!--<tr><th>Input</th><th>Control</th></tr>-->
 								<tr><td class="override_input_name">1</td><td><div class="btn-group">
-										<button type="button" class="btn btn-large" value="11">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
+										<button type="button" class="btn btn-large" value="1">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
 									</div></td></tr>
 								<tr><td class="override_input_name">2</td><td><div class="btn-group">
-										<button type="button" class="btn btn-large" value="21">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
+										<button type="button" class="btn btn-large" value="2">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
 									</div></td></tr>
 								<tr><td class="override_input_name">3</td><td><div class="btn-group">
-										<button type="button" class="btn btn-large" value="31">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
+										<button type="button" class="btn btn-large" value="3">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
 									</div></td></tr>
 								<tr><td class="override_input_name">4</td><td><div class="btn-group">
-										<button type="button" class="btn btn-large" value="41">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
+										<button type="button" class="btn btn-large" value="4">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
 									</div></td></tr>
 								<tr><td class="override_input_name">5</td><td><div class="btn-group">
-										<button type="button" class="btn btn-large" value="51">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
+										<button type="button" class="btn btn-large" value="5">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
 									</div></td></tr>
 								<tr><td class="override_input_name">6</td><td><div class="btn-group">
-										<button type="button" class="btn btn-large" value="61">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
+										<button type="button" class="btn btn-large" value="6">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
 									</div></td></tr>
 								<tr><td colspan="3"><div class="btn-group">
-										<button type="button" class="btn btn-large" value="all_on">&nbsp;&nbsp;&nbsp; Trigger ALL &nbsp;&nbsp;&nbsp;</button>
+										<button type="button" class="btn btn-large" value="all">&nbsp;&nbsp;&nbsp; Trigger ALL &nbsp;&nbsp;&nbsp;</button>
 									</div></td></tr>
 							</table>
 						</div>
