@@ -12,6 +12,7 @@
 #include <EthernetBonjour.h>
 
 #define DEBUG true
+#define DEBUG_STATES false    //prints states to serial
 #define MAXROWS 12
 #define MINROWS 6
 
@@ -23,6 +24,7 @@ int d = 0;  //Delay used in testing of code.  Set to 0 if not testing code.
 //--------------------Define/get variables from GUI-------------------------------------
 int guiFlag = 0;  //GUI Flag tells us when there is a new program.txt/settings.txt from the GUI
 int currentRowCount = 6;  //current number of rows (starts at 6 and modified by gui)
+bool automaticMode = true;  //keeps track of auto/manual override mode
 
 
 //"Program" arrays
@@ -53,13 +55,12 @@ bool outputState[6] = {0,0,0,0,0,0};   //array to hold on/off (1/0) state of eve
                 //***only 6 outputs!!!
 int stateRow[MAXROWS];              //array that defines each row's state. Gets initialized in initializeFunction called from main function
 int trigState[6];                      //gets initialized immediately before it is used
-unsigned long timeStampDelayRow[MAXROWS];    //gets initialized immediately before it is used
+unsigned long delayTimeStamp[MAXROWS];    //gets initialized immediately before it is used
 unsigned long timeStampDurationRow[MAXROWS]; //gets initialized immediately before it is used
 unsigned long nowTime;
-unsigned long netTime;
+unsigned long netTime;                       //used to measure difference between now and delay time
+//unsigned long retriggerNetTime;              //used to measure difference between now and retrigger time
 int statesInitialized = 0;      //keeps track if the states have been initialized
-unsigned long tempStampA;
-unsigned long tempStampB;
 
 //Define I/O pins
 int pinIn1 = 10;  //Analog pin
@@ -115,6 +116,9 @@ TinyWebServer::PathHandler handlers[] = {
   {"/all_off", TinyWebServer::GET, &all_off_handler },
   {"/all_on", TinyWebServer::GET, &all_on_handler },
   {"/trigger_all", TinyWebServer::GET, &trigger_all_handler },
+  {"/automatic_on", TinyWebServer::GET, &automatic_on_handler },
+  {"/automatic_off", TinyWebServer::GET, &automatic_off_handler },
+  {"/mode", TinyWebServer::GET, &mode_handler },
   {"/trigger", TinyWebServer::POST, &trigger_handler },
   {"/upload/" "*", TinyWebServer::PUT, &TinyWebPutHandler::put_handler },
   {"/" "*", TinyWebServer::GET, &file_handler },
@@ -303,23 +307,16 @@ boolean trigger_handler(TinyWebServer& web_server) {
       Serial.println(tempInput);
     #endif
 
-    //CODE GOES HERE TO ALTER STATE MACHINE BY TRIGGERING
-      for (byte i=0; i < currentRowCount; i++){
-        Serial.print(i);
-        Serial.print(" ");
-        if (inputArray[i] == tempInput){ //inputArray = {1,1,2}
-          stateRow[i] = 2;
-          Serial.println("match");
-        }
+    //loop through each row to see if it is controlled by the triggered input
+    for (int i=0; i < currentRowCount; i++){
+      //Serial.print(i);
+      //Serial.print(" ");
+      if (inputArray[i] == tempInput){      //if the row is controlld by the input
+        stateRow[i] = 2;                    //set as triggered in the state machine
       }
-    /*
-    for state
-
-
+    }
     
-    You'll have to map an input to its row(s) and change state to 2 (trigger message received)
 
-    */
   }
   return true;
 }
@@ -339,6 +336,45 @@ boolean trigger_all_handler(TinyWebServer& web_server) {   //turns all outputs o
     //set all to state 2
     stateRow[i] = 2;
   }
+  return true;
+}
+
+
+// -------------------- trigger_all handler -------------------- 
+boolean automatic_on_handler(TinyWebServer& web_server) {   //turns all outputs on
+  web_server.send_error_code(200);
+  //web_server.send_content_type("text/plain");
+  //web_server.end_headers();
+  #ifdef DEBUG
+    Serial.print("****** Automatic Mode ON");
+  #endif
+
+  automaticMode = true;
+  return true;
+}
+
+
+// -------------------- trigger_all handler -------------------- 
+boolean automatic_off_handler(TinyWebServer& web_server) {   //turns all outputs on
+  web_server.send_error_code(200);
+  //web_server.send_content_type("text/plain");
+  //web_server.end_headers();
+  #ifdef DEBUG
+    Serial.print("****** Automatic Mode OFF");
+  #endif
+    
+  automaticMode = false;
+  return true;
+}
+
+
+// -------------------- mode handler -------------------- 
+boolean mode_handler(TinyWebServer& web_server) {
+  web_server.send_error_code(200);
+  web_server.send_content_type("text/plain");
+  web_server.end_headers();
+  Client& client = web_server.get_client();
+  client.println((bool)automaticMode);
   return true;
 }
 
@@ -478,7 +514,7 @@ void file_uploader_handler(TinyWebServer& web_server,
         Serial.print("tempGuiFlag = ");
         Serial.println(tempGuiFlag);
         
-	free(fname);
+	     free(fname);
       }
     }
     break;
@@ -629,14 +665,14 @@ void initializeFunction() {
   // load settings and program from SD card
 
   //if they aren't there, create an intelligent default
-  delay(d*3);
+  //delay(d*3);
 
   for(int a = 0; a < 6; a++) {
     outputState[a] = 0;     //start with all pins off.
     outputSelectFunction(a, outputState[a]);  //set output according to outputState[] map
   }
   statesInitialized = 1;
-  delay(d*3);
+  //delay(d*3);
 }
 
 //----- Section AA4b -----
@@ -700,11 +736,13 @@ void statusMessage(int n) {
 //----- Section AA4c -----
 // Function that pairs the output pins to the row that is controlling for it
 void outputSelectFunction(int outputNumber, bool action) {
+  /*
   Serial.print("outputSelectFunction ");
   Serial.print(outputNumber);
   Serial.print(" ");
   Serial.print(action);
   Serial.print("\n");
+  */
   //takes an output (outputNumber) and an action:
     //0 = off
     //1 = on
@@ -754,7 +792,7 @@ void outputSelectFunction(int outputNumber, bool action) {
 //-------------------- Main Function ------------------------
 void loop(){
   
-  delay(d/2);  //For debug use only
+  //delay(d/2);  //For debug use only
   
   //----- Section AA1a -----
   if(statesInitialized == 0) {  //If the states have not been initialized, do so.
@@ -762,23 +800,26 @@ void loop(){
   }
   
   //----- Section AA4a ----- Reading Inputs and Writing to Outputs -----
-  tempStampA = millis();
   for(int z = 0; z < currentRowCount; z++) {              //runs loop for each row
     if(enableDisableArray[z] == 1) {   //only run the state machine for a row that's enabled
       if(stateRow[z] == 1) {                   //STATE 1 = Waiting for a trigger
         trigState[z] = inputTakeAction(z); //Call function and pass(Row number) to see if input is triggered
-        if(trigState[z] == 1) {                //If triggered
+        if(trigState[z] == 1 && automaticMode == true) {   //If triggered AND in automaticMode
           stateRow[z] = 2;                     //Moves to next state
-        }
-        if(trigState[z] == 0) {               //If not triggered
-        //Do nothing
+        }else{//if(trigState[z] == 0) {               //If not triggered (or not in automaticMode)
+          //Do nothing
         }
       }else if(stateRow[z] == 2) {             //STATE 2 = Trigger message just received
-        timeStampDelayRow[z] = millis();      //Gets time stamp
+        delayTimeStamp[z] = millis();      //Gets time stamp
+        
+        Serial.print("Trigger ");
+        Serial.print(z);
+        Serial.print(": ");
+        Serial.println(delayTimeStamp[z]);
         stateRow[z] = 3;                      //Moves on to next state
       }else if(stateRow[z] == 3) {             //STATE 3 = Delay vs. timeStamp
         nowTime = millis();
-        netTime = nowTime - timeStampDelayRow[z];
+        netTime = nowTime - delayTimeStamp[z];
         if(netTime >= delayArray[z]) {   //Tests to see if time > delay
           stateRow[z] = 4;                    //If we've met our delay, go to next state
         }
@@ -794,6 +835,10 @@ void loop(){
         timeStampDurationRow[z] = millis();   //Get timestamp
         stateRow[z] = 5;                      //Moves on to next state
       }else if(stateRow[z] == 5) {             //STATE 5 = Duration of output "on"
+        #ifdef DEBUG_STATES
+          printState(z);
+        #endif
+
         //switch for 3 different duration types
         if (durationTypeArray[z] == 0) {  //"until further notice"
           stateRow[z] = 6;  //move to next state (retrigger delay)
@@ -831,13 +876,24 @@ void loop(){
             }
 
             stateRow[z] = 6;    //move to next state (retrigger delay)
+            
           }
         }
       }else if(stateRow[z] == 6) {             //STATE 6 = retrigger delay holding state (kind of like a lobby)
-        nowTime = millis();
-        netTime = nowTime - timeStampDelayRow[z];
-        if(netTime >= inputRetriggerDelayArray[z]) {          //Tests to see if time > delay
-          stateRow[z] = 1;                    //If we've met our delay, go back to waiting for trigger state
+        
+        #ifdef DEBUG_STATES
+          printState(z);
+        #endif
+
+        unsigned long net;
+        unsigned long tempDelay = inputRetriggerDelayArray[(inputArray[z] - 1)];
+        unsigned long now = millis();
+
+        net = now - delayTimeStamp[z];
+
+
+        if(net >= tempDelay){
+          stateRow[z] = 1;
         }
       }else {                                  //STATE = ??? if state is not 1-6, set to 1 (waiting)
         stateRow[z] = 1;
@@ -879,16 +935,16 @@ void loop(){
     char* newvar = open_file("program.txt");  //store the program.txt in a var
     Serial.println(newvar);                   //print the file out
     convert(newvar,1);                        //convert the file to arrays
-    Serial.println("made it through program.txt conversion");
+    //Serial.println("made it through program.txt conversion");
     newvar = 0;                               //erase the newvar
-    Serial.println("reset newvar to 0");
+    //Serial.println("reset newvar to 0");
     
     newvar = open_file("settings.txt");       //store the settings.txt in a var
-    Serial.println("opening settings.txt");
-    Serial.println(newvar);                   //print the file out
-    Serial.println("printed settings.txt");
+    //Serial.println("opening settings.txt");
+    //Serial.println(newvar);                   //print the file out
+    //Serial.println("printed settings.txt");
     convert(newvar,0);                        //convert the file to arrays
-    Serial.println("made it through conversion of settings.txt");
+    //Serial.println("made it through conversion of settings.txt");
 
     
     //----- Section AB2 -----
@@ -1065,7 +1121,7 @@ char convert(char* readString, bool type){
     for (i = 0; i < 6; i++) {
       if (tok == NULL)
         break;
-      inputRetriggerDelayArray[i] = (byte)atoi(tok);
+      inputRetriggerDelayArray[i] = (unsigned long)atoi(tok);
       tok = strtok(NULL, ",");
     }
     
@@ -1163,7 +1219,7 @@ char convert(char* readString, bool type){
     for (i = 0; i < 6; i++) {
       if (tok == NULL)
         break;
-      durationTypeArray[i] = (unsigned int)atoi(tok);
+      durationTypeArray[i] = (byte)atoi(tok);
       tok = strtok(NULL, ",");
     }
     // durationArray
@@ -1239,4 +1295,11 @@ void LEDFlasher (int flashes, int timeOn, int timeOff){    //used to flash all i
     delay(timeOff);
   }//flashing loop
 }//end LEDFlasher function
+
+void printState(int row){
+  Serial.print("Row ");
+  Serial.print(row);
+  Serial.print(" State: ");
+  Serial.println(stateRow[row]);
+}
 
