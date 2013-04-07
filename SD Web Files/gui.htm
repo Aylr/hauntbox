@@ -201,6 +201,13 @@
 		margin-left: -160px;
 		width: 320px;
 	}
+	div.manual_mode_warning h2 {
+		position: absolute;
+		top: 30px;
+		left: 30px;
+		font-size: 2em;
+		color: rgb(249,167,43);
+	}
 </style>
 
 <script>
@@ -218,6 +225,7 @@ $(function(){//shortcut for doc.ready
 	var current_page = "program";			//keeps track of current page
 	var next_page = null;					//keeps track of next page
 	var ABC = ["A","B","C","D","E","F"]		//used when naming the dynamically generated rows
+	var automatic_mode = true;				//keeps track if hauntbox is in manual mode
 	
 	//ADC threshold values for inputs/outputs. Maths are done here to spare Arduino CPU cycles
 	var threshold_5V = 103;				//(5V / 5)*1024 = 103
@@ -245,6 +253,7 @@ $(function(){//shortcut for doc.ready
 	//##################################### Initial Page Load Stuff ##################################### 
 	$("#unsaved_modal").modal('hide');		//hide the unsaved changes modal
 	$("div.alert").hide();					//hide the alerts
+	$("div.manual_mode_warning").hide();	//hide the manual mode warning
 	$("#display_container").children().hide();			//load with all "tabs" hidden
 	$(".inner_sentence").fadeTo(0,.5);
 	
@@ -324,8 +333,9 @@ $(function(){//shortcut for doc.ready
 			}
 			update_row_buttons(current_rows_from_program);
 		
-			console.log(input_array);
+			console.log("Converted program arrays");
 			console.log(enable_disable_array);
+			console.log(input_array);
 			console.log(input_onoff);
 			console.log(on_delay);
 			console.log(output_array);
@@ -381,13 +391,13 @@ $(function(){//shortcut for doc.ready
 			array_of_strings_to_ints(io_voltage_thresholds);
 			array_of_strings_to_ints(retrigger_delays);
 		
-			/*
+			console.log("Converted settings arrays:")
 			console.log(io_definitions);
 			console.log(input_names);
 			console.log(output_names);
 			console.log(io_voltage_thresholds);
 			console.log(retrigger_delays);
-			*/
+			
 			local_input_names = input_names;
 			local_output_names = output_names;
 		
@@ -398,7 +408,7 @@ $(function(){//shortcut for doc.ready
 			set_inputs(".input_name",input_names);
 			set_inputs("div.settings .output_name",output_names);
 			set_inputs("div.settings .threshold",io_voltage_thresholds);
-			set_inputs("div.settings .retrigger",retrigger_delays);
+			set_inputs("div.settings input.retrigger",retrigger_delays);
 		}//end populate_settings()
 		
 		function update_status_and_ram(data){
@@ -407,6 +417,24 @@ $(function(){//shortcut for doc.ready
 			status_message(parseInt(data[data.length - 3]));		//update the status alert (the 3rd to last element)
 		}
 	};//end load_settings()
+
+	function load_mode(){
+		$.ajax({						//get current mode (auto/manual) and update buttons, etc
+				url: '/mode',				// /mode returns a 0 (manual) or 1 (automatic)
+				type: 'GET',
+				success: function(data){
+					if (data == 1){		//automatic mode
+						$("div.manual_mode_warning").fadeOut();								//hide warning
+						automatic_mode = 1;
+						$("div.manual_override_mode button[value='1']").button('toggle');	//toggle radio button
+					}else{				//manual mode
+						$("div.manual_mode_warning").fadeIn();								//show warning
+						automatic_mode = 0;
+						$("div.manual_override_mode button[value='0']").button('toggle');	//toggle radio button
+					}
+				}
+			});
+	}//end load_mode()
 
 	function set_override_output_names(){			//sets real names of outputs on the override page
 		var i = 0;
@@ -427,6 +455,7 @@ $(function(){//shortcut for doc.ready
 
 	set_voltage_thresholds();			//setup the settings form with proper threshold values
 	load_settings();					//load the data and populate form
+	load_mode();						//load the mode (auto/manual) and display appropriate warnings
 
 
 	//##################################### General navigation manager ##################################### 
@@ -501,9 +530,9 @@ $(function(){//shortcut for doc.ready
 					}
 				});//end ajax
 		}else if (chosen == "override"){	//"override" clicked
-			//anything special here?
-			set_override_output_names();
+			set_override_output_names();	//set the io names
 			set_override_input_names();
+			load_mode();					//load the mode and set buttons, warnings appropriately
 		}
 
 		set_active_nav(next_page);
@@ -647,7 +676,7 @@ $(function(){//shortcut for doc.ready
 		}
 	});
 
-	$("div.override_triggers button").click(function(){
+	$("div.override_triggers td button").click(function(){
 		//api for manual triggers
 		var tempval = $(this).attr("value");
 
@@ -657,6 +686,38 @@ $(function(){//shortcut for doc.ready
 			$.post("trigger", { a: tempval });	//otherwise post the input# and on/off
 		}
 	});
+
+	$("div.manual_override_mode button").click(function(){
+		var type = $(this).val();
+		if (type == 1){				//automatic
+			$.ajax({
+			  url: "automatic_on",
+			  type: 'GET',
+			  success: function(){
+			  	$("div.manual_mode_warning").fadeOut();
+			  	automatic_mode = true;
+			  },
+			  error: function(){
+			  	//some kind of error message
+			  	$("div.manual_mode_warning").fadeOut();
+			  }
+			});
+		}else{						//manual
+			$.ajax({
+				url: "automatic_off",
+				type: 'GET',
+				success: function(){
+					$("div.manual_mode_warning").fadeIn();
+					automatic_mode = false;
+				},
+				error: function(){
+					//some kind of error message
+					$("div.manual_mode_warning").fadeIn();
+				}
+			});
+		}
+	});
+
 //##################################### Utility Functions #####################################
 	
 	function unsaved_modal(){	//displays the unsaved changes warning with save/discard buttons
@@ -712,9 +773,10 @@ $(function(){//shortcut for doc.ready
 		for (var i=0, tot=column_names.length; i < tot; i++) {		
 			$(column_names[i]).each(function(){	//loop through a single column
 				counter ++;						//increment counter
-				if(column_names[i] == "div.program input.wait_time" || column_names[i] == "div.program input.output_duration" || column_names == "div.settings input.retrigger"){
+				if(column_names[i] == "div.program input.wait_time" || column_names[i] == "div.program input.output_duration" || column_names[i] == "div.settings input.retrigger"){
 					//undecimalify
-					post_data += $(this).val() * 1000;	//the singular conversion from seconds to milliseconds
+					//console.log("**** i:" + i + " this.val(): " + $(this).val() + " this.val()*1000: " + $(this).val()*1000);
+					post_data += ($(this).val() * 1000);	//the singular conversion from seconds to milliseconds
 				}else{
 					post_data += $(this).val();		//append value of input
 				}
@@ -1117,6 +1179,9 @@ $(function(){//shortcut for doc.ready
 				<li><a href="#" class="override">Override</a></li>
 				<li><a href="#" class="help">Help</a></li>
 			</ul>
+			<div class="manual_mode_warning">
+				<h2>Warning: Now in Manual mode!</h2>
+			</div>
 			<p class="logo"><img src="hblogo.png" width="150" height="87" /></p>
 			<div class="alert">
 				<a class="close">&times;</a>
@@ -1270,19 +1335,11 @@ $(function(){//shortcut for doc.ready
 
 				<div class="container">
 					<div class="row">
-						<div class="">
-							<div class="btn-group" data-toggle="buttons-radio">
-								<button type="button" class="btn">Automatic (normal)</button>
-								<button type="button" class="btn">Manual (disables inputs)</button>
-							</div>
-						</div>
-					</div>
-					<div class="row">
 						<div class="override_triggers span4">
 							<h3>Inputs</h3>
-							<div class="btn-group" data-toggle="buttons-radio">
-								<button type="button" class="btn">Automatic (normal)</button>
-								<button type="button" class="btn">Manual (disables inputs)</button>
+							<div class="btn-group manual_override_mode" data-toggle="buttons-radio">
+								<button type="button" class="btn" value="1">Automatic (normal)</button>
+								<button type="button" class="btn" value="0">Manual (disables inputs)</button>
 							</div>
 							<table>
 								<!--<tr><th>Input</th><th>Control</th></tr>-->
