@@ -11,12 +11,19 @@
 #include <TinyWebServer.h>
 #include <EthernetBonjour.h>
 
-#define DEBUG true
-#define DEBUG_STATES false    //prints states to serial
-#define MAXROWS 12
+//Serial debugging options. Uncomment a row to enable each section as needed.
+//#define DEBUG_STATES true           //prints states to serial
+//#define DEBUG_FILES true            //prints file conversion details to serial
+//#define DEBUG_PUT_HANDLER true      //prints file upload details to serial
+//#define DEBUG_OUTPUTS true          //prints outputSelect details to serial
+#define DEBUG_TRIGGERS true           //prints trigger details to serial
+#define DEBUG_BRIDGE true             //prints bridge details to serial
+//#define DEBUG_MANUAL true           //prints manual mode details to serial
+
+#define MAXROWS 20
 #define MINROWS 6
 
-char* bonjourName = "hauntbox";      //bonjour name
+char* bonjourName = "hauntbox";                  //bonjour name
 char* bonjourServiceRecord = "hauntbox._http";  //bonjour name (needs to have the "._http" at the end)
 
 int d = 0;  //Delay used in testing of code.  Set to 0 if not testing code.
@@ -24,6 +31,7 @@ int d = 0;  //Delay used in testing of code.  Set to 0 if not testing code.
 //--------------------Define/get variables from GUI-------------------------------------
 int guiFlag = 0;  //GUI Flag tells us when there is a new program.txt/settings.txt from the GUI
 int currentRowCount = 6;  //current number of rows (starts at 6 and modified by gui)
+int newCurrentRowCount = 0;
 bool automaticMode = true;  //keeps track of auto/manual override mode
 
 
@@ -145,8 +153,7 @@ void send_file_name(TinyWebServer& web_server, const char* filename) {
     web_server.send_error_code(404);
     web_server << F("Could not parse URL");
   } else {
-    TinyWebServer::MimeType mime_type
-      = TinyWebServer::get_mime_type_from_filename(filename);
+    TinyWebServer::MimeType mime_type = TinyWebServer::get_mime_type_from_filename(filename);
     web_server.send_error_code(200);
     web_server.send_content_type(mime_type);
     web_server.end_headers();
@@ -255,15 +262,9 @@ boolean manual_handler(TinyWebServer& web_server) {
       tempOutput = 6;
     }
     
-    #ifdef DEBUG
-      Serial.print("****** Manual Control recieved unconverted: ");
-      Serial.print(ch);
-      Serial.print(" ");
-      Serial.print(ch2);
-      Serial.print(" Converted: ");
-      Serial.print(tempOutput);
-      Serial.print(" ");
-      Serial.println(tempOnOff);
+    #ifdef DEBUG_MANUAL
+      Serial << F("****** Manual Control raw: ") << ch << " " << ch2;
+      Serial << F(" Converted: ") << tempOutput << " " << tempOnOff << F("\n");
     #endif
 
     outputState[tempOutput-1] = tempOnOff;          //set map, remembering to shift by minus 1
@@ -300,23 +301,18 @@ boolean trigger_handler(TinyWebServer& web_server) {
       tempInput = 6;
     }
     
-    #ifdef DEBUG
-      Serial.print("****** Manual trigger recieved unconverted: ");
-      Serial.print(ch);
-      Serial.print(" Converted: ");
-      Serial.println(tempInput);
+    #ifdef DEBUG_MANUAL
+      Serial << F("****** Manual trigger raw: ") << ch;
+      Serial << F(" Converted: ") << tempInput << F("\n");
     #endif
 
     //loop through each row to see if it is controlled by the triggered input
     for (int i=0; i < currentRowCount; i++){
-      //Serial.print(i);
-      //Serial.print(" ");
       if (inputArray[i] == tempInput){      //if the row is controlld by the input
         stateRow[i] = 2;                    //set as triggered in the state machine
       }
     }
     
-
   }
   return true;
 }
@@ -328,8 +324,8 @@ boolean trigger_all_handler(TinyWebServer& web_server) {   //turns all outputs o
   //web_server.send_content_type("text/plain");
   //web_server.end_headers();
   
-  #ifdef DEBUG
-    Serial.print("****** Manual Trigger: ALL");
+  #ifdef DEBUG_MANUAL
+    Serial << F("****** Manual Trigger: ALL");
   #endif
   
   for (byte i=0;i<=currentRowCount;i++){
@@ -345,8 +341,8 @@ boolean automatic_on_handler(TinyWebServer& web_server) {   //turns all outputs 
   web_server.send_error_code(200);
   //web_server.send_content_type("text/plain");
   //web_server.end_headers();
-  #ifdef DEBUG
-    Serial.print("****** Automatic Mode ON");
+  #ifdef DEBUG_MANUAL
+    Serial << F("****** Automatic Mode ON");
   #endif
 
   automaticMode = true;
@@ -359,8 +355,8 @@ boolean automatic_off_handler(TinyWebServer& web_server) {   //turns all outputs
   web_server.send_error_code(200);
   //web_server.send_content_type("text/plain");
   //web_server.end_headers();
-  #ifdef DEBUG
-    Serial.print("****** Automatic Mode OFF");
+  #ifdef DEBUG_MANUAL
+    Serial << F("****** Automatic Mode OFF");
   #endif
     
   automaticMode = false;
@@ -385,8 +381,8 @@ boolean all_off_handler(TinyWebServer& web_server) {  //turns all outputs off
   //web_server.send_content_type("text/plain");
   //web_server.end_headers();
   
-  #ifdef DEBUG
-    Serial.print("****** Manual Control: All Off");
+  #ifdef DEBUG_MANUAL
+    Serial << F("****** Manual Control: All Off");
   #endif
   
   for (byte i=0;i<=5;i++){
@@ -403,8 +399,8 @@ boolean all_on_handler(TinyWebServer& web_server) {   //turns all outputs on
   //web_server.send_content_type("text/plain");
   //web_server.end_headers();
   
-  #ifdef DEBUG
-    Serial.print("****** Manual Control: All On");
+  #ifdef DEBUG_MANUAL
+    Serial << F("****** Manual Control: All On");
   #endif
   
   for (byte i=0;i<=5;i++){
@@ -422,9 +418,9 @@ boolean row_status_handler(TinyWebServer& web_server) {   //returns stateRow[]
   web_server.end_headers();
   
   Client& client = web_server.get_client();
-  for (int i = 0; i < 6; i++){
+  for (int i = 0; i < currentRowCount; i++){
     client.print(stateRow[0], DEC);
-    if(i < 5){
+    if(i < (currentRowCount - 1)){
       client.print(",");
     }
   }
@@ -439,23 +435,23 @@ boolean status_handler(TinyWebServer& web_server) {   //returns trigState[];stat
   web_server.end_headers();
   
   Client& client = web_server.get_client();
-  for (int i = 0; i < 6; i++){
+  for (int i = 0; i < currentRowCount; i++){
     client.print(trigState[i], DEC);
-    if(i < 5){
+    if(i < (currentRowCount - 1)){
       client.print(",");
     }
   }
   client.print(";");
-  for (int i = 0; i < 6; i++){
+  for (int i = 0; i < currentRowCount; i++){
     client.print(stateRow[i], DEC);
-    if(i < 5){
+    if(i < (currentRowCount - 1)){
       client.print(",");
     }
   }
   client.print(";");
-  for (int i = 0; i < 6; i++){
+  for (int i = 0; i < currentRowCount; i++){
     client.print(outputState[i], DEC);
-    if(i < 5){
+    if(i < (currentRowCount - 1)){
       client.print(",");
     }
   }
@@ -503,16 +499,21 @@ void file_uploader_handler(TinyWebServer& web_server,
       // from the request path.
       fname = web_server.get_file_from_path(web_server.get_path());
       if (fname) {
-	Serial << F("Creating ") << fname << "\n";
-	file.open(&root, fname, O_CREAT | O_WRITE | O_TRUNC);
+        #ifdef DEBUG_PUT_HANDLER
+        	Serial << F("Creating ") << fname << "\n";
+      	#endif
+
+        file.open(&root, fname, O_CREAT | O_WRITE | O_TRUNC);
 
         //IF PROGRAM.TXT OR SETTINGS.TXT WERE UPDATED, TRIGGER UPDATE ARRAYS
         if ((strcmp(fname,"PROGRAM.TXT") == 0) || (strcmp(fname,"SETTINGS.TXT") == 0)){    //strcmp compares the pointer to the string 0 means equal.
           tempGuiFlag = 1;
         }
-        Serial.println("case START");
-        Serial.print("tempGuiFlag = ");
-        Serial.println(tempGuiFlag);
+        #ifdef DEBUG_PUT_HANDLER
+          Serial.println("case START");
+          Serial.print("tempGuiFlag = ");
+          Serial.println(tempGuiFlag);
+        #endif
         
 	     free(fname);
       }
@@ -528,16 +529,19 @@ void file_uploader_handler(TinyWebServer& web_server,
 
   case TinyWebPutHandler::END:
     file.sync();
-    Serial << F("Wrote ") << file.fileSize() << F(" bytes in ")
-	   << millis() - start_time << F(" millis (received ")
-           << total_size << F(" bytes)\n");
+    #ifdef DEBUG_PUT_HANDLER
+      Serial << F("Wrote ") << file.fileSize() << F(" bytes in ") << millis() - start_time << F(" millis (received ") << total_size << F(" bytes)\n");
+    #endif
+
     file.close();
     if (tempGuiFlag == 1){
       guiFlag = 1;
       tempGuiFlag = 0;
-      Serial.println("case END");
-      Serial.print("tempGuiFlag = ");
-      Serial.println(tempGuiFlag);
+      #ifdef DEBUG_PUT_HANDLER
+        Serial.println("case END");
+        Serial.print("tempGuiFlag = ");
+        Serial.println(tempGuiFlag);
+      #endif
     }
   }
 }
@@ -602,7 +606,7 @@ void setup() {
       char* tok;
       char* val[4];
       
-      tok = strtok(ip_temp, ".");
+      tok = strtok(ip_temp, ".");   //separate string using "." as a delimiter
       val[0] = tok;
     	for (i = 1; i < 4; i++) {
     	  if (tok == NULL)
@@ -618,8 +622,7 @@ void setup() {
         ip[i] = (byte)atoi(val[i]);
       }
       
-      Serial << F("Static IP on\n");
-      Serial << ip_temp;
+      Serial << F("Static IP: ") << ip_temp << F("\n");
       Ethernet.begin(mac,ip);                                 //setup with static address
     }else{      //if there is not a static ip specified... use DHCP
       Serial << F("Setting up the Ethernet card...\n");
@@ -634,18 +637,9 @@ void setup() {
       Serial << F("DHCP failed\n");
     }
 
-    #ifdef DEBUG
-      Serial.println("****** Warning: SD not working");
-    #endif
+    Serial << F("****** Warning: SD not working\n");
     LEDFlasher(10,200,200);  //visually alert user that something is awry by flashing all LEDs
   }//end if has filesystem
-   
-  Serial.print("IP Address: ");
-  for (byte thisByte = 0; thisByte < 4; thisByte++) {  // print the value of each byte of the IP address:
-    Serial.print(Ethernet.localIP()[thisByte], DEC);
-    Serial.print("."); 
-  }
-  Serial.print("\n");
   
   // Start the web server.
   Serial << F("Web server starting...\n");
@@ -655,7 +649,14 @@ void setup() {
   EthernetBonjour.begin(bonjourName);        //Set the advertised name
   EthernetBonjour.addServiceRecord(bonjourServiceRecord, 80, MDNSServiceTCP);   //Set the advertised port/service
 
-  Serial << F("Ready to accept HTTP requests.\n");
+  Serial << F("Ready to accept HTTP requests at ") << bonjourName << F(".local or at http://");
+  //Serial.print("IP Address: ");
+  for (byte thisByte = 0; thisByte < 4; thisByte++) {  // print the value of each byte of the IP address:
+    Serial.print(Ethernet.localIP()[thisByte], DEC);
+    Serial.print("."); 
+  }
+  Serial.print("\n");
+
 }
 
 
@@ -724,25 +725,22 @@ bool inputTakeAction(int rowNumber) {
 
 //  Function to write messages to gui            CURRENTLY WRITTEN FOR SERIAL, NOT GUI!
 void statusMessage(int n) {
-  if (n==1) {Serial.println("Definitions don't make sense");}
-  if (n==2) {Serial.println("No SD Card anymore");}
-  if (n==3) {Serial.println("Problem opening file on SD card");}
-  if (n==4) {Serial.println("Corrupted SD file -Read/Write fail");}
-  if (n==5) {Serial.println("Successfully updated programming");}
-  if (n==6) {Serial.println("Finished writing to .csv file");}
-  
+  if (n==1) {Serial << F("Definitions don't make sense\n");}
+  if (n==2) {Serial << F("No SD Card anymore\n");}
+  if (n==3) {Serial << F("Problem opening file on SD card\n");}
+  if (n==4) {Serial << F("Corrupted SD file -Read/Write fail\n");}
+  if (n==5) {Serial << F("Successfully updated programming\n");}
+  if (n==6) {Serial << F("Finished writing to .txt file\n");}
 }
 
 //----- Section AA4c -----
 // Function that pairs the output pins to the row that is controlling for it
 void outputSelectFunction(int outputNumber, bool action) {
-  /*
-  Serial.print("outputSelectFunction ");
-  Serial.print(outputNumber);
-  Serial.print(" ");
-  Serial.print(action);
-  Serial.print("\n");
-  */
+  
+  #ifdef DEBUG_OUTPUTS
+    Serial << F("outputSelectFunction ") << outputNumber << F(" ") << action << F("\n");
+  #endif
+
   //takes an output (outputNumber) and an action:
     //0 = off
     //1 = on
@@ -801,6 +799,9 @@ void loop(){
   
   //----- Section AA4a ----- Reading Inputs and Writing to Outputs -----
   for(int z = 0; z < currentRowCount; z++) {              //runs loop for each row
+    #ifdef DEBUG_STATES
+      Serial.println(millis());
+    #endif
     if(enableDisableArray[z] == 1) {   //only run the state machine for a row that's enabled
       if(stateRow[z] == 1) {                   //STATE 1 = Waiting for a trigger
         trigState[z] = inputTakeAction(z); //Call function and pass(Row number) to see if input is triggered
@@ -812,10 +813,9 @@ void loop(){
       }else if(stateRow[z] == 2) {             //STATE 2 = Trigger message just received
         delayTimeStamp[z] = millis();      //Gets time stamp
         
-        Serial.print("Trigger ");
-        Serial.print(z);
-        Serial.print(": ");
-        Serial.println(delayTimeStamp[z]);
+        #ifdef DEBUG_TRIGGERS
+          Serial << F("Trigger ") << z << F(": ") << delayTimeStamp[z] << F("\n");
+        #endif
         stateRow[z] = 3;                      //Moves on to next state
       }else if(stateRow[z] == 3) {             //STATE 3 = Delay vs. timeStamp
         nowTime = millis();
@@ -902,8 +902,8 @@ void loop(){
     }
   }
     
-  //----- Section AA5 ----- Update the Status LEDs on shield -----
-  for(int z = 0; z < currentRowCount; z++) {              //runs loop for each row
+  //----- Section AA5 ----- Update the input status LEDs on shield -----
+  for(int z = 0; z < 5; z++) {              //runs loop for each row
     trigState[z] = decipherInputSensor(z); //Call function and pass(Row number) to see if input is on or off
       if(trigState[z] == 1) {                //If input is "on"
         digitalWrite(inputLEDArray[z],HIGH);  //turn on appropriate input LED
@@ -928,23 +928,34 @@ void loop(){
     //return;  //break out of main funtion if no new definitions have come in.  POSSIBLY REMOVE THE HARD RETURN?
   //}
   if(guiFlag == 1) {  //If there are new GUI definitions...
-    Serial.println("new info from gui received");
-    
+    #ifdef DEBUG_FILES
+      Serial << F("new info from gui received\n");
+    #endif
+
     //----- Section AB1 -----
     //READ program.txt and settings.txt
     char* newvar = open_file("program.txt");  //store the program.txt in a var
-    Serial.println(newvar);                   //print the file out
+    #ifdef DEBUG_FILES
+      Serial.println(newvar);                   //print the file out
+    #endif
     convert(newvar,1);                        //convert the file to arrays
-    //Serial.println("made it through program.txt conversion");
+    #ifdef DEBUG_FILES
+      Serial << F("made it through program.txt conversion\n");
+    #endif
     newvar = 0;                               //erase the newvar
     //Serial.println("reset newvar to 0");
     
     newvar = open_file("settings.txt");       //store the settings.txt in a var
-    //Serial.println("opening settings.txt");
-    //Serial.println(newvar);                   //print the file out
-    //Serial.println("printed settings.txt");
+
+    #ifdef DEBUG_FILES
+      Serial << F("opening settings.txt\n");
+      Serial.println(newvar);                   //print the file out
+      Serial << F("printed settings.txt\n");
+    #endif
     convert(newvar,0);                        //convert the file to arrays
-    //Serial.println("made it through conversion of settings.txt");
+    #ifdef DEBUG_FILES
+      Serial << F("made it through conversion of settings.txt\n");
+    #endif
 
     
     //----- Section AB2 -----
@@ -976,7 +987,7 @@ void loop(){
   if (has_filesystem) {
   //  web.process();
   }else{
-        LEDFlasher(1,200,200);    //call the LEDFlasher function to visually alert user of SD issue
+    LEDFlasher(1,200,200);    //call the LEDFlasher function to visually alert user of SD issue
   }
   web.process();
   
@@ -986,46 +997,38 @@ void loop(){
 
 //----- Section open SD file for conversion to arrays -----
 char* open_file(char* input_file){
-  Serial.print("\nopen_file(");
-  Serial.print(input_file);
-  Serial.print(") called\n");
+  #ifdef DEBUG_FILES
+    Serial.print("\nopen_file(");
+    Serial.print(input_file);
+    Serial.print(") called\n");
+  #endif
   char storage[400] = {0};             //used to store read stuff
   char ch;                             //used to store incoming byte
   int i = 0;                           //used as counter for building string
   char* fail = "";                     //the failure return
   
-  #ifdef DEBUG
-    Serial.print("SD.begin = ");
-    Serial.print(SD.begin(SD_CS));
-    Serial.print(", has_filesystem = ");
-    Serial.println(has_filesystem);
+  #ifdef DEBUG_FILES
+    Serial << F("SD.begin = ") << SD.begin(SD_CS) << F(", has_filesystem = ") << has_filesystem << F("\n");
   #endif
   
   File file = SD.open(input_file);
   
-  #ifdef DEBUG
-    Serial.print("input_file = ");
-    Serial.print(input_file);
-    Serial.print(", file read = ");
-    Serial.println(file);
+  #ifdef DEBUG_FILES
+    Serial << F("input_file = ") << input_file << F(", file read = ") << file << F("\n");
   #endif
   
   if (file) {                           //if there's a file
 
-    #ifdef DEBUG
-      Serial.print("*****did we make it? File.available() = ");
-      Serial.println(file.available());
-      Serial.println(input_file);
-      Serial.println("we made it!");
+    #ifdef DEBUG_FILES
+      Serial << F("*****did we make it? File.available() = ") << file.available() << F("\n");
+      Serial << input_file << F("we made it!\n");
     #endif
 
     while (file.available()) {          //if there are unread bytes in the file
       ch = file.read();                 //read one
       storage[i] = ch;                  //append it to storage
-      #ifdef DEBUG
-        Serial.print(i);
-        Serial.print(" ");
-        Serial.println(ch);
+      #ifdef DEBUG_FILES
+        Serial << i << F(" ") << ch << F("\n");
       #endif
 
       i ++;                             //inc counter
@@ -1075,7 +1078,7 @@ char convert(char* readString, bool type){
   }
 
   if (type == 0) {  //convert settings arrays here
-    Serial.println("converting settings.txt");
+    Serial << F("converting settings.txt\n");
     //inputActiveHiLow + outputActiveHiLow ; names ; names ; inputThreshold + outputVoltage (if we care) ; retriggerTime
     //0,1,1,1,1,1,0,1,1,1,1,1;garage,my room,hall,cemetery,cornfield,swamp;UV,light,strobe,sound,air horn,zombie;492,246,103,103,103,103,103,103,103,103,103,103;1,1,1,1,1,0; 
     //col[0] = inputActiveHiLow + outputActiveHiLow (need both)
@@ -1125,34 +1128,38 @@ char convert(char* readString, bool type){
       tok = strtok(NULL, ",");
     }
     
-    
-    // Now print out all the values to make sure it all worked
-    Serial.print("inputActiveHiLowArray: ");
-    for (i = 0; i < 6; i++){
-      Serial.print(inputActiveHiLowArray[i]);
-      Serial.print(" ");
-    }
-    
-    Serial.print("\noutputActiveHiLowArray: ");
-    for (i = 0; i < 6; i++){
-      Serial.print(outputActiveHiLowArray[i]);
-      Serial.print(" ");
-    }
-    
-    Serial.print("\ninputTriggerThresholdArray: ");
-    for (i = 0; i < 6; i++){
-      Serial.print(inputTriggerThresholdArray[i]);
-      Serial.print(" ");
-    }
-    
-    Serial.print("\ninputRetriggerDelayArray: ");
-    for (i = 0; i < 6; i++){
-      Serial.print(inputRetriggerDelayArray[i]);
-      Serial.print(" ");
-    }
+    #ifdef DEBUG_BRIDGE
+      // Now print out all the values to make sure it all worked
+      Serial.print("inputActiveHiLowArray: ");
+      for (i = 0; i < 6; i++){
+        Serial.print(inputActiveHiLowArray[i]);
+        Serial.print(" ");
+      }
+      
+      Serial.print("\noutputActiveHiLowArray: ");
+      for (i = 0; i < 6; i++){
+        Serial.print(outputActiveHiLowArray[i]);
+        Serial.print(" ");
+      }
+      
+      Serial.print("\ninputTriggerThresholdArray: ");
+      for (i = 0; i < 6; i++){
+        Serial.print(inputTriggerThresholdArray[i]);
+        Serial.print(" ");
+      }
+      
+      Serial.print("\ninputRetriggerDelayArray: ");
+      for (i = 0; i < 6; i++){
+        Serial.print(inputRetriggerDelayArray[i]);
+        Serial.print(" ");
+      }
+    #endif
+
   }else if (type == 1){ //convert program arrays here
     Serial.println("converting Program.txt");
-    Serial << F("Free RAM: ") << FreeRam() << "\n";
+    #ifdef DEBUG_BRIDGE
+      Serial << F("Free RAM: ") << FreeRam() << "\n";
+    #endif
     // Now turn the array of strings into arrays of numbers.  Each array is
     // named for the column it represents.  The values are separated by
     // commas.  atoi is used to convert the stringified numbers back into
@@ -1161,22 +1168,30 @@ char convert(char* readString, bool type){
     // atoi(tok) is doing.)  It would be more graceful to create a function
     // to do this, rather than repeat it 6 times.
 
-    currentRowCount = 0; //reset to zero, then we'll count them on the first array
+    newCurrentRowCount = 0; //reset to zero, then we'll count them on the first array
     // inputArray
     tok = strtok(col[0], ",");
-    for (i = 0; i < 6; i++) {
+    for (i = 0; i < MAXROWS; i++) {
       if (tok == NULL)
         break;
       enableDisableArray[i] = (byte)atoi(tok);
-      currentRowCount = i + 1;
+    
+      newCurrentRowCount = i + 1;
+
+      #ifdef DEBUG_BRIDGE
+        Serial << F("i: ") << i << F(" new: ") << newCurrentRowCount << F("\n");
+      #endif
       
       tok = strtok(NULL, ",");
     }
-    Serial.print("currentRowCount: ");
-    Serial.println(currentRowCount);
+
+    currentRowCount = newCurrentRowCount;
+    #ifdef DEBUG_BRIDGE
+      Serial << F("Done w/ first loop. currentRowCount: ") << currentRowCount << F(" newCurrentRowCount: ") << newCurrentRowCount <<  F("\n");
+    #endif
 
     tok = strtok(col[1], ",");
-    for (i = 0; i < 6; i++) {
+    for (i = 0; i < currentRowCount; i++) {
       if (tok == NULL)
         break;
       inputArray[i] = (byte)atoi(tok);
@@ -1184,7 +1199,7 @@ char convert(char* readString, bool type){
     }
     // inputOnOffArray
     tok = strtok(col[2], ",");
-    for (i = 0; i < 6; i++) {
+    for (i = 0; i < currentRowCount; i++) {
       if (tok == NULL)
         break;
       inputOnOffArray[i] = (byte)atoi(tok);
@@ -1192,7 +1207,7 @@ char convert(char* readString, bool type){
     }
     // delayArray
     tok = strtok(col[3], ",");
-    for (i = 0; i < 6; i++) {
+    for (i = 0; i < currentRowCount; i++) {
       if (tok == NULL)
         break;
       delayArray[i] = (unsigned int)atoi(tok);
@@ -1200,7 +1215,7 @@ char convert(char* readString, bool type){
     }
     // outputArray
     tok = strtok(col[4], ",");
-    for (i = 0; i < 6; i++) {
+    for (i = 0; i < currentRowCount; i++) {
       if (tok == NULL)
         break;
       outputArray[i] = (byte)atoi(tok);
@@ -1208,7 +1223,7 @@ char convert(char* readString, bool type){
     }
     // outputOnOffToggleArray
     tok = strtok(col[5], ",");
-    for (i = 0; i < 6; i++) {
+    for (i = 0; i < currentRowCount; i++) {
       if (tok == NULL)
         break;
       outputOnOffToggleArray[i] = (byte)atoi(tok);
@@ -1216,7 +1231,7 @@ char convert(char* readString, bool type){
     }
     // durationTypeArray
     tok = strtok(col[6], ",");
-    for (i = 0; i < 6; i++) {
+    for (i = 0; i < currentRowCount; i++) {
       if (tok == NULL)
         break;
       durationTypeArray[i] = (byte)atoi(tok);
@@ -1224,7 +1239,7 @@ char convert(char* readString, bool type){
     }
     // durationArray
     tok = strtok(col[7], ",");
-    for (i = 0; i < 6; i++) {
+    for (i = 0; i < currentRowCount; i++) {
       if (tok == NULL)
         break;
       durationArray[i] = (unsigned int)atoi(tok);
@@ -1232,46 +1247,48 @@ char convert(char* readString, bool type){
     }
     
     // Now print out all the values to make sure it all worked
-    Serial.print("enableDisableArray: ");
-    for (i = 0; i < 6; i++){
-      Serial.print(enableDisableArray[i]);
-      Serial.print(" ");
-    }
-    Serial.print("inputArray: ");
-    for (i = 0; i < 6; i++){
-      Serial.print(inputArray[i]);
-      Serial.print(" ");
-    }
-    Serial.print("\ninputOnOffArray: ");
-    for (i = 0; i < 6; i++){
-      Serial.print(inputOnOffArray[i]);
-      Serial.print(" ");
-    }
-    Serial.print("\ndelayArray: ");
-    for (i = 0; i < 6; i++){
-      Serial.print(delayArray[i]);
-      Serial.print(" ");
-    }
-    Serial.print("\noutputArray: ");
-    for (i = 0; i < 6; i++){
-      Serial.print(outputArray[i]);
-      Serial.print(" ");
-    }
-    Serial.print("\noutputOnOffToggleArray: ");
-    for (i = 0; i < 6; i++){
-      Serial.print(outputOnOffToggleArray[i]);
-      Serial.print(" ");
-    }
-    Serial.print("\ndurationTypeArray: ");
-    for (i = 0; i < 6; i++){
-      Serial.print(durationTypeArray[i]);
-      Serial.print(" ");
-    }
-    Serial.print("\ndurationArray: ");
-    for (i = 0; i < 6; i++){
-      Serial.print(durationArray[i]);
-      Serial.print(" ");
-    }
+    #ifdef DEBUG_BRIDGE
+      Serial.print("enableDisableArray: ");
+      for (i = 0; i < currentRowCount; i++){
+        Serial.print(enableDisableArray[i]);
+        Serial.print(" ");
+      }
+      Serial.print("inputArray: ");
+      for (i = 0; i < currentRowCount; i++){
+        Serial.print(inputArray[i]);
+        Serial.print(" ");
+      }
+      Serial.print("\ninputOnOffArray: ");
+      for (i = 0; i < currentRowCount; i++){
+        Serial.print(inputOnOffArray[i]);
+        Serial.print(" ");
+      }
+      Serial.print("\ndelayArray: ");
+      for (i = 0; i < currentRowCount; i++){
+        Serial.print(delayArray[i]);
+        Serial.print(" ");
+      }
+      Serial.print("\noutputArray: ");
+      for (i = 0; i < currentRowCount; i++){
+        Serial.print(outputArray[i]);
+        Serial.print(" ");
+      }
+      Serial.print("\noutputOnOffToggleArray: ");
+      for (i = 0; i < currentRowCount; i++){
+        Serial.print(outputOnOffToggleArray[i]);
+        Serial.print(" ");
+      }
+      Serial.print("\ndurationTypeArray: ");
+      for (i = 0; i < currentRowCount; i++){
+        Serial.print(durationTypeArray[i]);
+        Serial.print(" ");
+      }
+      Serial.print("\ndurationArray: ");
+      for (i = 0; i < currentRowCount; i++){
+        Serial.print(durationArray[i]);
+        Serial.print(" ");
+      }
+    #endif
     Serial.println("convert: done converting program");
     Serial << F("Free RAM: ") << FreeRam() << "\n";
 
@@ -1297,9 +1314,6 @@ void LEDFlasher (int flashes, int timeOn, int timeOff){    //used to flash all i
 }//end LEDFlasher function
 
 void printState(int row){
-  Serial.print("Row ");
-  Serial.print(row);
-  Serial.print(" State: ");
-  Serial.println(stateRow[row]);
+  Serial << F("Row ") << row << F(" State: ") << stateRow[row] << "\n";
 }
 
