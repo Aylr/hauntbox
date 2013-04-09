@@ -1095,20 +1095,16 @@ char convert(char* readString, bool type){
     // atoi(tok) is doing.)  It would be more graceful to create a function
     // to do this, rather than repeat it 6 times.
 
-    // inputActiveHiLowArray
+    // inputActiveHiLowArray & outputActiveHiLowArray
     tok = strtok(col[0], ",");
-    for (i = 0; i < 6; i++) {
+    for (i = 0; i < 12; i++) {
       if (tok == NULL)
         break;
-      inputActiveHiLowArray[i] = (byte)atoi(tok);
-      tok = strtok(NULL, ",");
-    }
-    // outputActiveHiLowArray
-    tok = strtok(col[0], ",");
-    for (i = 6; i < 12; i++) {
-      if (tok == NULL)
-        break;
-      outputActiveHiLowArray[i] = (byte)atoi(tok);
+      if (i < 6){                     //since this is in a string of 12, do first 6 as input last 6 as output
+        inputActiveHiLowArray[i] = (byte)atoi(tok);
+      }else{
+        outputActiveHiLowArray[i-6] = (byte)atoi(tok);
+      }
       tok = strtok(NULL, ",");
     }
     // inputTriggerThresholdArray
