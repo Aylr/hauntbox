@@ -13,8 +13,8 @@
 
 //Serial debugging options. Uncomment a row to enable each section as needed.
 //#define DEBUG_STATES true           //prints states to serial
-//#define DEBUG_FILES true            //prints file conversion details to serial
-//#define DEBUG_PUT_HANDLER true      //prints file upload details to serial
+#define DEBUG_FILES true            //prints file conversion details to serial
+#define DEBUG_PUT_HANDLER true      //prints file upload details to serial
 //#define DEBUG_OUTPUTS true          //prints outputSelect details to serial
 #define DEBUG_TRIGGERS true           //prints trigger details to serial
 #define DEBUG_BRIDGE true             //prints bridge details to serial
@@ -795,9 +795,64 @@ void loop(){
   //----- Section AA1a -----
   if(statesInitialized == 0) {  //If the states have not been initialized, do so.
     initializeFunction();
+    guiFlag = 1;                //force loading of settings and program
   }
+
+  //----- Section AA9 ----- See if program or settings have changed
+  if(guiFlag == 1) {  //If there are new program/settings ...
+    #ifdef DEBUG_BRIDGE
+      Serial << F("new info from gui received\n");
+    #endif
+
+    //----- Section AB1 -----
+    //READ program.txt and settings.txt
+    char* newvar = open_file("program.txt");  //store the program.txt in a var
+    #ifdef DEBUG_BRIDGE
+      Serial.println(newvar);                   //print the file out
+    #endif
+    convert(newvar,1);                        //convert the file to arrays
+    #ifdef DEBUG_BRIDGE
+      Serial << F("made it through program.txt conversion\n");
+    #endif
+    newvar = 0;                               //erase the newvar
+    //Serial.println("reset newvar to 0");
+    
+    newvar = open_file("settings.txt");       //store the settings.txt in a var
+
+    #ifdef DEBUG_BRIDGE
+      Serial << F("opening settings.txt\n");
+      Serial.println(newvar);                   //print the file out
+      Serial << F("printed settings.txt\n");
+    #endif
+    convert(newvar,0);                        //convert the file to arrays
+    #ifdef DEBUG_BRIDGE
+      Serial << F("made it through conversion of settings.txt\n");
+    #endif
+
+    
+    //----- Section AB2 -----
+    //FUNCTION TO MAKE SURE GUI DEFINITIONS MAKE SENSE
+    
+    //----- Section AB3 -----
+    //FUNCTION TO SAVE DEFINITIONS TO SD CARD
+    //saved to disk with the put handler
+
+    //CHECK TO SEE IF SD CARD IS THERE
+    //already done with has_filesystem
+    
+    //----- Section AB4 -----
+    //FUNCTION TO READ DEFINITIONS ON SD CARD
+    
+    //COMPARE TO VALUES FROM AB1
+    
+    //Sends GUI confirmation message
+    statusMessage(5);  //GUI message #5
+    
+    guiFlag = 0;                                //reset guiFlag
+  }
+
   
-  //----- Section AA4a ----- Reading Inputs and Writing to Outputs -----
+  //----- Section AA4a ----- Main State Machine: Reading Inputs and Writing to Outputs -----
   for(int z = 0; z < currentRowCount; z++) {              //runs loop for each row
     #ifdef DEBUG_STATES
       Serial.println(millis());
@@ -903,7 +958,7 @@ void loop(){
   }
     
   //----- Section AA5 ----- Update the input status LEDs on shield -----
-  for(int z = 0; z < 5; z++) {              //runs loop for each row
+  for(int z = 0; z < 5; z++) {              //runs loop for each input
     trigState[z] = decipherInputSensor(z); //Call function and pass(Row number) to see if input is on or off
       if(trigState[z] == 1) {                //If input is "on"
         digitalWrite(inputLEDArray[z],HIGH);  //turn on appropriate input LED
@@ -923,61 +978,6 @@ void loop(){
   
   
 
-  //----- Section AA9 ----- See if GUI definitions have changed
-  //if(guiFlag == 0) {  //No new GUI definitions
-    //return;  //break out of main funtion if no new definitions have come in.  POSSIBLY REMOVE THE HARD RETURN?
-  //}
-  if(guiFlag == 1) {  //If there are new GUI definitions...
-    #ifdef DEBUG_FILES
-      Serial << F("new info from gui received\n");
-    #endif
-
-    //----- Section AB1 -----
-    //READ program.txt and settings.txt
-    char* newvar = open_file("program.txt");  //store the program.txt in a var
-    #ifdef DEBUG_FILES
-      Serial.println(newvar);                   //print the file out
-    #endif
-    convert(newvar,1);                        //convert the file to arrays
-    #ifdef DEBUG_FILES
-      Serial << F("made it through program.txt conversion\n");
-    #endif
-    newvar = 0;                               //erase the newvar
-    //Serial.println("reset newvar to 0");
-    
-    newvar = open_file("settings.txt");       //store the settings.txt in a var
-
-    #ifdef DEBUG_FILES
-      Serial << F("opening settings.txt\n");
-      Serial.println(newvar);                   //print the file out
-      Serial << F("printed settings.txt\n");
-    #endif
-    convert(newvar,0);                        //convert the file to arrays
-    #ifdef DEBUG_FILES
-      Serial << F("made it through conversion of settings.txt\n");
-    #endif
-
-    
-    //----- Section AB2 -----
-    //FUNCTION TO MAKE SURE GUI DEFINITIONS MAKE SENSE
-    
-    //----- Section AB3 -----
-    //FUNCTION TO SAVE DEFINITIONS TO SD CARD
-    //saved to disk with the put handler
-
-    //CHECK TO SEE IF SD CARD IS THERE
-    //already done with has_filesystem
-    
-    //----- Section AB4 -----
-    //FUNCTION TO READ DEFINITIONS ON SD CARD
-    
-    //COMPARE TO VALUES FROM AB1
-    
-    //Sends GUI confirmation message
-    statusMessage(5);  //GUI message #5
-    
-    guiFlag = 0;                                //reset guiFlag
-  }
   
   //This tiny section runs the entire web server. Must be in void loop()
   //Please not the main line "web.process()" is the actual functioning block.
