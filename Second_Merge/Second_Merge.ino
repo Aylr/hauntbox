@@ -1,9 +1,6 @@
-//Second attempt at basic building block of HauntBox control
-//Trying to write code for a row in the GUI, not for a specific input.
-//Code written for 6 row control from HB
-//12-01-20 (YY-MM-DD)
+//Hauntbox Firmware
 
-
+//#include <avr/wdt.h>    //watchdog timer. Proably not neededa
 #include <SPI.h>
 #include <Ethernet.h>
 #include <Flash.h>
@@ -14,17 +11,19 @@
 //Serial debugging options. Uncomment a row to enable each section as needed.
 //#define DEBUG_STATES true           //prints states to serial
 #define DEBUG_FILES true            //prints file conversion details to serial
+//#define DEBUG_FILES_BY_CHARACTER true            //prints file conversion details to serial
 #define DEBUG_PUT_HANDLER true      //prints file upload details to serial
 //#define DEBUG_OUTPUTS true          //prints outputSelect details to serial
-#define DEBUG_TRIGGERS true           //prints trigger details to serial
+//#define DEBUG_TRIGGERS true           //prints trigger details to serial
 #define DEBUG_BRIDGE true             //prints bridge details to serial
 //#define DEBUG_MANUAL true           //prints manual mode details to serial
+#define DEBUG_BOUNJOUR_NAME true    //details regarding custom bonjour naming
 
 #define MAXROWS 20
 #define MINROWS 6
+#define MAXBONJOURNAMELENGTH 32
 
-char* bonjourName = "hauntbox";                  //bonjour name
-char* bonjourServiceRecord = "hauntbox._http";  //bonjour name (needs to have the "._http" at the end)
+char* bonjourName = "hauntbox2";                  //bonjour name
 
 int d = 0;  //Delay used in testing of code.  Set to 0 if not testing code.
 
@@ -222,6 +221,7 @@ boolean ram_handler(TinyWebServer& web_server) {
   web_server.end_headers();
   Client& client = web_server.get_client();
   client.println(FreeRam());
+  client.stop();
   return true;
 }
 
@@ -237,18 +237,20 @@ boolean manual_handler(TinyWebServer& web_server) {
     bool tempOnOff = 0;             //keeps track of if we want it on or off
     int tempOutput = 0;             //keeps track of which input
     
-    char ch = (char)client.read();  //throw away the first two characters in "a=11"
-    ch = (char)client.read();       //throw away the first two characters in "a=11"
+    char ch = (char)client.read();  //throw away the first character in "a=11"
+    ch = (char)client.read();       //throw away the second character in "a=11"
     ch = (char)client.read();       //now get the first integer 1
     char ch2 = (char)client.read(); //now get the second integer 1
     
+    // tempOnOff = atoi(&ch2);
     if (ch2 == '1'){                //this could be cleaned probably by using atoi
       tempOnOff = 1;
     }else{
       tempOnOff = 0;
     }
     
-    if (ch == '1'){                 //this could be cleaned probably by using atoi
+    // tempOutput = atoi(&ch);         //convert char address to an integer
+    if (ch == '1'){              //this could be cleaned probably by using atoi
       tempOutput = 1;
     }else if (ch == '2'){
       tempOutput = 2;
@@ -260,10 +262,15 @@ boolean manual_handler(TinyWebServer& web_server) {
       tempOutput = 5;
     }else if (ch == '6'){
       tempOutput = 6;
+    }else{                      //if you get something besides 1-6, exit the handler
+      #ifdef DEBUG_MANUAL
+        Serial << F("Manual Control: Bad data");
+      #endif
+      return true;
     }
     
     #ifdef DEBUG_MANUAL
-      Serial << F("****** Manual Control raw: ") << ch << " " << ch2;
+      Serial << F("Manual Control: Raw: ") << ch << " " << ch2;
       Serial << F(" Converted: ") << tempOutput << " " << tempOnOff << F("\n");
     #endif
 
@@ -283,26 +290,34 @@ boolean trigger_handler(TinyWebServer& web_server) {
   if (client.available()) {
     int tempInput = 0;             //keeps track of which input
     
-    char ch = (char)client.read();  //throw away the first two characters in "a=11"
-    ch = (char)client.read();       //throw away the first two characters in "a=11"
+    char ch = (char)client.read();  //throw away the first character in "a=1"
+    ch = (char)client.read();       //throw away the second character in "a=1"
     ch = (char)client.read();       //now get the first integer 1
     
-    if (ch == '1'){                 //this could be cleaned probably by using atoi
-      tempInput = 1;
-    }else if (ch == '2'){
-      tempInput = 2;
-    }else if (ch == '3'){
-      tempInput = 3;
-    }else if (ch == '4'){
-      tempInput = 4;
-    }else if (ch == '5'){
-      tempInput = 5;
-    }else if (ch == '6'){
-      tempInput = 6;
+    tempInput = atoi(&ch);          //convert char address to an integer
+
+    if (tempInput < 1 || tempInput > 6){    //if bad data, exit handler
+      #ifdef DEBUG_MANUAL
+        Serial << F("Manual trigger: Bad data");
+      #endif
+      return true;                          //exit handler
     }
+    // if (ch == '1'){                 //this could be cleaned probably by using atoi
+    //   tempInput = 1;
+    // }else if (ch == '2'){
+    //   tempInput = 2;
+    // }else if (ch == '3'){
+    //   tempInput = 3;
+    // }else if (ch == '4'){
+    //   tempInput = 4;
+    // }else if (ch == '5'){
+    //   tempInput = 5;
+    // }else if (ch == '6'){
+    //   tempInput = 6;
+    // }
     
     #ifdef DEBUG_MANUAL
-      Serial << F("****** Manual trigger raw: ") << ch;
+      Serial << F("Manual trigger: Raw: ") << ch;
       Serial << F(" Converted: ") << tempInput << F("\n");
     #endif
 
@@ -552,17 +567,42 @@ void file_uploader_handler(TinyWebServer& web_server,
 // -------------------- begin firmware -------------------- 
 
 void setup() {
-  int i;
-  
+  /*
+  if ((MCUSR & _BV(PORF)) && (MCUSR & _BV(EXTRF))) {
+    Serial.println("Down with the ship!!");
+    MCUSR = 0;
+  }
+  */
+
+  //This portion detects how it was reset and resets if it was a PORF (power on reset flag)
+  /*
+  if (MCUSR & _BV(WDRF)) {          //if the watchdog reset flag is true
+    Serial.println("WDRF true");
+    Serial.println(MCUSR, HEX);
+    MCUSR = 0;                      //reset register
+    wdt_disable();                  //disable watchdog timer, because we already had a reset
+    Serial.println(MCUSR, HEX);
+  }else if (MCUSR & _BV(PORF)) {
+    Serial.println("enabling reset");
+    Serial.println(MCUSR, HEX);
+    wdt_enable(WDTO_1S);            //reset atmel after 1 second
+  } else {
+    Serial.println("something else");
+    Serial.println(MCUSR, HEX);
+    MCUSR = 0;                      //reset register
+  }
+  */
+    
   Serial.begin(115200);
   Serial << F("Starting up Hauntbox. Free RAM: ") << FreeRam() << "\n";
+  int i;
 
   pinMode(SS_PIN, OUTPUT);	// set the SS pin as an output (necessary to keep the board as master and not SPI slave)
   digitalWrite(SS_PIN, HIGH);	// and ensure SS is high
 
   // Ensure we are in a consistent state after power-up or a reset button These pins are standard for the Arduino w5100 Rev 3 ethernet board They may need to be re-jigged for different boards
   pinMode(ETHER_CS, OUTPUT); 	// Set the CS pin as an output
-  digitalWrite(ETHER_CS, HIGH); // Turn off the W5100 chip! (wait for configuration)                              
+  digitalWrite(ETHER_CS, HIGH); // Turn off the W5100 chip! (wait for configuration)
   pinMode(SD_CS, OUTPUT);       // Set the SDcard CS pin as an output
   digitalWrite(SD_CS, HIGH); 	// Turn off the SD card! (wait for configuration)
 
@@ -573,20 +613,23 @@ void setup() {
   pinMode(pinOut4, OUTPUT);
   pinMode(pinOut5, OUTPUT);
   pinMode(pinOut6, OUTPUT);
-  for (int i = 0;i <=5;i++){  //quickly loop through inputLEDs and outoutLEDS
+
+  for (int i = 0;i <=5;i++){  // loop through all inputLEDs & outputLEDS and set as outputs
     pinMode(inputLEDArray[i], OUTPUT);  //set inputLED as output
     pinMode(outputLEDArray[i], OUTPUT); //set outoutLED as output
   }
 
-  // initialize the SD card.
-  Serial << F("Setting up SD card...\n");
+  // directionalLEDFlasher(1,10,50,0);
+  // directionalLEDFlasher(0,10,50,0);
+
+  Serial << F("Setting up SD card...\n");     //Initialize the SD card
   // Pass over the speed and Chip select for the SD card
-  if (!card.init(SPI_FULL_SPEED, SD_CS)) {
+  if (!card.init(SPI_HALF_SPEED, SD_CS)) {
+  //if (!card.init(SPI_FULL_SPEED, SD_CS)) {
     Serial << F("card failed\n");
     has_filesystem = false;
   }
-  // initialize a FAT volume.
-  if (!volume.init(&card)) {
+  if (!volume.init(&card)) {                  // initialize a FAT volume.
     Serial << F("vol.init failed!\n");
     has_filesystem = false;
   }
@@ -594,13 +637,107 @@ void setup() {
     Serial << F("openRoot failed");
     has_filesystem = false;
   }
-
   if (has_filesystem) {
    // Assign our function to `upload_handler_fn'.
    TinyWebPutHandler::put_handler_fn = file_uploader_handler;
   }
 
   if (has_filesystem) {
+  	// load macaddr.txt
+    //   char* MAC_addr_temp = open_file("uniqueID.txt");    //try to open uniqueID.txt
+    //   if (MAC_addr_temp != ""){  
+    //     char* tok;
+    //     char* val[4];
+    //     
+    //     tok = strtok(ip_temp, ":");   //separate string using ":" as a delimiter
+    //     val[0] = tok;
+    //     for (i = 1; i < 4; i++) {
+    //       if (tok == NULL)
+    //         break;
+    //       tok = strtok(NULL, ".");
+    //       val[i] = tok;
+    //     }
+    // 
+    //     for (i = 0; i < 4; i++) {
+    //       Serial << (val[i]) << ' ';
+    //     }
+    //     for (i = 0; i < 4; i++) {
+    //       ip[i] = (byte)atoi(val[i]);
+    //     }
+    //   }else{
+    //         // if not there random default
+    // 
+    //     Serial.pringln("No uniqueID.txt file.")
+    //   }// end if uniqueID.txt exists
+  	
+    // load bonjour.txt
+
+    // ************ take 1 ******************
+    //File bonjour_file;
+    /*
+    char* bonjour_file = open_file("b.txt");    //try to open uniqueID.txt
+    Serial.println("trying to open b.txt");
+    Serial.println(bonjour_file);
+    if (bonjour_file !=""){
+      Serial.println("found b.txt");
+      //load name from text file and convert it to a string or char something
+      int k=0;
+
+      bonjourName = bonjour_file;
+      //while (bonjour_file[] != ""){
+      //  Serial.println("looping through bonjour_file");
+      //  Serial.println(k);
+      //  bonjourName[k] = bonjour_file[k];
+      //  k++;
+      //}
+
+      Serial.println(bonjourName);
+      //while (bonjour_file.available()) {
+      //  Serial.write(bonjour_file.read());
+      //  bonjourName[k] = bonjour_file.read();
+      //  k++;
+      //}
+
+      //******* VALIDATION *********
+      //Limit bonjour name to MAXBONJOURNAMELENGTH
+
+      //bonjour_file.close();
+    }else{
+      // if not there use default set above
+
+      Serial.println("No b.txt file.");
+    }// end if bonjour.txt exists
+
+    */
+
+    //***** take 2 ******************
+    /*
+    char* input_file = "b.txt";
+    char tempchar;
+    File file = SD.open(input_file);
+    Serial << F("input_file = ") << input_file << F(", file read = ") << file << F("\n");
+
+    if (file) {                           //if there's a file
+      Serial << F("*****did we make it? File.available() = ") << file.available() << F("\n");
+      Serial << input_file << F("we made it!\n");
+
+      int k = 0;
+      while (file.available()) {          //if there are unread bytes in the file
+        tempchar = file.read();                 //read one
+        bonjourName[k] = tempchar;                  //append it to bonjourName
+        Serial << k << F(" ") << tempchar << F("\n");
+
+        k ++;                             //inc counter
+      }
+      file.close();                      //close the file
+
+      Serial << F("bonjourName = ") << bonjourName << F("\n");
+    }
+    */
+
+
+
+
    char* ip_temp = open_file("ip.txt");    //try to open ip.txt
     if (ip_temp != ""){  
       char* tok;
@@ -630,14 +767,15 @@ void setup() {
          Serial << F("DHCP failed\n");
       }
     }
-  }else{
-    Serial << F("Setting up the Ethernet card...\n");
-    
-    if (Ethernet.begin(mac) == 0) {                          // Initialize ethernet with DHCP
-      Serial << F("DHCP failed\n");
+  }else{                                                    //If there is NO FILESYSTEM
+    Serial << F("Setting up the Ethernet card...\n");       //still setup ethernet
+    if (Ethernet.begin(mac) == 0) {                         // Initialize ethernet with DHCP
+      Serial << F("DHCP failed: Check network connections\n");
+      // directionalLEDFlasher(0,10,50,0);
     }
 
     Serial << F("****** Warning: SD not working\n");
+    // directionalLEDFlasher(1,10,50,0);
     LEDFlasher(10,200,200);  //visually alert user that something is awry by flashing all LEDs
   }//end if has filesystem
   
@@ -646,17 +784,20 @@ void setup() {
   web.begin();
   
   // Start the bonjour/zeroconf service
-  EthernetBonjour.begin(bonjourName);        //Set the advertised name
+  EthernetBonjour.begin(bonjourName);               //Set the advertised name
+  
+  char bonjourServiceRecord[MAXBONJOURNAMELENGTH];  //declare char array to hold bonjourServiceRecord
+  strcpy(bonjourServiceRecord, bonjourName);        //copy user-changeable name from http://stackoverflow.com/questions/2218290/concatenate-char-array-in-c
+  strcat(bonjourServiceRecord, "._http");           //copy required postfix (needs to have the "._http" at the end)
+
+  #ifdef DEBUG_BOUNJOUR_NAME
+    Serial << F("bonjourName: ") << bonjourName << F(" bonjourServiceRecord: ") << bonjourServiceRecord << F("\n");
+  #endif
+
   EthernetBonjour.addServiceRecord(bonjourServiceRecord, 80, MDNSServiceTCP);   //Set the advertised port/service
 
-  Serial << F("Ready to accept HTTP requests at ") << bonjourName << F(".local or at http://");
-  //Serial.print("IP Address: ");
-  for (byte thisByte = 0; thisByte < 4; thisByte++) {  // print the value of each byte of the IP address:
-    Serial.print(Ethernet.localIP()[thisByte], DEC);
-    Serial.print("."); 
-  }
-  Serial.print("\n");
-
+  Serial << F("Ready to accept web requests at ") << bonjourName << F(".local or at http://");
+  Serial.println(Ethernet.localIP());
 }
 
 
@@ -736,7 +877,6 @@ void statusMessage(int n) {
 //----- Section AA4c -----
 // Function that pairs the output pins to the row that is controlling for it
 void outputSelectFunction(int outputNumber, bool action) {
-  
   #ifdef DEBUG_OUTPUTS
     Serial << F("outputSelectFunction ") << outputNumber << F(" ") << action << F("\n");
   #endif
@@ -749,7 +889,7 @@ void outputSelectFunction(int outputNumber, bool action) {
   x = outputArray[outputNumber]; //lookup which output is being controlled
   y = outputActiveHiLowArray[x-1];// lookup which value is considered "on"
   
-  if(action == 1) {         // turn output on
+  if(action == 1) {        // turn output on
     if(y == 1) {           // "on" means turn output high
       if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
       if(x == 1) {digitalWrite(pinOut1, HIGH); digitalWrite(outputLEDArray[0], HIGH); }
@@ -767,7 +907,7 @@ void outputSelectFunction(int outputNumber, bool action) {
       if(x == 5) {digitalWrite(pinOut5, LOW); digitalWrite(outputLEDArray[4], LOW);}
       if(x == 6) {digitalWrite(pinOut6, LOW); digitalWrite(outputLEDArray[5], LOW);} }
     return; }
-  if(action == 0) {         //turn output off
+  if(action == 0) {        //turn output off
     if(y == 1) {           // "off" means turn output low
       if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
       if(x == 1) {digitalWrite(pinOut1, LOW); digitalWrite(outputLEDArray[0], LOW);}
@@ -796,6 +936,7 @@ void loop(){
   if(statesInitialized == 0) {  //If the states have not been initialized, do so.
     initializeFunction();
     guiFlag = 1;                //force loading of settings and program
+    LEDFlasher(2,250,150);
   }
 
   //----- Section AA9 ----- See if program or settings have changed
@@ -851,7 +992,6 @@ void loop(){
     guiFlag = 0;                                //reset guiFlag
   }
 
-  
   //----- Section AA4a ----- Main State Machine: Reading Inputs and Writing to Outputs -----
   for(int z = 0; z < currentRowCount; z++) {              //runs loop for each row
     #ifdef DEBUG_STATES
@@ -1027,7 +1167,7 @@ char* open_file(char* input_file){
     while (file.available()) {          //if there are unread bytes in the file
       ch = file.read();                 //read one
       storage[i] = ch;                  //append it to storage
-      #ifdef DEBUG_FILES
+      #ifdef DEBUG_FILES_BY_CHARACTER
         Serial << i << F(" ") << ch << F("\n");
       #endif
 
@@ -1308,6 +1448,36 @@ void LEDFlasher (int flashes, int timeOn, int timeOff){    //used to flash all i
     delay(timeOff);
   }//flashing loop
 }//end LEDFlasher function
+
+/*
+void directionalLEDFlasher (int direction, int cycles, int timeOn, int timeOff){    //used to flash all input/output LEDs as a warning something is awry
+  for (int i=0;i<cycles;i++){
+    if (direction == 1){                    //if forward
+      Serial.println("looping forwards");
+      for (int j=0;j<=5;j++){
+        Serial.println(j);
+        digitalWrite(inputLEDArray[j],HIGH);
+        digitalWrite(outputLEDArray[j],HIGH);
+        delay(timeOn);
+        digitalWrite(inputLEDArray[j],LOW);
+        digitalWrite(outputLEDArray[j],LOW);
+        delay(timeOff);
+      }
+    }else{
+      Serial.println("looping backwards");
+      for (int j=5;j<=0;j--){                 //if backwards
+        Serial.println(j);
+        digitalWrite(inputLEDArray[j],HIGH);
+        digitalWrite(outputLEDArray[j],HIGH);
+        delay(timeOn);
+        digitalWrite(inputLEDArray[j],LOW);
+        digitalWrite(outputLEDArray[j],LOW);
+        delay(timeOff);
+      }
+    }
+  }// end one cycle
+}//end directionalLEDFlasher function
+*/
 
 void printState(int row){
   Serial << F("Row ") << row << F(" State: ") << stateRow[row] << "\n";
