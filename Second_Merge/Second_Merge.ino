@@ -1100,13 +1100,17 @@ void loop(){
   }
     
   //----- Section AA5 ----- Update the input status LEDs on shield -----
+  #ifdef DEBUG_INPUTS
+    char tempInputLetterArray[] = "ABCDEF";
+  #endif
+
   for(int z = 0; z <= 5; z++) {              //runs loop for each input
     trigState[z] = decipherInputSensor(z); //Call function and pass(Row number) to see if input is on or off
       if(trigState[z] == 1) {                //If input is "on"
         digitalWrite(inputLEDArray[z],HIGH);  //turn on appropriate input LED
 
         #ifdef DEBUG_INPUTS
-          Serial << F("Input ") << z + 1 << F(": actual/threshold: ") << analogRead(inputPinArray[z]) << F("/") << inputTriggerThresholdArray[z];
+          Serial << F("Input ") << tempInputLetterArray[z] << F(": actual/threshold: ") << analogRead(inputPinArray[z]) << F("/") << inputTriggerThresholdArray[z];
           Serial.println();
         #endif
       }
