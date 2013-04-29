@@ -14,6 +14,7 @@
 //#define DEBUG_FILES_BY_CHARACTER true            //prints file conversion details to serial
 #define DEBUG_PUT_HANDLER true      //prints file upload details to serial
 //#define DEBUG_OUTPUTS true          //prints outputSelect details to serial
+#define DEBUG_INPUTS true           //prints input details to serial
 //#define DEBUG_TRIGGERS true           //prints trigger details to serial
 #define DEBUG_BRIDGE true             //prints bridge details to serial
 //#define DEBUG_MANUAL true           //prints manual mode details to serial
@@ -76,6 +77,7 @@ int pinIn3 = 12;  //Analog pin
 int pinIn4 = 13;  //Analog pin
 int pinIn5 = 14;  //Analog pin
 int pinIn6 = 15;  //Analog pin
+int inputPinArray[] = {pinIn1, pinIn2, pinIn3, pinIn4, pinIn5, pinIn6};
 
 int pinOut1 = 49; //Digital pin
 int pinOut2 = 48; //Digital pin
@@ -1098,10 +1100,15 @@ void loop(){
   }
     
   //----- Section AA5 ----- Update the input status LEDs on shield -----
-  for(int z = 0; z < 5; z++) {              //runs loop for each input
+  for(int z = 0; z <= 5; z++) {              //runs loop for each input
     trigState[z] = decipherInputSensor(z); //Call function and pass(Row number) to see if input is on or off
       if(trigState[z] == 1) {                //If input is "on"
         digitalWrite(inputLEDArray[z],HIGH);  //turn on appropriate input LED
+
+        #ifdef DEBUG_INPUTS
+          Serial << F("Input ") << z + 1 << F(": actual/threshold: ") << analogRead(inputPinArray[z]) << F("/") << inputTriggerThresholdArray[z];
+          Serial.println();
+        #endif
       }
       if(trigState[z] == 0) {               //If input is "off"
         digitalWrite(inputLEDArray[z],LOW);  //turn off appropriate input LED
@@ -1252,7 +1259,7 @@ char convert(char* readString, bool type){
     for (i = 0; i < 6; i++) {
       if (tok == NULL)
         break;
-      inputTriggerThresholdArray[i] = (byte)atoi(tok);
+      inputTriggerThresholdArray[i] = (int)atoi(tok);
       tok = strtok(NULL, ",");
     }
     // inputRetriggerDelayArray
