@@ -9,24 +9,22 @@
 #include <EthernetBonjour.h>
 
 //Serial debugging options. Uncomment a row to enable each section as needed.
-//#define DEBUG_STATES true           //prints states to serial
-#define DEBUG_FILES true            //prints file conversion details to serial
-//#define DEBUG_FILES_BY_CHARACTER true            //prints file conversion details to serial
-#define DEBUG_PUT_HANDLER true      //prints file upload details to serial
-//#define DEBUG_OUTPUTS true          //prints outputSelect details to serial
-#define DEBUG_INPUTS true           //prints input details to serial
-//#define DEBUG_TRIGGERS true           //prints trigger details to serial
+// #define DEBUG_STATES true             //prints states to serial
+#define DEBUG_FILES true              //prints file conversion details to serial
+#define DEBUG_FILES_BY_CHARACTER true //prints file conversion details character by character to serial
+#define DEBUG_PUT_HANDLER true        //prints file upload details to serial
+// #define DEBUG_OUTPUTS true            //prints outputSelect details to serial
+// #define DEBUG_INPUTS true             //prints input details to serial
+// #define DEBUG_TRIGGERS true           //prints trigger details to serial
 #define DEBUG_BRIDGE true             //prints bridge details to serial
-//#define DEBUG_MANUAL true           //prints manual mode details to serial
-#define DEBUG_BOUNJOUR_NAME true    //details regarding custom bonjour naming
+// #define DEBUG_MANUAL true             //prints manual mode details to serial
+#define DEBUG_BOUNJOUR_NAME true      //details regarding custom bonjour naming
+#define DEBUG_IP_ADDRESS  true        //details about static IP address
 
-#define MAXROWS 20
-#define MINROWS 6
-#define MAXBONJOURNAMELENGTH 32
+#define MAXROWS 20                  //Maximum # of rows
+#define MINROWS 1                   //minimum # of rows
+#define MAX_BONJOUR_NAME_LENGTH 16  //maximum length of bonjour name
 
-char* bonjourName = "hauntbox2";                  //bonjour name
-
-int d = 0;  //Delay used in testing of code.  Set to 0 if not testing code.
 
 //--------------------Define/get variables from GUI-------------------------------------
 int guiFlag = 0;  //GUI Flag tells us when there is a new program.txt/settings.txt from the GUI
@@ -59,6 +57,8 @@ byte outputLEDArray [] = {47,46,45,44,43,42};   //Array of arduino pins that cor
 
 
 //----------------------Define variables in code-----------------------------
+int d = 0;  //Delay used in testing of code.  Set to 0 if not testing code.
+char bonjourName[MAX_BONJOUR_NAME_LENGTH] = "hauntbox";     //default bonjour name if not set in bounjour.txt on SD card
 bool outputState[6] = {0,0,0,0,0,0};   //array to hold on/off (1/0) state of every given output. Manipulated by any/multiple rules
                 //***only 6 outputs!!!
 int stateRow[MAXROWS];              //array that defines each row's state. Gets initialized in initializeFunction called from main function
@@ -98,12 +98,11 @@ int pinOut6 = 37; //Digital pin
 
 const int SD_CS = 4;      // pin 4 is the SPI select pin for the SDcard
 const int ETHER_CS = 10;  // pin 10 is the SPI select pin for the Ethernet
-byte ip[] = { 192, 168, 0, 100 }; // Static fallback IP
-static uint8_t mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xEE };
+byte ip[] = { 192, 168, 0, 100 };                             // Static fallback IP if not set in ip.txt on SD card
+byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xEE };          // static fallback MAC address if not set in uniqueID.txt on SD card
 char* html_browser_header = "HTTP/1.0 200 OK\nContent-Type: text/html\n";  //2 line header including mandatory blank line to signify data below
 
 //--------------------------- Define Handlers ----------------------------
-
 boolean file_handler(TinyWebServer& web_server);
 boolean index_handler(TinyWebServer& web_server);
 boolean program_handler(TinyWebServer& web_server);
@@ -498,10 +497,7 @@ boolean output_status_handler(TinyWebServer& web_server) {  //returns outputStat
 // -------------------- file uploader -------------------- 
 byte tempGuiFlag = 0;   //remembers guiFlag state in between loops (this is called 3 times: start, write, end)
                         //so we have to only set the real guiFlag after all 3 steps
-
-void file_uploader_handler(TinyWebServer& web_server,
-			   TinyWebPutHandler::PutAction action,
-			   char* buffer, int size) {
+void file_uploader_handler(TinyWebServer& web_server, TinyWebPutHandler::PutAction action, char* buffer, int size) {
   static uint32_t start_time;
   static uint32_t total_size;
   char* fname;
@@ -564,10 +560,7 @@ void file_uploader_handler(TinyWebServer& web_server,
 }
 
 
-
-
 // -------------------- begin firmware -------------------- 
-
 void setup() {
   /*
   if ((MCUSR & _BV(PORF)) && (MCUSR & _BV(EXTRF))) {
@@ -628,7 +621,7 @@ void setup() {
   // Pass over the speed and Chip select for the SD card
   if (!card.init(SPI_HALF_SPEED, SD_CS)) {
   //if (!card.init(SPI_FULL_SPEED, SD_CS)) {
-    Serial << F("card failed\n");
+    Serial << F("SD card failed\n");
     has_filesystem = false;
   }
   if (!volume.init(&card)) {                  // initialize a FAT volume.
@@ -639,108 +632,69 @@ void setup() {
     Serial << F("openRoot failed");
     has_filesystem = false;
   }
+  
   if (has_filesystem) {
-   // Assign our function to `upload_handler_fn'.
-   TinyWebPutHandler::put_handler_fn = file_uploader_handler;
-  }
+    TinyWebPutHandler::put_handler_fn = file_uploader_handler;   // Assign our function to `upload_handler_fn'.
 
-  if (has_filesystem) {
-  	// load macaddr.txt
-    //   char* MAC_addr_temp = open_file("uniqueID.txt");    //try to open uniqueID.txt
-    //   if (MAC_addr_temp != ""){  
-    //     char* tok;
-    //     char* val[4];
-    //     
-    //     tok = strtok(ip_temp, ":");   //separate string using ":" as a delimiter
-    //     val[0] = tok;
-    //     for (i = 1; i < 4; i++) {
-    //       if (tok == NULL)
-    //         break;
-    //       tok = strtok(NULL, ".");
-    //       val[i] = tok;
-    //     }
-    // 
-    //     for (i = 0; i < 4; i++) {
-    //       Serial << (val[i]) << ' ';
-    //     }
-    //     for (i = 0; i < 4; i++) {
-    //       ip[i] = (byte)atoi(val[i]);
-    //     }
-    //   }else{
-    //         // if not there random default
-    // 
-    //     Serial.pringln("No uniqueID.txt file.")
-    //   }// end if uniqueID.txt exists
+    //----------------------------------- load uniqueID.txt -----------------------------------
+      // char* mac_addr_temp = open_file("uniqueID.txt");    //try to open uniqueID.txt
+      // if (mac_addr_temp != ""){  
+      //   char* tok;
+      //   char* val[6];
+        
+      //   tok = strtok(mac_addr_temp, ":.-_, \r\n");   //separate string using ":" as a delimiter
+      //   val[0] = tok;
+      //   for (i = 1; i < 6; i++) {
+      //     if (tok == NULL)
+      //       break;
+      //     tok = strtok(NULL, ":.-_, \r\n");
+      //     val[i] = tok;
+      //   }
+    
+      //   for (i = 0; i < 6; i++) {
+      //     Serial << (val[i]) << ' ';
+      //   }
+      //   Serial << F("Changed mac from ");
+      //   int vb;
+      //   for (vb = 0; vb < 6; vb++)
+      //     Serial << mac[vb] << ' ';
+      //   Serial << F(" to ");
+      //   for (i = 0; i < 6; i++) {
+      //     mac[i] = (byte)atoi(val[i]);
+      //   }
+      //   for (vb = 0; vb < 6; vb++)
+      //     Serial << mac[vb] << ' ';
+      //   Serial << F("!!\n");
+      // }else{
+      //       // if not there random default
+    
+      //   Serial.println("No uniqueID.txt file.");
+      // }// end if uniqueID.txt exists
   	
-    // load bonjour.txt
+    //----------------------------------- load bonjour.txt -----------------------------------
+    #ifdef DEBUG_BOUNJOUR_NAME
+      Serial << F("Trying to open bonjour.txt");
+    #endif
 
-    // ************ take 1 ******************
-    //File bonjour_file;
-    /*
-    char* bonjour_file = open_file("b.txt");    //try to open uniqueID.txt
-    Serial.println("trying to open b.txt");
-    Serial.println(bonjour_file);
-    if (bonjour_file !=""){
-      Serial.println("found b.txt");
-      //load name from text file and convert it to a string or char something
-      int k=0;
+    char* bonjour_file = open_file("bonjour.txt");    //try to open bonjour.txt
 
-      bonjourName = bonjour_file;
-      //while (bonjour_file[] != ""){
-      //  Serial.println("looping through bonjour_file");
-      //  Serial.println(k);
-      //  bonjourName[k] = bonjour_file[k];
-      //  k++;
-      //}
+    if (bonjour_file !=""){                           //if there is data in the file
+      #ifdef DEBUG_BOUNJOUR_NAME
+        Serial << F("found bonjour.txt");
+      #endif
 
-      Serial.println(bonjourName);
-      //while (bonjour_file.available()) {
-      //  Serial.write(bonjour_file.read());
-      //  bonjourName[k] = bonjour_file.read();
-      //  k++;
-      //}
+      char* tok;                                //Get rid of extraneous characters
+      tok = strtok(bonjour_file, ".:-',?*&^#@!()\n\r ");   //separate string using ".:- " or newline as a delimiter
+      strcpy(bonjourName, tok);                 //copy the read string into bonjourName (Note you can't just say bonjourName = bonjourFile)
 
-      //******* VALIDATION *********
-      //Limit bonjour name to MAXBONJOURNAMELENGTH
-
-      //bonjour_file.close();
-    }else{
-      // if not there use default set above
-
-      Serial.println("No b.txt file.");
+    }else{                                      //if no data in file or not there use default set initially
+      #ifdef DEBUG_BOUNJOUR_NAME
+        Serial << F("No bonjour.txt file exists.");
+      #endif
     }// end if bonjour.txt exists
 
-    */
-
-    //***** take 2 ******************
-    /*
-    char* input_file = "b.txt";
-    char tempchar;
-    File file = SD.open(input_file);
-    Serial << F("input_file = ") << input_file << F(", file read = ") << file << F("\n");
-
-    if (file) {                           //if there's a file
-      Serial << F("*****did we make it? File.available() = ") << file.available() << F("\n");
-      Serial << input_file << F("we made it!\n");
-
-      int k = 0;
-      while (file.available()) {          //if there are unread bytes in the file
-        tempchar = file.read();                 //read one
-        bonjourName[k] = tempchar;                  //append it to bonjourName
-        Serial << k << F(" ") << tempchar << F("\n");
-
-        k ++;                             //inc counter
-      }
-      file.close();                      //close the file
-
-      Serial << F("bonjourName = ") << bonjourName << F("\n");
-    }
-    */
-
-
-
-
-   char* ip_temp = open_file("ip.txt");    //try to open ip.txt
+    //----------------------------------- load bonjour.txt -----------------------------------
+    char* ip_temp = open_file("ip.txt");    //try to open ip.txt
     if (ip_temp != ""){  
       char* tok;
       char* val[4];
@@ -755,13 +709,16 @@ void setup() {
     	}
 
       for (i = 0; i < 4; i++) {
-        Serial << (val[i]) << ' ';
+        #ifdef DEBUG_IP_ADDRESS
+          Serial << (val[i]) << ' ';
+        #endif
       }
       for (i = 0; i < 4; i++) {
         ip[i] = (byte)atoi(val[i]);
       }
-      
-      Serial << F("Static IP: ") << ip_temp << F("\n");
+      #ifdef DEBUG_IP_ADDRESS
+        Serial << F("Static IP: ") << ip_temp << F("\n");
+      #endif
       Ethernet.begin(mac,ip);                                 //setup with static address
     }else{      //if there is not a static ip specified... use DHCP
       Serial << F("Setting up the Ethernet card...\n");
@@ -788,7 +745,7 @@ void setup() {
   // Start the bonjour/zeroconf service
   EthernetBonjour.begin(bonjourName);               //Set the advertised name
   
-  char bonjourServiceRecord[MAXBONJOURNAMELENGTH];  //declare char array to hold bonjourServiceRecord
+  char bonjourServiceRecord[MAX_BONJOUR_NAME_LENGTH + 6];  //declare char array to hold bonjourServiceRecord
   strcpy(bonjourServiceRecord, bonjourName);        //copy user-changeable name from http://stackoverflow.com/questions/2218290/concatenate-char-array-in-c
   strcat(bonjourServiceRecord, "._http");           //copy required postfix (needs to have the "._http" at the end)
 
@@ -798,7 +755,7 @@ void setup() {
 
   EthernetBonjour.addServiceRecord(bonjourServiceRecord, 80, MDNSServiceTCP);   //Set the advertised port/service
 
-  Serial << F("Ready to accept web requests at ") << bonjourName << F(".local or at http://");
+  Serial << F("Ready to accept web requests at http://") << bonjourName << F(".local or at http://");
   Serial.println(Ethernet.localIP());
 }
 
@@ -1169,10 +1126,9 @@ char* open_file(char* input_file){
   #endif
   
   if (file) {                           //if there's a file
-
     #ifdef DEBUG_FILES
-      Serial << F("*****did we make it? File.available() = ") << file.available() << F("\n");
-      Serial << input_file << F("we made it!\n");
+      Serial << F("File.available() = ") << file.available() << F("\n");
+      Serial << input_file << F(" We made it!\n");
     #endif
 
     while (file.available()) {          //if there are unread bytes in the file
@@ -1187,7 +1143,7 @@ char* open_file(char* input_file){
     file.close();                      //close the file
     return storage;                    //return the read bytes
   }else{                              //no file
-    Serial.println("no file");          //error
+    Serial.println("no file");
     return fail;                      //return w/ fail
   }
 }//end open_file
@@ -1303,9 +1259,9 @@ char convert(char* readString, bool type){
     #endif
 
   }else if (type == 1){ //convert program arrays here
-    Serial.println("converting Program.txt");
+    Serial.println("converting program.txt");
     #ifdef DEBUG_BRIDGE
-      Serial << F("Free RAM: ") << FreeRam() << "\n";
+      Serial << F("Bridge: Free RAM: ") << FreeRam() << "\n";
     #endif
     // Now turn the array of strings into arrays of numbers.  Each array is
     // named for the column it represents.  The values are separated by
@@ -1326,7 +1282,7 @@ char convert(char* readString, bool type){
       newCurrentRowCount = i + 1;
 
       #ifdef DEBUG_BRIDGE
-        Serial << F("i: ") << i << F(" new: ") << newCurrentRowCount << F("\n");
+        Serial << F("Bridge: i: ") << i << F(" newCurrentRowCount: ") << newCurrentRowCount << F("\n");
       #endif
       
       tok = strtok(NULL, ",");
@@ -1334,7 +1290,7 @@ char convert(char* readString, bool type){
 
     currentRowCount = newCurrentRowCount;
     #ifdef DEBUG_BRIDGE
-      Serial << F("Done w/ first loop. currentRowCount: ") << currentRowCount << F(" newCurrentRowCount: ") << newCurrentRowCount <<  F("\n");
+      Serial << F("Bridge: Done w/ first loop. currentRowCount: ") << currentRowCount << F(" newCurrentRowCount: ") << newCurrentRowCount <<  F("\n");
     #endif
 
     tok = strtok(col[1], ",");
@@ -1400,7 +1356,7 @@ char convert(char* readString, bool type){
         Serial.print(enableDisableArray[i]);
         Serial.print(" ");
       }
-      Serial.print("inputArray: ");
+      Serial.print("\ninputArray: ");
       for (i = 0; i < currentRowCount; i++){
         Serial.print(inputArray[i]);
         Serial.print(" ");
@@ -1435,10 +1391,11 @@ char convert(char* readString, bool type){
         Serial.print(durationArray[i]);
         Serial.print(" ");
       }
+      Serial.println();
+      Serial << F("Free RAM: ") << FreeRam() << "\n";
     #endif
-    Serial.println("convert: done converting program");
-    Serial << F("Free RAM: ") << FreeRam() << "\n";
 
+    Serial.println("Convert: done converting program");
   }
 
 }//end convert cupcake string to arrays function
@@ -1493,4 +1450,5 @@ void directionalLEDFlasher (int direction, int cycles, int timeOn, int timeOff){
 void printState(int row){
   Serial << F("Row ") << row << F(" State: ") << stateRow[row] << "\n";
 }
+
 
