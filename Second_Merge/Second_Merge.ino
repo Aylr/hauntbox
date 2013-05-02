@@ -15,11 +15,12 @@
 #define DEBUG_PUT_HANDLER true        //prints file upload details to serial
 // #define DEBUG_OUTPUTS true            //prints outputSelect details to serial
 // #define DEBUG_INPUTS true             //prints input details to serial
-// #define DEBUG_TRIGGERS true           //prints trigger details to serial
+#define DEBUG_TRIGGERS true           //prints trigger details to serial
 #define DEBUG_BRIDGE true             //prints bridge details to serial
 // #define DEBUG_MANUAL true             //prints manual mode details to serial
 #define DEBUG_BOUNJOUR_NAME true      //details regarding custom bonjour naming
 #define DEBUG_IP_ADDRESS  true        //details about static IP address
+// #define DEBUG_DECIPHER_INPUT_SENSOR true  //details about the inner workings of the decipherIntputSensor() function
 
 #define MAXROWS 20                  //Maximum # of rows
 #define MINROWS 1                   //minimum # of rows
@@ -687,7 +688,7 @@ void setup() {
       tok = strtok(bonjour_file, ".:-',?*&^#@!()\n\r ");   //separate string using ".:- " or newline as a delimiter
       strcpy(bonjourName, tok);                 //copy the read string into bonjourName (Note you can't just say bonjourName = bonjourFile)
 
-    }else{                                      //if no data in file or not there use default set initially
+    }else{                                      //if no file or not there use default set initially
       #ifdef DEBUG_BOUNJOUR_NAME
         Serial << F("No bonjour.txt file exists.");
       #endif
@@ -779,12 +780,15 @@ void initializeFunction() {
 //----- Section AA4b -----
 // Function that reads sensor, interprets what the value means (active hi/low) and 
 //returns int 1 for "triggered" or 0 for "not triggered"
-int decipherInputSensor(int rowNumber) {
+int decipherInputSensor(int x) {
+  // It is very important to realize that this takes an input # from 1-6 and
+  // NOT 0-5. In this firmware an input = 0 is considered not active, or NO input.
+  // This is why you see some of the indexes shifted + or - 1.
   int trig; //returns 1 if input is considered triggered, 0 if not
   int val;
-  int x;
+  // int x = tempInputNumber;
   int y;
-  x = inputArray[rowNumber];  //Returns input pin # (0-6) 
+
   if(x == 0) {return 0;} //Do nothing for "N/A" case and break out of function
   if(x == 1) {val = analogRead(pinIn1);}
   if(x == 2) {val = analogRead(pinIn2);}
@@ -793,14 +797,18 @@ int decipherInputSensor(int rowNumber) {
   if(x == 5) {val = analogRead(pinIn5);}
   if(x == 6) {val = analogRead(pinIn6);}
 
-  y = inputActiveHiLowArray[x-1];  //Returns Acvive High/Low definition for corresponding input
-      //x-1 because in the inputArray we are using 0 as "none"
-      //wherease in inputActiveHiLowArray we are not
+  y = inputActiveHiLowArray[x-1];  // Returns Acvive High/Low definition for corresponding input
+      // x-1 because in the inputArray we are using 0 as "none"
+      // whereas in inputActiveHiLowArray & inputTriggerThresholdArray we are not
+  if((y == 1) && (val >= inputTriggerThresholdArray[x-1])) {trig = 1;}    // if high and supposed to be, consider input "triggered"
+  if((y == 0) && (val >= inputTriggerThresholdArray[x-1])) {trig = 0;}    // if low and supposed to be high, don't
+  if((y == 1) && (val <  inputTriggerThresholdArray[x-1])) {trig = 0;}
+  if((y == 0) && (val <  inputTriggerThresholdArray[x-1])) {trig = 1;}    // if low and supposed to be, consider input "triggered"
 
-  if((y == 1) && (val >= inputTriggerThresholdArray[rowNumber])) {trig = 1;}    // if high and supposed to be, consider input "triggered"
-  if((y == 0) && (val >= inputTriggerThresholdArray[rowNumber])) {trig = 0;}    // if low and supposed to be high, don't
-  if((y == 1) && (val <  inputTriggerThresholdArray[rowNumber])) {trig = 0;}
-  if((y == 0) && (val <  inputTriggerThresholdArray[rowNumber])) {trig = 1;}    // if low and supposed to be, consider input "triggered"
+  #ifdef DEBUG_DECIPHER_INPUT_SENSOR
+    Serial << "decipherInputSensor(): x=" << x << " val=" << val << " inputTriggerThresholdArray[x-1]=" << inputTriggerThresholdArray[x-1] << " trig=" << trig << "\n";
+  #endif
+
   return trig;
 }
 
@@ -815,7 +823,7 @@ int decipherInputSensor(int rowNumber) {
   //Therefore, only take action when they == each other
 bool inputTakeAction(int rowNumber) {
   bool shouldItTakeAction;
-  if ( decipherInputSensor(rowNumber) == inputOnOffArray[rowNumber] ){
+  if ( decipherInputSensor(inputArray[rowNumber]) == inputOnOffArray[rowNumber] ){
     shouldItTakeAction = 1;
   }else{
     shouldItTakeAction = 0;
@@ -960,6 +968,15 @@ void loop(){
       if(stateRow[z] == 1) {                   //STATE 1 = Waiting for a trigger
         trigState[z] = inputTakeAction(z); //Call function and pass(Row number) to see if input is triggered
         if(trigState[z] == 1 && automaticMode == true) {   //If triggered AND in automaticMode
+
+          //loop through each row to see if it is controlled by the triggered input
+          for (int i=0; i < currentRowCount; i++){
+            if (inputArray[i] == inputArray[z]){      //if the row is controlld by the input
+              trigState[i] = 1;                   //set trigState as triggered
+              stateRow[i] = 2;                    //advance to next state
+            }
+          }
+
           stateRow[z] = 2;                     //Moves to next state
         }else{//if(trigState[z] == 0) {               //If not triggered (or not in automaticMode)
           //Do nothing
@@ -968,7 +985,7 @@ void loop(){
         delayTimeStamp[z] = millis();      //Gets time stamp
         
         #ifdef DEBUG_TRIGGERS
-          Serial << F("Trigger ") << z << F(": ") << delayTimeStamp[z] << F("\n");
+          Serial << F("Trigger Row ") << z+1 << F(": ") << delayTimeStamp[z] << F("\n");     // z+1 is the row number starting from 1 for the user, not starting from 0 for the array
         #endif
         stateRow[z] = 3;                      //Moves on to next state
       }else if(stateRow[z] == 3) {             //STATE 3 = Delay vs. timeStamp
@@ -1045,7 +1062,6 @@ void loop(){
 
         net = now - delayTimeStamp[z];
 
-
         if(net >= tempDelay){
           stateRow[z] = 1;
         }
@@ -1058,24 +1074,20 @@ void loop(){
     
   //----- Section AA5 ----- Update the input status LEDs on shield -----
   #ifdef DEBUG_INPUTS
-    char tempInputLetterArray[] = "ABCDEF";
+    char tempInputLetterArray[] = "ABCDEF";   //letter prefix for serial debugging
   #endif
-
-  for(int z = 0; z <= 5; z++) {              //runs loop for each input
-    trigState[z] = decipherInputSensor(z); //Call function and pass(Row number) to see if input is on or off
-      if(trigState[z] == 1) {                //If input is "on"
-        digitalWrite(inputLEDArray[z],HIGH);  //turn on appropriate input LED
-
-        #ifdef DEBUG_INPUTS
-          Serial << F("Input ") << tempInputLetterArray[z] << F(": actual/threshold: ") << analogRead(inputPinArray[z]) << F("/") << inputTriggerThresholdArray[z];
-          Serial.println();
-        #endif
-      }
-      if(trigState[z] == 0) {               //If input is "off"
-        digitalWrite(inputLEDArray[z],LOW);  //turn off appropriate input LED
-      }
+  for(int j=0;j<=5;j++){                    //loop through each input
+    if(decipherInputSensor(j+1) == 1){      //if input is (on). Shift +1 to account for inputArray[0] = no input
+      digitalWrite(inputLEDArray[j],HIGH);  //turn on LED
+      #ifdef DEBUG_INPUTS
+        Serial << F("Input ") << tempInputLetterArray[j] << F(": actual/threshold: ") << analogRead(inputPinArray[j]) << F("/") << inputTriggerThresholdArray[j];
+        Serial.println();
+      #endif
+    }else{                                  //else (off)
+      digitalWrite(inputLEDArray[j],LOW);   //turn off LED
+    }
   }
-  
+    
   
   //----- Section AA6 ----- Update the Status variables for GUI to read
   
