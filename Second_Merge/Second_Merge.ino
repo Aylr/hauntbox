@@ -718,7 +718,7 @@ void setup() {
       #ifdef DEBUG_IP_ADDRESS
         Serial << F("DEBUG_IP_ADDRESS: Static IP: ") << ip_temp << F("\n");
       #endif
-      Ethernet.begin(mac,ip) == 0)        //set up with static address
+      Ethernet.begin(mac,ip);             //set up with static address
     }else{                                //if there is not a static ip specified... use DHCP
       Serial << F("Setting up the Ethernet card...\n");
       if (Ethernet.begin(mac) == 0) {     // Initialize ethernet with DHCP
@@ -1140,7 +1140,7 @@ char* open_file(char* input_file){
       ch = file.read();                 //read one
       storage[i] = ch;                  //append it to storage
       #ifdef DEBUG_FILES_BY_CHARACTER
-        Serial F("DEBUG_FILES_BY_CHARACTER: ") << i << F(" ") << ch << F("\n");
+        Serial << F("DEBUG_FILES_BY_CHARACTER: ") << i << F(" ") << ch << F("\n");
       #endif
 
       i ++;                             //inc counter
@@ -1149,7 +1149,7 @@ char* open_file(char* input_file){
     return storage;                    //return the read bytes
   }else{                              //no file
     Serial << F("No file: ") << input_file;
-    Seria.println();
+    Serial.println();
     return fail;                      //return w/ fail
   }
 }//end open_file
