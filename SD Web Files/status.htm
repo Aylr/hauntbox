@@ -11,6 +11,9 @@
 
 <script>
 $(function(){//shortcut for doc.ready
+
+	var currentRows = 0;
+	var table_row = "<tr class='table_row'><td class='input'>.</td><td class='row'></td><td class='output'></td></tr>";
 	
 	function load_status(){
 		console.log("loading status");
@@ -34,19 +37,19 @@ $(function(){//shortcut for doc.ready
 			var input_status = raw_incoming_status[0].split(",");	//split substrings into arrays of strings
 			var row_state = raw_incoming_status[1].split(",");
 			var output_status = raw_incoming_status[2].split(",");
-			
-				
+							
 			array_of_strings_to_ints(input_status);				//run all the arrays through the integerizer
 			array_of_strings_to_ints(row_state);
 	 		array_of_strings_to_ints(output_status);
+
+			currentRows = row_state.length;						//count the rows
+			console.log("currentRows=" + currentRows);
+	 		create_rows();										//update the table w/ current # of rows
 			
 			console.log(input_status);
 			console.log(row_state);
 			console.log(output_status);
 			
-			//set_status("ul.input li",input_status);			//set each input with the appropriate array
-			//set_status("ul.row li",row_state);
-			//set_status("ul.output li",output_status);
 			set_status("td.input",input_status,1);			//set each input with the appropriate array
 			set_status("td.row",row_state);
 			set_status("td.output",output_status,1);
@@ -63,7 +66,7 @@ $(function(){//shortcut for doc.ready
 			for (i in array){						//loop through each element in array
 				if (j == i){						//if this element # corresponds w/ this element
 					$(this).html(array[i]);			//set the value
-					
+
 					if (color == 1){
 						if (array[i] == 1){
 							$(this).css("background","green");
@@ -78,6 +81,15 @@ $(function(){//shortcut for doc.ready
 		});
 	};//end set_status()
 
+
+	function create_rows(){
+		$("table tr.table_row").remove();		// remove all rows
+		for (i=0;i<currentRows;i++)	//loop through each row
+			$("table").append(table_row);		// add new rows
+	}
+
+	create_rows();
+
 	function set_color(selector,data){
 		if (selector == "td.output" || selector == "td.input"){
 			if (data == 1){
@@ -91,13 +103,36 @@ $(function(){//shortcut for doc.ready
 	
 	load_status();	//update the status data
 	
-	setInterval(function(){		//update the status data every n milliseconds
-		load_status();
-	},2000);
+	var interval;
+
+	function start_auto(){
+		interval = setInterval(function(){		//update the status data every n milliseconds
+			load_status();
+		},2000);
+	}
+
+	start_auto();
+
+	function stop_auto(){				//this function is called whenever you want to stop auto incrementing
+		clearInterval(interval);
+	};//end stop_auto
+
+	var auto_toggle = true;
+
+	$("button.toggle_auto_update").click(function(){
+		if (auto_toggle == true){
+			stop_auto();
+			auto_toggle = false;
+			$(this).html("Turn auto refresh ON");
+		}else{
+			start_auto();
+			auto_toggle = true;
+			$(this).html("Turn auto refresh OFF");
+		}
+	})
 	
 	
-//##################################### Utility Functions #####################################
-	
+	//##################################### Utility Functions #####################################
 	function array_of_strings_to_ints(dirty_array){			//converts arrays of strings into arrays of integers ie: ["1","2","3",...] --> [1,2,3,...]
 		for (i in dirty_array){								//for each element in the array
 			dirty_array[i] = parseInt(dirty_array[i]);		//convert strings to int "1" --> 1
@@ -113,18 +148,11 @@ $(function(){//shortcut for doc.ready
 	<div class="container body_container">	
 
 		<div id="display_container">
+			<button class="toggle_auto_update">Turn auto-refresh off</button>
 			
 			<div class="status">
 				<table>
 					<tr><th>Inputs 0/1</th><th>Row States 1-6</th><th>Outputs 0/1</th></tr>
-					<tr><td class="input"></td><td class="row"></td><td class="output"></td></tr>
-					<tr><td class="input"></td><td class="row"></td><td class="output"></td></tr>
-					<tr><td class="input"></td><td class="row"></td><td class="output"></td></tr>
-					<tr><td class="input"></td><td class="row"></td><td class="output"></td></tr>
-					<tr><td class="input"></td><td class="row"></td><td class="output"></td></tr>
-					<tr><td class="input"></td><td class="row"></td><td class="output"></td></tr>
-					<tr><td class="input"></td><td class="row"></td><td class="output"></td></tr>
-					<tr><td class="input"></td><td class="row"></td><td class="output"></td></tr>
 				</table>
 			</div><!--//end div.status -->
 		</div><!--//end display_container -->
