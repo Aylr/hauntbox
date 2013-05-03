@@ -10,13 +10,13 @@
 
 //Serial debugging options. Uncomment a row to enable each section as needed.
 // #define DEBUG_STATES true             //prints states to serial
-// #define DEBUG_FILES true              //prints file conversion details to serial
+#define DEBUG_FILES true              //prints file conversion details to serial
 // #define DEBUG_FILES_BY_CHARACTER true //prints file conversion details character by character to serial
 // #define DEBUG_PUT_HANDLER true        //prints file upload details to serial
 // #define DEBUG_OUTPUTS true            //prints outputSelect details to serial
 // #define DEBUG_INPUTS true             //prints input details to serial
 // #define DEBUG_TRIGGERS true           //prints trigger details to serial
-// #define DEBUG_BRIDGE true             //prints bridge details to serial
+#define DEBUG_BRIDGE true             //prints bridge details to serial
 // #define DEBUG_MANUAL true             //prints manual mode details to serial
 // #define DEBUG_BOUNJOUR_NAME true      //details regarding custom bonjour naming
 // #define DEBUG_IP_ADDRESS  true        //details about static IP address
@@ -24,7 +24,9 @@
 
 #define MAXROWS 20                  //Maximum # of rows
 #define MINROWS 1                   //minimum # of rows
+#define MIN_BONJOUR_NAME_LENGTH 3   //minimum length of bonjour name. Unreliable below 3.
 #define MAX_BONJOUR_NAME_LENGTH 16  //maximum length of bonjour name
+#define MAX_FILE_LENGTH 400         //maximum length of program/settings file (major impact on memory)
 
 
 //--------------------Define/get variables from GUI-------------------------------------
@@ -33,7 +35,6 @@ int currentRowCount = 6;  //current number of rows (starts at 6 and modified by 
 int newCurrentRowCount = 0;
 bool automaticMode = true;  //keeps track of auto/manual override mode
 bool networkServicesDisabled = false; //true if ethernet doesn't start due to IP issue or unplugged CAT5. Still runs state machine, and skips any web.process and bonjour stuff.
-
 
 //"Program" arrays
 bool enableDisableArray[MAXROWS] = {1,1,1,1,1,1};       //if a row is enabled or disabled
@@ -46,11 +47,12 @@ byte durationTypeArray[MAXROWS] = {0,1,2,0,1,2};        //The type of duration (
 unsigned long durationArray[MAXROWS] = {1000, 6000, 6000, 6000, 6000, 6000};  //actual effect duration in milliseconds
 
 //"Settings" arrays
-byte inputActiveHiLowArray[] =  {1, 1, 1, 1, 1, 0};         //What signal level is considered "on" for each input (1 = High, 0 = Low)
+byte inputActiveHiLowArray[] =  {1, 1, 1, 1, 1, 1};         //What signal level is considered "on" for each input (1 = High, 0 = Low)
 byte outputActiveHiLowArray[] = {1, 1, 1, 1, 1, 1};         //Output considered on when High (1) or Low (0)
-unsigned int inputTriggerThresholdArray[] = {100,100,100,100,100,100};  //input trigger thresholds
-unsigned long inputRetriggerDelayArray[] = {0,0,0,0,0,0};               //retrigger time in milliseconds
-
+unsigned int inputTriggerThresholdArray[] = {103,103,103,103,103,103};  //input trigger thresholds
+unsigned long inputRetriggerDelayArray[] = {100,100,100,100,100,100};   //retrigger time in milliseconds
+FLASH_STRING(default_settings, "1,1,1,1,1,1,1,1,1,1,1,1;garage,my room,hall,cemetery,cornfield,swamp;UV,light,strobe,sound,air horn,zombie;103,103,103,103,103,103;100,100,100,100,100,100;");
+FLASH_STRING(default_program, "1,1;1,2;1,1;0,0;1,2;1,1;2,2;1000,1000;");
 
 // Other arrays
 //---------intput & output indicator LEDs near screw terminals
@@ -101,8 +103,11 @@ int pinOut6 = 37; //Digital pin
 const int SD_CS = 4;      // pin 4 is the SPI select pin for the SDcard
 const int ETHER_CS = 10;  // pin 10 is the SPI select pin for the Ethernet
 byte ip[] = { 192, 168, 0, 100 };                             // Static fallback IP if not set in ip.txt on SD card
-byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xEE };          // static fallback MAC address if not set in uniqueID.txt on SD card
-char* html_browser_header = "HTTP/1.0 200 OK\nContent-Type: text/html\n";  //2 line header including mandatory blank line to signify data below
+// byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xEE };          // static fallback MAC address if not set in uniqueID.txt on SD card
+byte mac[] = { 222, 173, 190, 239, 254, 238};          // static fallback MAC address if not set in uniqueID.txt on SD card
+
+//char* html_browser_header = "HTTP/1.0 200 OK\nContent-Type: text/html\n";  //2 line header including mandatory blank line to signify data below
+FLASH_STRING(html_browser_header, "HTTP/1.0 200 OK\nContent-Type: text/html\n");  //2 line header including mandatory blank line to signify data below
 // Store frequently used strings in eprom flash to save on ram.
 FLASH_STRING(prefixSTATUS, "STATUS: ");
 FLASH_STRING(prefixDEBUG_FILES, "DEBUG_FILES: ");
@@ -194,7 +199,7 @@ boolean index_handler(TinyWebServer& web_server) {
     send_file_name(web_server, "gui.htm");
   }else{                                          //if SD has failed, send an informative help page
     Client& client = web_server.get_client();
-    client.println(html_browser_header);
+    client << html_browser_header;
     client << sd_fail_html;                       //the actual SD fail html page is stored in eprom flash
   }
   return true;
@@ -676,6 +681,39 @@ void setup() {
     
       //   Serial.println("No uniqueID.txt file.");
       // }// end if uniqueID.txt exists
+
+      //----------------------------------- load uniqueID.txt -----------------------------------
+      char* mac_addr_temp = open_file("uniqueID.txt");    //try to open uniqueID.txt
+      if (mac_addr_temp != ""){  
+        char* tok;
+        char* val[6];
+        
+        tok = strtok(mac_addr_temp, ":.-_, \r\n");   //separate string using ":" as a delimiter
+        val[0] = tok;
+        for (i = 1; i < 6; i++) {
+          if (tok == NULL)
+            break;
+          tok = strtok(NULL, ":.-_, \r\n");
+          val[i] = tok;
+        }
+    
+        for (i = 0; i < 6; i++) {
+          Serial << (val[i]) << ' ';
+        }
+        Serial << F("Changed mac from ");
+        int vb;
+        for (vb = 0; vb < 6; vb++)
+          Serial << mac[vb] << ' ';
+        Serial << F(" to ");
+        for (i = 0; i < 6; i++) {
+          mac[i] = (byte)atoi(val[i]);
+        }
+        for (vb = 0; vb < 6; vb++)
+          Serial << mac[vb] << ' ';
+        Serial << F("!\n");
+      }else{      //use default mac address specified above.    
+        Serial << F("No uniqueID.txt file. Using default MAC address.\n");
+      }// end if uniqueID.txt exists
   	
     //----------------------------------- load bonjour.txt -----------------------------------
     #ifdef DEBUG_BOUNJOUR_NAME
@@ -699,7 +737,7 @@ void setup() {
       #endif
     }// end if bonjour.txt exists
 
-    //----------------------------------- load bonjour.txt -----------------------------------
+    //----------------------------------- load ip.txt -----------------------------------
     char* ip_temp = open_file("ip.txt");    //try to open ip.txt
     if (ip_temp != ""){  
       char* tok;
@@ -928,22 +966,37 @@ void loop(){
     #ifdef DEBUG_BRIDGE
       Serial << prefixDEBUG_BRIDGE << F("program.txt=") << newvar << F("\n");                 //print the file out
     #endif
-    convert(newvar,1);                        //convert the file to arrays
-    #ifdef DEBUG_BRIDGE
-      Serial << prefixDEBUG_BRIDGE << F("program.txt converted\n");
-    #endif
+
+    if (newvar != 0 && newvar != ""){
+      convert(newvar,1);                        //convert the file to arrays
+      #ifdef DEBUG_BRIDGE
+        Serial << prefixDEBUG_BRIDGE << F("program.txt converted\n");
+      #endif
+    } else {  // if we've gotten here we need to remove, then create & populate a new settings.txt file
+      createDefaultFile("program.txt");
+      #ifdef DEBUG_BRIDGE
+        Serial << prefixDEBUG_BRIDGE << F("Default program used.\n");
+      #endif
+    }
+
     newvar = 0;                               //erase the newvar
-    //Serial.println("reset newvar to 0");
     
     newvar = open_file("settings.txt");       //store the settings.txt in a var
 
     #ifdef DEBUG_BRIDGE
       Serial << prefixDEBUG_BRIDGE << F("settings.txt=") << newvar << F("\n");
     #endif
-    convert(newvar,0);                        //convert the file to arrays
-    #ifdef DEBUG_BRIDGE
-      Serial << prefixDEBUG_BRIDGE << F("settings.txt converted\n");
-    #endif
+    if (newvar != 0 && newvar != ""){
+      convert(newvar,0);                        //convert the file to arrays
+      #ifdef DEBUG_BRIDGE
+        Serial << prefixDEBUG_BRIDGE << F("settings.txt converted\n");
+      #endif
+    } else {  // if we've gotten here we need to remove, then create & populate a new settings.txt file
+      createDefaultFile("settings.txt");
+      #ifdef DEBUG_BRIDGE
+        Serial << prefixDEBUG_BRIDGE << F("Default settings used.\n");
+      #endif
+    }
 
     
     //----- Section AB2 -----
@@ -1125,22 +1178,51 @@ char* open_file(char* input_file){
   #ifdef DEBUG_FILES
     Serial << prefixDEBUG_FILES << F("open_file(") << input_file << F(")\n");
   #endif
-  char storage[400] = {0};             //used to store read stuff
-  char ch;                             //used to store incoming byte
-  int i = 0;                           //used as counter for building string
-  char* fail = "";                     //the failure return
+  char storage[MAX_FILE_LENGTH] = {0};      //used to store read stuff
+  char ch;                                  //used to store incoming byte
+  int i = 0;                                //used as counter for building string
+  char* fail = "";                          //the failure return
+  int tempMaxFileLength = MAX_FILE_LENGTH;  //largest file to use (to protect limited memory)
+  byte tempMinFileLength = 10;               //smallest file to consider valid (used in open_file() testing file.available())
+
   
   int tempSDStatus = SD.begin(SD_CS);
   File file = SD.open(input_file);
 
   #ifdef DEBUG_FILES
-    Serial << prefixDEBUG_FILES << F("SD.begin=") << SD.begin(SD_CS) << F(", has_filesystem=") << has_filesystem << F(" input_file=") << input_file << F(" file read=") << file << F("\n");
+    Serial << prefixDEBUG_FILES << F("SD.begin=") << tempSDStatus << F(", has_filesystem=") << has_filesystem << F(" input_file=") << input_file << F(" file read=") << file << F("\n");
   #endif
   
   if (file) {                           //if there's a file
     #ifdef DEBUG_FILES
       Serial << prefixDEBUG_FILES << F("File.available()=") << file.available() << F("\n");
     #endif
+
+    // ------ input sanitization section -------
+    // This important section validates the user-changeable files on the SD card
+    // such as bonjour.txt, ip.txt, etc. Based on which file is opened, min/max
+    // lengths are set to prevent bad data from getting in and overflowing the cpu.
+    // If the input fails, defaults are used.
+    if (input_file == "bonjour.txt") {
+      tempMinFileLength = MIN_BONJOUR_NAME_LENGTH;
+      tempMaxFileLength = MAX_BONJOUR_NAME_LENGTH;
+    }else if (input_file == "ip.txt") {
+      tempMinFileLength = 7;                  //min possibl IP n.n.n.n
+      tempMaxFileLength = 15;                 //max possible IP nnn.nnn.nnn.nnn
+    }else if (input_file == "uniqueID.txt"){
+      tempMinFileLength = 11;                 //min possible MAC n:n:n:n:n:n
+      tempMaxFileLength = 23;                 //max possible MAC nnn:nnn:nnn:nnn:nnn:nnn
+    }else{
+      //use defaults of min & max specified at top of function
+    }
+
+    if (file.available() < tempMinFileLength){
+      Serial << F("File.avail() < ") << tempMinFileLength << F("\n");
+      return fail;
+    }else if (file.available() > tempMaxFileLength){    //tests to see if the file has more than the minimum chars to be considered legitimate
+      Serial << F("File.avail() > ") << tempMaxFileLength << F("\n");
+      return fail;            //exit the function and return the fail string ("")
+    }
 
     while (file.available()) {          //if there are unread bytes in the file
       ch = file.read();                 //read one
@@ -1155,7 +1237,7 @@ char* open_file(char* input_file){
     return storage;                    //return the read bytes
   }else{                              //no file
     Serial << F("No file: ") << input_file;
-    Serial.println();
+    Serial.println("");
     return fail;                      //return w/ fail
   }
 }//end open_file
@@ -1268,6 +1350,7 @@ char convert(char* readString, bool type){
         Serial.print(inputRetriggerDelayArray[i]);
         Serial.print(" ");
       }
+      Serial.println("");
     #endif
 
   }else if (type == 1){ //convert program arrays here
@@ -1466,4 +1549,28 @@ void printState(int row){
 void disableNetworkServices(){    //disables network services (bonjour, web.process, etc)
   networkServicesDisabled = true;
   Serial << F("Ethernet failed. Check network connections and reset Hauntbox. Proceeding without network services.\n");
+}
+
+void createDefaultFile(char* tempFileName){
+  File myFile;
+  bool tempConvertType;
+  SD.remove(tempFileName);            // just in case, delete the file to prevent bad data
+  myFile = SD.open(tempFileName, FILE_WRITE);   //create new
+
+  if (myFile) {                   // if the file opened okay, write to it:
+    Serial << F("Creating new ") << tempFileName << F(" file.\n");
+    if (tempFileName == "settings.txt") {
+      tempConvertType = 0;
+      myFile << default_settings;
+    }
+    if (tempFileName == "program.txt") {
+      myFile << default_program;
+      tempConvertType = 1;
+    }
+    myFile.close();             // close the file:
+  } else {         // if the file didn't open, print an error:
+    Serial << F("Error creating new ") << tempFileName << F(" file.\n");
+  }
+
+  convert(open_file(tempFileName),tempConvertType);
 }
