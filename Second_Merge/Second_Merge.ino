@@ -32,6 +32,7 @@ int guiFlag = 0;  //GUI Flag tells us when there is a new program.txt/settings.t
 int currentRowCount = 6;  //current number of rows (starts at 6 and modified by gui)
 int newCurrentRowCount = 0;
 bool automaticMode = true;  //keeps track of auto/manual override mode
+bool noNetworkMode = false; //true if ethernet doesn't start due to IP issue or unplugged CAT5. Still runs state machine, and skips any web.process and bonjour stuff.
 
 
 //"Program" arrays
@@ -720,17 +721,19 @@ void setup() {
       #ifdef DEBUG_IP_ADDRESS
         Serial << F("Static IP: ") << ip_temp << F("\n");
       #endif
-      Ethernet.begin(mac,ip);                                 //setup with static address
-    }else{      //if there is not a static ip specified... use DHCP
+      Ethernet.begin(mac,ip) == 0)        //set up with static address
+    }else{                                //if there is not a static ip specified... use DHCP
       Serial << F("Setting up the Ethernet card...\n");
-      if (Ethernet.begin(mac) == 0) {                          // Initialize ethernet with DHCP
+      if (Ethernet.begin(mac) == 0) {     // Initialize ethernet with DHCP
          Serial << F("DHCP failed\n");
+         disableNetworkServices();        // disable any network services like web.process and bonjour
       }
     }
   }else{                                                    //If there is NO FILESYSTEM
     Serial << F("Setting up the Ethernet card...\n");       //still setup ethernet
     if (Ethernet.begin(mac) == 0) {                         // Initialize ethernet with DHCP
       Serial << F("DHCP failed: Check network connections\n");
+      disableNetworkServices();       // disable any network services like web.process and bonjour
       // directionalLEDFlasher(0,10,50,0);
     }
 
@@ -739,25 +742,25 @@ void setup() {
     LEDFlasher(10,200,200);  //visually alert user that something is awry by flashing all LEDs
   }//end if has filesystem
   
-  // Start the web server.
-  Serial << F("Web server starting...\n");
-  web.begin();
+  if (!noNetworkMode){           //if the hauntbox doesn't appear to be on a network, disable network services
+    Serial << F("Web server starting...\n");
+    web.begin();                 // Start the web server.
   
-  // Start the bonjour/zeroconf service
-  EthernetBonjour.begin(bonjourName);               //Set the advertised name
-  
-  char bonjourServiceRecord[MAX_BONJOUR_NAME_LENGTH + 6];  //declare char array to hold bonjourServiceRecord
-  strcpy(bonjourServiceRecord, bonjourName);        //copy user-changeable name from http://stackoverflow.com/questions/2218290/concatenate-char-array-in-c
-  strcat(bonjourServiceRecord, "._http");           //copy required postfix (needs to have the "._http" at the end)
+    // Start the bonjour/zeroconf service
+    EthernetBonjour.begin(bonjourName);                       //Set the advertised name
+    char bonjourServiceRecord[MAX_BONJOUR_NAME_LENGTH + 6];   //declare char array to hold bonjourServiceRecord
+    strcpy(bonjourServiceRecord, bonjourName);                //copy user-changeable name from http://stackoverflow.com/questions/2218290/concatenate-char-array-in-c
+    strcat(bonjourServiceRecord, "._http");                   //copy required postfix (needs to have the "._http" at the end)
 
-  #ifdef DEBUG_BOUNJOUR_NAME
-    Serial << F("bonjourName: ") << bonjourName << F(" bonjourServiceRecord: ") << bonjourServiceRecord << F("\n");
-  #endif
+    #ifdef DEBUG_BOUNJOUR_NAME
+      Serial << F("bonjourName: ") << bonjourName << F(" bonjourServiceRecord: ") << bonjourServiceRecord << F("\n");
+    #endif
 
-  EthernetBonjour.addServiceRecord(bonjourServiceRecord, 80, MDNSServiceTCP);   //Set the advertised port/service
+    EthernetBonjour.addServiceRecord(bonjourServiceRecord, 80, MDNSServiceTCP);   //Set the advertised port/service
 
-  Serial << F("Ready to accept web requests at http://") << bonjourName << F(".local or at http://");
-  Serial.println(Ethernet.localIP());
+    Serial << F("Ready to accept web requests at http://") << bonjourName << F(".local or at http://");
+    Serial.println(Ethernet.localIP());
+  }
 }
 
 
@@ -1100,18 +1103,15 @@ void loop(){
 
   
   //This tiny section runs the entire web server. Must be in void loop()
-  //Please not the main line "web.process()" is the actual functioning block.
+  //Please note the main line "web.process()" is the actual functioning block.
   //It should normally be wrapped in a statement protecting it from running
   //without an SD card, but in this case we want it to run even if there is no SD card
   //so we can serve up a custom html page from index_handler
-  if (has_filesystem) {
-  //  web.process();
-  }else{
-    LEDFlasher(1,200,200);    //call the LEDFlasher function to visually alert user of SD issue
+  // LEDFlasher(1,200,200);    // call the LEDFlasher function to visually alert user of SD issue
+  if (!noNetworkMode) {     // if not in noNetworkMode
+    web.process();          // run web process
+    EthernetBonjour.run();  // run zeroconf/bonjour
   }
-  web.process();
-  
-  EthernetBonjour.run();  //Runs zeroconf/bonjour. Must be in void loop()
 }// end void loop
 
 
@@ -1461,6 +1461,11 @@ void directionalLEDFlasher (int direction, int cycles, int timeOn, int timeOff){
 
 void printState(int row){
   Serial << F("Row ") << row << F(" State: ") << stateRow[row] << "\n";
+}
+
+void disableNetworkServices(){    //disables network services (bonjour, web.process, etc)
+  noNetworkMode = true;
+  Serial << F("Ethernet failed. Check network connections and reset Hauntbox. Proceeding without network services.\n");
 }
 
 
