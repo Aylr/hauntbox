@@ -22,7 +22,7 @@
 #define DEBUG_IP_ADDRESS  true        //details about static IP address
 // #define DEBUG_DECIPHER_INPUT_SENSOR true  //details about the inner workings of the decipherIntputSensor() function
 
-#define MAXROWS 20                  //Maximum # of rows
+#define MAXROWS 30                  //Maximum # of rows
 #define MINROWS 1                   //minimum # of rows
 #define MAX_BONJOUR_NAME_LENGTH 16  //maximum length of bonjour name
 
@@ -267,14 +267,13 @@ boolean manual_handler(TinyWebServer& web_server) {
       tempOutput = 6;
     }else{                      //if you get something besides 1-6, exit the handler
       #ifdef DEBUG_MANUAL
-        Serial << F("Manual Control: Bad data");
+        Serial << F("DEBUG_MANUAL: Bad data\n");
       #endif
       return true;
     }
     
     #ifdef DEBUG_MANUAL
-      Serial << F("Manual Control: Raw: ") << ch << " " << ch2;
-      Serial << F(" Converted: ") << tempOutput << " " << tempOnOff << F("\n");
+      Serial << F("DEBUG_MANUAL: Raw: ") << ch << " " << ch2 << F(" Converted: ") << tempOutput << " " << tempOnOff << F("\n");
     #endif
 
     outputState[tempOutput-1] = tempOnOff;          //set map, remembering to shift by minus 1
@@ -301,7 +300,7 @@ boolean trigger_handler(TinyWebServer& web_server) {
 
     if (tempInput < 1 || tempInput > 6){    //if bad data, exit handler
       #ifdef DEBUG_MANUAL
-        Serial << F("Manual trigger: Bad data");
+        Serial << F("DEBUG_MANUAL: Bad data\n");
       #endif
       return true;                          //exit handler
     }
@@ -320,8 +319,7 @@ boolean trigger_handler(TinyWebServer& web_server) {
     // }
     
     #ifdef DEBUG_MANUAL
-      Serial << F("Manual trigger: Raw: ") << ch;
-      Serial << F(" Converted: ") << tempInput << F("\n");
+      Serial << F("DEBUG_MANUAL: Raw: ") << ch << F(" Converted: ") << tempInput << F("\n");
     #endif
 
     //loop through each row to see if it is controlled by the triggered input
@@ -343,7 +341,7 @@ boolean trigger_all_handler(TinyWebServer& web_server) {   //turns all outputs o
   //web_server.end_headers();
   
   #ifdef DEBUG_MANUAL
-    Serial << F("****** Manual Trigger: ALL");
+    Serial << F("DEBUG_MANUAL: ALL\n");
   #endif
   
   for (byte i=0;i<=currentRowCount;i++){
@@ -360,7 +358,7 @@ boolean automatic_on_handler(TinyWebServer& web_server) {   //turns all outputs 
   //web_server.send_content_type("text/plain");
   //web_server.end_headers();
   #ifdef DEBUG_MANUAL
-    Serial << F("****** Automatic Mode ON");
+    Serial << F("DEBUG_MANUAL: Automatic Mode ON\n");
   #endif
 
   automaticMode = true;
@@ -374,7 +372,7 @@ boolean automatic_off_handler(TinyWebServer& web_server) {   //turns all outputs
   //web_server.send_content_type("text/plain");
   //web_server.end_headers();
   #ifdef DEBUG_MANUAL
-    Serial << F("****** Automatic Mode OFF");
+    Serial << F("DEBUG_MANUAL: Automatic Mode OFF\n");
   #endif
     
   automaticMode = false;
@@ -400,7 +398,7 @@ boolean all_off_handler(TinyWebServer& web_server) {  //turns all outputs off
   //web_server.end_headers();
   
   #ifdef DEBUG_MANUAL
-    Serial << F("****** Manual Control: All Off");
+    Serial << F("DEBUG_MANUAL: All Off\n");
   #endif
   
   for (byte i=0;i<=5;i++){
@@ -418,7 +416,7 @@ boolean all_on_handler(TinyWebServer& web_server) {   //turns all outputs on
   //web_server.end_headers();
   
   #ifdef DEBUG_MANUAL
-    Serial << F("****** Manual Control: All On");
+    Serial << F("DEBUG_MANUAL: All On\n");
   #endif
   
   for (byte i=0;i<=5;i++){
@@ -515,7 +513,7 @@ void file_uploader_handler(TinyWebServer& web_server, TinyWebPutHandler::PutActi
       fname = web_server.get_file_from_path(web_server.get_path());
       if (fname) {
         #ifdef DEBUG_PUT_HANDLER
-        	Serial << F("Creating ") << fname << "\n";
+        	Serial << F("DEBUG_PUT_HANDLER: Creating ") << fname << F("\n");
       	#endif
 
         file.open(&root, fname, O_CREAT | O_WRITE | O_TRUNC);
@@ -525,9 +523,7 @@ void file_uploader_handler(TinyWebServer& web_server, TinyWebPutHandler::PutActi
           tempGuiFlag = 1;
         }
         #ifdef DEBUG_PUT_HANDLER
-          Serial.println("case START");
-          Serial.print("tempGuiFlag = ");
-          Serial.println(tempGuiFlag);
+          Serial << F("DEBUG_PUT_HANDLER: case START tempGuiFlag=") << tempGuiFlag << F("\n");
         #endif
         
 	     free(fname);
@@ -545,7 +541,7 @@ void file_uploader_handler(TinyWebServer& web_server, TinyWebPutHandler::PutActi
   case TinyWebPutHandler::END:
     file.sync();
     #ifdef DEBUG_PUT_HANDLER
-      Serial << F("Wrote ") << file.fileSize() << F(" bytes in ") << millis() - start_time << F(" millis (received ") << total_size << F(" bytes)\n");
+      Serial << F("DEBUG_PUT_HANDLER: Wrote ") << file.fileSize() << F(" bytes in ") << millis() - start_time << F(" millis (received ") << total_size << F(" bytes)\n");
     #endif
 
     file.close();
@@ -553,9 +549,7 @@ void file_uploader_handler(TinyWebServer& web_server, TinyWebPutHandler::PutActi
       guiFlag = 1;
       tempGuiFlag = 0;
       #ifdef DEBUG_PUT_HANDLER
-        Serial.println("case END");
-        Serial.print("tempGuiFlag = ");
-        Serial.println(tempGuiFlag);
+        Serial << F("DEBUG_PUT_HANDLER: case END tempGuiFlag = ") << tempGuiFlag << F("\n");
       #endif
     }
   }
@@ -675,14 +669,14 @@ void setup() {
   	
     //----------------------------------- load bonjour.txt -----------------------------------
     #ifdef DEBUG_BOUNJOUR_NAME
-      Serial << F("Trying to open bonjour.txt");
+      Serial << F("DEBUG_BOUNJOUR_NAME: Trying to open bonjour.txt\n");
     #endif
 
     char* bonjour_file = open_file("bonjour.txt");    //try to open bonjour.txt
 
     if (bonjour_file !=""){                           //if there is data in the file
       #ifdef DEBUG_BOUNJOUR_NAME
-        Serial << F("found bonjour.txt");
+        Serial << F("DEBUG_BOUNJOUR_NAME: found bonjour.txt\n");
       #endif
 
       char* tok;                                //Get rid of extraneous characters
@@ -691,7 +685,7 @@ void setup() {
 
     }else{                                      //if no file or not there use default set initially
       #ifdef DEBUG_BOUNJOUR_NAME
-        Serial << F("No bonjour.txt file exists.");
+        Serial << F("DEBUG_BOUNJOUR_NAME: No bonjour.txt file exists\n");
       #endif
     }// end if bonjour.txt exists
 
@@ -710,16 +704,19 @@ void setup() {
     	  val[i] = tok;
     	}
 
-      for (i = 0; i < 4; i++) {
-        #ifdef DEBUG_IP_ADDRESS
-          Serial << (val[i]) << ' ';
-        #endif
-      }
+      #ifdef DEBUG_IP_ADDRESS
+        Serial << F("DEBUG_IP_ADDRESS: ");
+        for (i = 0; i < 4; i++) {
+          Serial << val[i] << " ";
+        }
+        Serial.println();
+      #endif
+
       for (i = 0; i < 4; i++) {
         ip[i] = (byte)atoi(val[i]);
       }
       #ifdef DEBUG_IP_ADDRESS
-        Serial << F("Static IP: ") << ip_temp << F("\n");
+        Serial << F("DEBUG_IP_ADDRESS: Static IP: ") << ip_temp << F("\n");
       #endif
       Ethernet.begin(mac,ip) == 0)        //set up with static address
     }else{                                //if there is not a static ip specified... use DHCP
@@ -753,7 +750,7 @@ void setup() {
     strcat(bonjourServiceRecord, "._http");                   //copy required postfix (needs to have the "._http" at the end)
 
     #ifdef DEBUG_BOUNJOUR_NAME
-      Serial << F("bonjourName: ") << bonjourName << F(" bonjourServiceRecord: ") << bonjourServiceRecord << F("\n");
+      Serial << F("DEBUG_BOUNJOUR_NAME: bonjourName: ") << bonjourName << F(" bonjourServiceRecord: ") << bonjourServiceRecord << F("\n");
     #endif
 
     EthernetBonjour.addServiceRecord(bonjourServiceRecord, 80, MDNSServiceTCP);   //Set the advertised port/service
@@ -809,7 +806,7 @@ int decipherInputSensor(int x) {
   if((y == 0) && (val <  inputTriggerThresholdArray[x-1])) {trig = 1;}    // if low and supposed to be, consider input "triggered"
 
   #ifdef DEBUG_DECIPHER_INPUT_SENSOR
-    Serial << "decipherInputSensor(): x=" << x << " val=" << val << " inputTriggerThresholdArray[x-1]=" << inputTriggerThresholdArray[x-1] << " trig=" << trig << "\n";
+    Serial << "DEBUG_DECIPHER_INPUT_SENSOR: x=" << x << " val=" << val << " inputTriggerThresholdArray[x-1]=" << inputTriggerThresholdArray[x-1] << " trig=" << trig << "\n";
   #endif
 
   return trig;
@@ -848,7 +845,7 @@ void statusMessage(int n) {
 // Function that pairs the output pins to the row that is controlling for it
 void outputSelectFunction(int outputNumber, bool action) {
   #ifdef DEBUG_OUTPUTS
-    Serial << F("outputSelectFunction ") << outputNumber << F(" ") << action << F("\n");
+    Serial << F("DEBUG_OUTPUTS: outputSelectFunction ") << outputNumber << F(" ") << action << F("\n");
   #endif
 
   //takes an output (outputNumber) and an action:
@@ -912,18 +909,18 @@ void loop(){
   //----- Section AA9 ----- See if program or settings have changed
   if(guiFlag == 1) {  //If there are new program/settings ...
     #ifdef DEBUG_BRIDGE
-      Serial << F("new info from gui received\n");
+      Serial << F("DEBUG_BRIDGE: New info from gui received\n");
     #endif
 
     //----- Section AB1 -----
     //READ program.txt and settings.txt
     char* newvar = open_file("program.txt");  //store the program.txt in a var
     #ifdef DEBUG_BRIDGE
-      Serial.println(newvar);                   //print the file out
+      Serial << F("DEBUG_BRIDGE: program.txt=") << newvar << F("\n");                 //print the file out
     #endif
     convert(newvar,1);                        //convert the file to arrays
     #ifdef DEBUG_BRIDGE
-      Serial << F("made it through program.txt conversion\n");
+      Serial << F("DEBUG_BRIDGE: program.txt converted\n");
     #endif
     newvar = 0;                               //erase the newvar
     //Serial.println("reset newvar to 0");
@@ -931,13 +928,11 @@ void loop(){
     newvar = open_file("settings.txt");       //store the settings.txt in a var
 
     #ifdef DEBUG_BRIDGE
-      Serial << F("opening settings.txt\n");
-      Serial.println(newvar);                   //print the file out
-      Serial << F("printed settings.txt\n");
+      Serial << F("DEBUG_BRIDGE: settings.txt=") << newvar << F("\n");
     #endif
     convert(newvar,0);                        //convert the file to arrays
     #ifdef DEBUG_BRIDGE
-      Serial << F("made it through conversion of settings.txt\n");
+      Serial << F("DEBUG_BRIDGE: settings.txt converted\n");
     #endif
 
     
@@ -965,7 +960,7 @@ void loop(){
   //----- Section AA4a ----- Main State Machine: Reading Inputs and Writing to Outputs -----
   for(int z = 0; z < currentRowCount; z++) {              //runs loop for each row
     #ifdef DEBUG_STATES
-      Serial.println(millis());
+      Serial << F("DEBUG_STATES: ")Serial.println(millis());
     #endif
     if(enableDisableArray[z] == 1) {   //only run the state machine for a row that's enabled
       if(stateRow[z] == 1) {                   //STATE 1 = Waiting for a trigger
@@ -988,7 +983,7 @@ void loop(){
         delayTimeStamp[z] = millis();      //Gets time stamp
         
         #ifdef DEBUG_TRIGGERS
-          Serial << F("Trigger Row ") << z+1 << F(": ") << delayTimeStamp[z] << F("\n");     // z+1 is the row number starting from 1 for the user, not starting from 0 for the array
+          Serial << F("DEBUG_TRIGGERS: Trigger Row ") << z+1 << F(": ") << delayTimeStamp[z] << F("\n");     // z+1 is the row number starting from 1 for the user, not starting from 0 for the array
         #endif
         stateRow[z] = 3;                      //Moves on to next state
       }else if(stateRow[z] == 3) {             //STATE 3 = Delay vs. timeStamp
@@ -1083,7 +1078,7 @@ void loop(){
     if(decipherInputSensor(j+1) == 1){      //if input is (on). Shift +1 to account for inputArray[0] = no input
       digitalWrite(inputLEDArray[j],HIGH);  //turn on LED
       #ifdef DEBUG_INPUTS
-        Serial << F("Input ") << tempInputLetterArray[j] << F(": actual/threshold: ") << analogRead(inputPinArray[j]) << F("/") << inputTriggerThresholdArray[j];
+        Serial << F("DEBUG_INPUTS: input ") << tempInputLetterArray[j] << F(": actual/threshold: ") << analogRead(inputPinArray[j]) << F("/") << inputTriggerThresholdArray[j];
         Serial.println();
       #endif
     }else{                                  //else (off)
@@ -1118,9 +1113,7 @@ void loop(){
 //----- Section open SD file for conversion to arrays -----
 char* open_file(char* input_file){
   #ifdef DEBUG_FILES
-    Serial.print("\nopen_file(");
-    Serial.print(input_file);
-    Serial.print(") called\n");
+    Serial << F("DEBUG_FILES: open_file(") << input_file << F(")\n");
   #endif
   char storage[400] = {0};             //used to store read stuff
   char ch;                             //used to store incoming byte
@@ -1128,26 +1121,26 @@ char* open_file(char* input_file){
   char* fail = "";                     //the failure return
   
   #ifdef DEBUG_FILES
-    Serial << F("SD.begin = ") << SD.begin(SD_CS) << F(", has_filesystem = ") << has_filesystem << F("\n");
+    Serial << F("DEBUG_FILES: SD.begin=") << SD.begin(SD_CS) << F(", has_filesystem=") << has_filesystem << F("\n");
   #endif
   
   File file = SD.open(input_file);
   
   #ifdef DEBUG_FILES
-    Serial << F("input_file = ") << input_file << F(", file read = ") << file << F("\n");
+    Serial << F("DEBUG_FILES: input_file=") << input_file << F(", file read=") << file << F("\n");
   #endif
   
   if (file) {                           //if there's a file
     #ifdef DEBUG_FILES
-      Serial << F("File.available() = ") << file.available() << F("\n");
-      Serial << input_file << F(" We made it!\n");
+      Serial << F("DEBUG_FILES: File.available()=") << file.available() << F("\n");
+      // Serial << input_file << F(" We made it!\n");
     #endif
 
     while (file.available()) {          //if there are unread bytes in the file
       ch = file.read();                 //read one
       storage[i] = ch;                  //append it to storage
       #ifdef DEBUG_FILES_BY_CHARACTER
-        Serial << i << F(" ") << ch << F("\n");
+        Serial F("DEBUG_FILES_BY_CHARACTER: ") << i << F(" ") << ch << F("\n");
       #endif
 
       i ++;                             //inc counter
@@ -1155,7 +1148,8 @@ char* open_file(char* input_file){
     file.close();                      //close the file
     return storage;                    //return the read bytes
   }else{                              //no file
-    Serial.println("no file");
+    Serial << F("No file: ") << input_file;
+    Seria.println();
     return fail;                      //return w/ fail
   }
 }//end open_file
@@ -1273,7 +1267,7 @@ char convert(char* readString, bool type){
   }else if (type == 1){ //convert program arrays here
     Serial.println("converting program.txt");
     #ifdef DEBUG_BRIDGE
-      Serial << F("Bridge: Free RAM: ") << FreeRam() << "\n";
+      Serial << F("DEBUG_BRIDGE: Free RAM: ") << FreeRam() << "\n";
     #endif
     // Now turn the array of strings into arrays of numbers.  Each array is
     // named for the column it represents.  The values are separated by
@@ -1294,7 +1288,7 @@ char convert(char* readString, bool type){
       newCurrentRowCount = i + 1;
 
       #ifdef DEBUG_BRIDGE
-        Serial << F("Bridge: i: ") << i << F(" newCurrentRowCount: ") << newCurrentRowCount << F("\n");
+        Serial << F("DEBUG_BRIDGE: i: ") << i << F(" newCurrentRowCount: ") << newCurrentRowCount << F("\n");
       #endif
       
       tok = strtok(NULL, ",");
@@ -1302,7 +1296,7 @@ char convert(char* readString, bool type){
 
     currentRowCount = newCurrentRowCount;
     #ifdef DEBUG_BRIDGE
-      Serial << F("Bridge: Done w/ first loop. currentRowCount: ") << currentRowCount << F(" newCurrentRowCount: ") << newCurrentRowCount <<  F("\n");
+      Serial << F("DEBUG_BRIDGE: currentRowCount: ") << currentRowCount << F(" newCurrentRowCount: ") << newCurrentRowCount <<  F("\n");
     #endif
 
     tok = strtok(col[1], ",");
@@ -1460,7 +1454,7 @@ void directionalLEDFlasher (int direction, int cycles, int timeOn, int timeOff){
 */
 
 void printState(int row){
-  Serial << F("Row ") << row << F(" State: ") << stateRow[row] << "\n";
+  Serial << F("DEBUG_STATES: Row=") << row << F(" State=") << stateRow[row] << "\n";
 }
 
 void disableNetworkServices(){    //disables network services (bonjour, web.process, etc)
