@@ -32,7 +32,7 @@ int guiFlag = 0;  //GUI Flag tells us when there is a new program.txt/settings.t
 int currentRowCount = 6;  //current number of rows (starts at 6 and modified by gui)
 int newCurrentRowCount = 0;
 bool automaticMode = true;  //keeps track of auto/manual override mode
-bool noNetworkMode = false; //true if ethernet doesn't start due to IP issue or unplugged CAT5. Still runs state machine, and skips any web.process and bonjour stuff.
+bool networkServicesDisabled = false; //true if ethernet doesn't start due to IP issue or unplugged CAT5. Still runs state machine, and skips any web.process and bonjour stuff.
 
 
 //"Program" arrays
@@ -103,7 +103,15 @@ const int ETHER_CS = 10;  // pin 10 is the SPI select pin for the Ethernet
 byte ip[] = { 192, 168, 0, 100 };                             // Static fallback IP if not set in ip.txt on SD card
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xEE };          // static fallback MAC address if not set in uniqueID.txt on SD card
 char* html_browser_header = "HTTP/1.0 200 OK\nContent-Type: text/html\n";  //2 line header including mandatory blank line to signify data below
-FLASH_STRING(STATUS, "STATUS: ");
+// Store frequently used strings in eprom flash to save on ram.
+FLASH_STRING(prefixSTATUS, "STATUS: ");
+FLASH_STRING(prefixDEBUG_FILES, "DEBUG_FILES: ");
+FLASH_STRING(prefixDEBUG_BONJOUR_NAME, "DEBUG_BOUNJOUR_NAME: ");
+FLASH_STRING(prefixDEBUG_BRIDGE, "DEBUG_BRIDGE:");
+FLASH_STRING(prefixDEBUG_MANUAL, "DEBUG_MANUAL: ");
+FLASH_STRING(prefixDEBUG_STATES, "DEBUG_STATES: ");
+FLASH_STRING(sd_fail_html,"<html><body><h1>SD Card Failed</h1><ol><li>Verify your SD card works</li><li>Remove and reseat it in SD slot in hauntbox</li><li>Reset hauntbox</li><li>Reload this page in 30 seconds</li></ol></body></html>");
+
 
 //--------------------------- Define Handlers ----------------------------
 boolean file_handler(TinyWebServer& web_server);
@@ -187,7 +195,7 @@ boolean index_handler(TinyWebServer& web_server) {
   }else{                                          //if SD has failed, send an informative help page
     Client& client = web_server.get_client();
     client.println(html_browser_header);
-    client.println("<html><body><h1>SD Card Failed</h1><ol><li>Verify your SD card works</li><li>Remove and reseat it in SD slot in hauntbox</li><li>Reset hauntbox</li><li>Reload this page in 30 seconds</li></ol></body></html>");
+    client << sd_fail_html;                       //the actual SD fail html page is stored in eprom flash
   }
   return true;
 }
@@ -268,13 +276,13 @@ boolean manual_handler(TinyWebServer& web_server) {
       tempOutput = 6;
     }else{                      //if you get something besides 1-6, exit the handler
       #ifdef DEBUG_MANUAL
-        Serial << F("DEBUG_MANUAL: Bad data\n");
+        Serial << prefixDEBUG_MANUAL << F("Bad data\n");
       #endif
       return true;
     }
     
     #ifdef DEBUG_MANUAL
-      Serial << F("DEBUG_MANUAL: Raw: ") << ch << " " << ch2 << F(" Converted: ") << tempOutput << " " << tempOnOff << F("\n");
+      Serial << prefixDEBUG_MANUAL << F("Raw: ") << ch << " " << ch2 << F(" Converted: ") << tempOutput << " " << tempOnOff << F("\n");
     #endif
 
     outputState[tempOutput-1] = tempOnOff;          //set map, remembering to shift by minus 1
@@ -301,7 +309,7 @@ boolean trigger_handler(TinyWebServer& web_server) {
 
     if (tempInput < 1 || tempInput > 6){    //if bad data, exit handler
       #ifdef DEBUG_MANUAL
-        Serial << F("DEBUG_MANUAL: Bad data\n");
+        Serial << prefixDEBUG_MANUAL << F("Bad data\n");
       #endif
       return true;                          //exit handler
     }
@@ -320,7 +328,7 @@ boolean trigger_handler(TinyWebServer& web_server) {
     // }
     
     #ifdef DEBUG_MANUAL
-      Serial << F("DEBUG_MANUAL: Raw: ") << ch << F(" Converted: ") << tempInput << F("\n");
+      Serial << prefixDEBUG_MANUAL << F("Raw: ") << ch << F(" Converted: ") << tempInput << F("\n");
     #endif
 
     //loop through each row to see if it is controlled by the triggered input
@@ -342,7 +350,7 @@ boolean trigger_all_handler(TinyWebServer& web_server) {   //turns all outputs o
   //web_server.end_headers();
   
   #ifdef DEBUG_MANUAL
-    Serial << F("DEBUG_MANUAL: ALL\n");
+    Serial << prefixDEBUG_MANUAL << F("ALL\n");
   #endif
   
   for (byte i=0;i<=currentRowCount;i++){
@@ -359,7 +367,7 @@ boolean automatic_on_handler(TinyWebServer& web_server) {   //turns all outputs 
   //web_server.send_content_type("text/plain");
   //web_server.end_headers();
   #ifdef DEBUG_MANUAL
-    Serial << F("DEBUG_MANUAL: Automatic Mode ON\n");
+    Serial << prefixDEBUG_MANUAL << F("Automatic Mode ON\n");
   #endif
 
   automaticMode = true;
@@ -373,7 +381,7 @@ boolean automatic_off_handler(TinyWebServer& web_server) {   //turns all outputs
   //web_server.send_content_type("text/plain");
   //web_server.end_headers();
   #ifdef DEBUG_MANUAL
-    Serial << F("DEBUG_MANUAL: Automatic Mode OFF\n");
+    Serial << prefixDEBUG_MANUAL << F("Automatic Mode OFF\n");
   #endif
     
   automaticMode = false;
@@ -399,7 +407,7 @@ boolean all_off_handler(TinyWebServer& web_server) {  //turns all outputs off
   //web_server.end_headers();
   
   #ifdef DEBUG_MANUAL
-    Serial << F("DEBUG_MANUAL: All Off\n");
+    Serial << prefixDEBUG_MANUAL << F("All Off\n");
   #endif
   
   for (byte i=0;i<=5;i++){
@@ -417,7 +425,7 @@ boolean all_on_handler(TinyWebServer& web_server) {   //turns all outputs on
   //web_server.end_headers();
   
   #ifdef DEBUG_MANUAL
-    Serial << F("DEBUG_MANUAL: All On\n");
+    Serial << prefixDEBUG_MANUAL << F("All On\n");
   #endif
   
   for (byte i=0;i<=5;i++){
@@ -671,14 +679,14 @@ void setup() {
   	
     //----------------------------------- load bonjour.txt -----------------------------------
     #ifdef DEBUG_BOUNJOUR_NAME
-      Serial << F("DEBUG_BOUNJOUR_NAME: Trying to open bonjour.txt\n");
+      Serial << prefixDEBUG_BONJOUR_NAME << F("Trying to open bonjour.txt\n");
     #endif
 
     char* bonjour_file = open_file("bonjour.txt");    //try to open bonjour.txt
 
     if (bonjour_file !=""){                           //if there is data in the file
       #ifdef DEBUG_BOUNJOUR_NAME
-        Serial << F("DEBUG_BOUNJOUR_NAME: found bonjour.txt\n");
+        Serial << prefixDEBUG_BONJOUR_NAME << F("found bonjour.txt\n");
       #endif
 
       char* tok;                                //Get rid of extraneous characters
@@ -687,7 +695,7 @@ void setup() {
 
     }else{                                      //if no file or not there use default set initially
       #ifdef DEBUG_BOUNJOUR_NAME
-        Serial << F("DEBUG_BOUNJOUR_NAME: No bonjour.txt file exists\n");
+        Serial << prefixDEBUG_BONJOUR_NAME << F("No bonjour.txt file exists\n");
       #endif
     }// end if bonjour.txt exists
 
@@ -741,7 +749,7 @@ void setup() {
     LEDFlasher(10,200,200);  //visually alert user that something is awry by flashing all LEDs
   }//end if has filesystem
   
-  if (!noNetworkMode){           //if the hauntbox doesn't appear to be on a network, disable network services
+  if (!networkServicesDisabled){           //if the hauntbox doesn't appear to be on a network, disable network services
     Serial << F("Web server starting...\n");
     web.begin();                 // Start the web server.
   
@@ -752,7 +760,7 @@ void setup() {
     strcat(bonjourServiceRecord, "._http");                   //copy required postfix (needs to have the "._http" at the end)
 
     #ifdef DEBUG_BOUNJOUR_NAME
-      Serial << F("DEBUG_BOUNJOUR_NAME: bonjourName: ") << bonjourName << F(" bonjourServiceRecord: ") << bonjourServiceRecord << F("\n");
+      Serial << prefixDEBUG_BONJOUR_NAME << F("bonjourName: ") << bonjourName << F(" bonjourServiceRecord: ") << bonjourServiceRecord << F("\n");
     #endif
 
     EthernetBonjour.addServiceRecord(bonjourServiceRecord, 80, MDNSServiceTCP);   //Set the advertised port/service
@@ -835,12 +843,12 @@ bool inputTakeAction(int rowNumber) {
 
 //  Function to write messages to gui            CURRENTLY WRITTEN FOR SERIAL, NOT GUI!
 void statusMessage(int n) {
-  if (n==1) {Serial << STATUS << F("Definitions don't make sense\n");}
-  if (n==2) {Serial << STATUS << F("No SD Card anymore\n");}
-  if (n==3) {Serial << STATUS << F("Problem opening file on SD card\n");}
-  if (n==4) {Serial << STATUS << F("Corrupted SD file -Read/Write fail\n");}
-  if (n==5) {Serial << STATUS << F("Successfully updated programming\n");}
-  if (n==6) {Serial << STATUS << F("Finished writing to .txt file\n");}
+  if (n==1) {Serial << prefixSTATUS << F("Definitions don't make sense\n");}
+  if (n==2) {Serial << prefixSTATUS << F("No SD Card anymore\n");}
+  if (n==3) {Serial << prefixSTATUS << F("Problem opening file on SD card\n");}
+  if (n==4) {Serial << prefixSTATUS << F("Corrupted SD file -Read/Write fail\n");}
+  if (n==5) {Serial << prefixSTATUS << F("Successfully updated programming\n");}
+  if (n==6) {Serial << prefixSTATUS << F("Finished writing to .txt file\n");}
 }
 
 //----- Section AA4c -----
@@ -911,18 +919,18 @@ void loop(){
   //----- Section AA9 ----- See if program or settings have changed
   if(guiFlag == 1) {  //If there are new program/settings ...
     #ifdef DEBUG_BRIDGE
-      Serial << F("DEBUG_BRIDGE: New info from gui received\n");
+      Serial << prefixDEBUG_BRIDGE << F("New info from gui received\n");
     #endif
 
     //----- Section AB1 -----
     //READ program.txt and settings.txt
     char* newvar = open_file("program.txt");  //store the program.txt in a var
     #ifdef DEBUG_BRIDGE
-      Serial << F("DEBUG_BRIDGE: program.txt=") << newvar << F("\n");                 //print the file out
+      Serial << prefixDEBUG_BRIDGE << F("program.txt=") << newvar << F("\n");                 //print the file out
     #endif
     convert(newvar,1);                        //convert the file to arrays
     #ifdef DEBUG_BRIDGE
-      Serial << F("DEBUG_BRIDGE: program.txt converted\n");
+      Serial << prefixDEBUG_BRIDGE << F("program.txt converted\n");
     #endif
     newvar = 0;                               //erase the newvar
     //Serial.println("reset newvar to 0");
@@ -930,11 +938,11 @@ void loop(){
     newvar = open_file("settings.txt");       //store the settings.txt in a var
 
     #ifdef DEBUG_BRIDGE
-      Serial << F("DEBUG_BRIDGE: settings.txt=") << newvar << F("\n");
+      Serial << prefixDEBUG_BRIDGE << F("settings.txt=") << newvar << F("\n");
     #endif
     convert(newvar,0);                        //convert the file to arrays
     #ifdef DEBUG_BRIDGE
-      Serial << F("DEBUG_BRIDGE: settings.txt converted\n");
+      Serial << prefixDEBUG_BRIDGE << F("settings.txt converted\n");
     #endif
 
     
@@ -962,7 +970,7 @@ void loop(){
   //----- Section AA4a ----- Main State Machine: Reading Inputs and Writing to Outputs -----
   for(int z = 0; z < currentRowCount; z++) {              //runs loop for each row
     #ifdef DEBUG_STATES
-      Serial << F("DEBUG_STATES: ")Serial.println(millis());
+      Serial << prefixDEBUG_STATES << F("") << millis() << F("\n");
     #endif
     if(enableDisableArray[z] == 1) {   //only run the state machine for a row that's enabled
       if(stateRow[z] == 1) {                   //STATE 1 = Waiting for a trigger
@@ -1105,7 +1113,7 @@ void loop(){
   //without an SD card, but in this case we want it to run even if there is no SD card
   //so we can serve up a custom html page from index_handler
   // LEDFlasher(1,200,200);    // call the LEDFlasher function to visually alert user of SD issue
-  if (!noNetworkMode) {     // if not in noNetworkMode
+  if (!networkServicesDisabled) {     // if not in networkServicesDisabled
     web.process();          // run web process
     EthernetBonjour.run();  // run zeroconf/bonjour
   }
@@ -1115,7 +1123,7 @@ void loop(){
 //----- Section open SD file for conversion to arrays -----
 char* open_file(char* input_file){
   #ifdef DEBUG_FILES
-    Serial << F("DEBUG_FILES: open_file(") << input_file << F(")\n");
+    Serial << prefixDEBUG_FILES << F("open_file(") << input_file << F(")\n");
   #endif
   char storage[400] = {0};             //used to store read stuff
   char ch;                             //used to store incoming byte
@@ -1126,12 +1134,12 @@ char* open_file(char* input_file){
   File file = SD.open(input_file);
 
   #ifdef DEBUG_FILES
-    Serial << F("DEBUG_FILES: SD.begin=") << SD.begin(SD_CS) << F(", has_filesystem=") << has_filesystem << F(" input_file=") << input_file << F(" file read=") << file << F("\n");
+    Serial << prefixDEBUG_FILES << F("SD.begin=") << SD.begin(SD_CS) << F(", has_filesystem=") << has_filesystem << F(" input_file=") << input_file << F(" file read=") << file << F("\n");
   #endif
   
   if (file) {                           //if there's a file
     #ifdef DEBUG_FILES
-      Serial << F("DEBUG_FILES: File.available()=") << file.available() << F("\n");
+      Serial << prefixDEBUG_FILES << F("File.available()=") << file.available() << F("\n");
     #endif
 
     while (file.available()) {          //if there are unread bytes in the file
@@ -1265,7 +1273,7 @@ char convert(char* readString, bool type){
   }else if (type == 1){ //convert program arrays here
     Serial.println("converting program.txt");
     #ifdef DEBUG_BRIDGE
-      Serial << F("DEBUG_BRIDGE: Free RAM: ") << FreeRam() << "\n";
+      Serial << prefixDEBUG_BRIDGE << F("Free RAM: ") << FreeRam() << "\n";
     #endif
     // Now turn the array of strings into arrays of numbers.  Each array is
     // named for the column it represents.  The values are separated by
@@ -1286,7 +1294,7 @@ char convert(char* readString, bool type){
       newCurrentRowCount = i + 1;
 
       #ifdef DEBUG_BRIDGE
-        Serial << F("DEBUG_BRIDGE: i: ") << i << F(" newCurrentRowCount: ") << newCurrentRowCount << F("\n");
+        Serial << prefixDEBUG_BRIDGE << F("i: ") << i << F(" newCurrentRowCount: ") << newCurrentRowCount << F("\n");
       #endif
       
       tok = strtok(NULL, ",");
@@ -1294,7 +1302,7 @@ char convert(char* readString, bool type){
 
     currentRowCount = newCurrentRowCount;
     #ifdef DEBUG_BRIDGE
-      Serial << F("DEBUG_BRIDGE: currentRowCount: ") << currentRowCount << F(" newCurrentRowCount: ") << newCurrentRowCount <<  F("\n");
+      Serial << prefixDEBUG_BRIDGE << F("currentRowCount: ") << currentRowCount << F(" newCurrentRowCount: ") << newCurrentRowCount <<  F("\n");
     #endif
 
     tok = strtok(col[1], ",");
@@ -1452,12 +1460,10 @@ void directionalLEDFlasher (int direction, int cycles, int timeOn, int timeOff){
 */
 
 void printState(int row){
-  Serial << F("DEBUG_STATES: Row=") << row << F(" State=") << stateRow[row] << "\n";
+  Serial << prefixDEBUG_STATES << F("Row=") << row << F(" State=") << stateRow[row] << "\n";
 }
 
 void disableNetworkServices(){    //disables network services (bonjour, web.process, etc)
-  noNetworkMode = true;
+  networkServicesDisabled = true;
   Serial << F("Ethernet failed. Check network connections and reset Hauntbox. Proceeding without network services.\n");
 }
-
-
