@@ -10,19 +10,19 @@
 
 //Serial debugging options. Uncomment a row to enable each section as needed.
 // #define DEBUG_STATES true             //prints states to serial
-#define DEBUG_FILES true              //prints file conversion details to serial
-#define DEBUG_FILES_BY_CHARACTER true //prints file conversion details character by character to serial
-#define DEBUG_PUT_HANDLER true        //prints file upload details to serial
+// #define DEBUG_FILES true              //prints file conversion details to serial
+// #define DEBUG_FILES_BY_CHARACTER true //prints file conversion details character by character to serial
+// #define DEBUG_PUT_HANDLER true        //prints file upload details to serial
 // #define DEBUG_OUTPUTS true            //prints outputSelect details to serial
 // #define DEBUG_INPUTS true             //prints input details to serial
-#define DEBUG_TRIGGERS true           //prints trigger details to serial
-#define DEBUG_BRIDGE true             //prints bridge details to serial
+// #define DEBUG_TRIGGERS true           //prints trigger details to serial
+// #define DEBUG_BRIDGE true             //prints bridge details to serial
 // #define DEBUG_MANUAL true             //prints manual mode details to serial
-#define DEBUG_BOUNJOUR_NAME true      //details regarding custom bonjour naming
-#define DEBUG_IP_ADDRESS  true        //details about static IP address
+// #define DEBUG_BOUNJOUR_NAME true      //details regarding custom bonjour naming
+// #define DEBUG_IP_ADDRESS  true        //details about static IP address
 // #define DEBUG_DECIPHER_INPUT_SENSOR true  //details about the inner workings of the decipherIntputSensor() function
 
-#define MAXROWS 30                  //Maximum # of rows
+#define MAXROWS 20                  //Maximum # of rows
 #define MINROWS 1                   //minimum # of rows
 #define MAX_BONJOUR_NAME_LENGTH 16  //maximum length of bonjour name
 
@@ -103,6 +103,7 @@ const int ETHER_CS = 10;  // pin 10 is the SPI select pin for the Ethernet
 byte ip[] = { 192, 168, 0, 100 };                             // Static fallback IP if not set in ip.txt on SD card
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xEE };          // static fallback MAC address if not set in uniqueID.txt on SD card
 char* html_browser_header = "HTTP/1.0 200 OK\nContent-Type: text/html\n";  //2 line header including mandatory blank line to signify data below
+FLASH_STRING(STATUS, "STATUS: ");
 
 //--------------------------- Define Handlers ----------------------------
 boolean file_handler(TinyWebServer& web_server);
@@ -613,18 +614,19 @@ void setup() {
   // directionalLEDFlasher(1,10,50,0);
   // directionalLEDFlasher(0,10,50,0);
 
-  Serial << F("Setting up SD card...\n");     //Initialize the SD card
-  // Pass over the speed and Chip select for the SD card
-  if (!card.init(SPI_HALF_SPEED, SD_CS)) {
-  //if (!card.init(SPI_FULL_SPEED, SD_CS)) {
+  //--------------------------------- Set up SD card ---------------------------------------
+  Serial << F("Setting up SD card...\n");
+
+  if (!card.init(SPI_HALF_SPEED, SD_CS)) {      //Pass over the speed and Chip select for the SD card
+  // if (!card.init(SPI_FULL_SPEED, SD_CS)) {
     Serial << F("SD card failed\n");
     has_filesystem = false;
   }
-  if (!volume.init(&card)) {                  // initialize a FAT volume.
+  if (!volume.init(&card)) {                  //initialize a FAT volume.
     Serial << F("vol.init failed!\n");
     has_filesystem = false;
   }
-  if (!root.openRoot(&volume)) {
+  if (!root.openRoot(&volume)) {              //open the volume
     Serial << F("openRoot failed");
     has_filesystem = false;
   }
@@ -833,12 +835,12 @@ bool inputTakeAction(int rowNumber) {
 
 //  Function to write messages to gui            CURRENTLY WRITTEN FOR SERIAL, NOT GUI!
 void statusMessage(int n) {
-  if (n==1) {Serial << F("Definitions don't make sense\n");}
-  if (n==2) {Serial << F("No SD Card anymore\n");}
-  if (n==3) {Serial << F("Problem opening file on SD card\n");}
-  if (n==4) {Serial << F("Corrupted SD file -Read/Write fail\n");}
-  if (n==5) {Serial << F("Successfully updated programming\n");}
-  if (n==6) {Serial << F("Finished writing to .txt file\n");}
+  if (n==1) {Serial << STATUS << F("Definitions don't make sense\n");}
+  if (n==2) {Serial << STATUS << F("No SD Card anymore\n");}
+  if (n==3) {Serial << STATUS << F("Problem opening file on SD card\n");}
+  if (n==4) {Serial << STATUS << F("Corrupted SD file -Read/Write fail\n");}
+  if (n==5) {Serial << STATUS << F("Successfully updated programming\n");}
+  if (n==6) {Serial << STATUS << F("Finished writing to .txt file\n");}
 }
 
 //----- Section AA4c -----
@@ -1120,20 +1122,16 @@ char* open_file(char* input_file){
   int i = 0;                           //used as counter for building string
   char* fail = "";                     //the failure return
   
-  #ifdef DEBUG_FILES
-    Serial << F("DEBUG_FILES: SD.begin=") << SD.begin(SD_CS) << F(", has_filesystem=") << has_filesystem << F("\n");
-  #endif
-  
+  int tempSDStatus = SD.begin(SD_CS);
   File file = SD.open(input_file);
-  
+
   #ifdef DEBUG_FILES
-    Serial << F("DEBUG_FILES: input_file=") << input_file << F(", file read=") << file << F("\n");
+    Serial << F("DEBUG_FILES: SD.begin=") << SD.begin(SD_CS) << F(", has_filesystem=") << has_filesystem << F(" input_file=") << input_file << F(" file read=") << file << F("\n");
   #endif
   
   if (file) {                           //if there's a file
     #ifdef DEBUG_FILES
       Serial << F("DEBUG_FILES: File.available()=") << file.available() << F("\n");
-      // Serial << input_file << F(" We made it!\n");
     #endif
 
     while (file.available()) {          //if there are unread bytes in the file
