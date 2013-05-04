@@ -10,13 +10,13 @@
 
 //Serial debugging options. Uncomment a row to enable each section as needed.
 // #define DEBUG_STATES true             //prints states to serial
-#define DEBUG_FILES true              //prints file conversion details to serial
+// #define DEBUG_FILES true              //prints file conversion details to serial
 // #define DEBUG_FILES_BY_CHARACTER true //prints file conversion details character by character to serial
 // #define DEBUG_PUT_HANDLER true        //prints file upload details to serial
 // #define DEBUG_OUTPUTS true            //prints outputSelect details to serial
 // #define DEBUG_INPUTS true             //prints input details to serial
 // #define DEBUG_TRIGGERS true           //prints trigger details to serial
-#define DEBUG_BRIDGE true             //prints bridge details to serial
+// #define DEBUG_BRIDGE true             //prints bridge details to serial
 // #define DEBUG_MANUAL true             //prints manual mode details to serial
 // #define DEBUG_BOUNJOUR_NAME true      //details regarding custom bonjour naming
 // #define DEBUG_IP_ADDRESS  true        //details about static IP address
@@ -28,14 +28,6 @@
 #define MAX_BONJOUR_NAME_LENGTH 16  //maximum length of bonjour name
 #define MAX_FILE_LENGTH 400         //maximum length of program/settings file (major impact on memory)
 
-
-//--------------------Define/get variables from GUI-------------------------------------
-int guiFlag = 0;  //GUI Flag tells us when there is a new program.txt/settings.txt from the GUI
-int currentRowCount = 6;  //current number of rows (starts at 6 and modified by gui)
-int newCurrentRowCount = 0;
-bool automaticMode = true;  //keeps track of auto/manual override mode
-bool networkServicesDisabled = false; //true if ethernet doesn't start due to IP issue or unplugged CAT5. Still runs state machine, and skips any web.process and bonjour stuff.
-
 //"Program" arrays
 bool enableDisableArray[MAXROWS] = {1,1,1,1,1,1};       //if a row is enabled or disabled
 byte inputArray[MAXROWS] =       {1, 2, 3, 4, 5, 6};    //which input (0-6) is selected (0 = none, 1 = input #1, 2 = input #2, ...)
@@ -45,34 +37,37 @@ byte outputArray[MAXROWS] =      {1, 2, 3, 4, 5, 6};    //which outputs (0-6) is
 byte outputOnOffToggleArray[MAXROWS] = {1,1,1,1,1,1};   //What the output should do (on/off/toggle)
 byte durationTypeArray[MAXROWS] = {0,1,2,0,1,2};        //The type of duration (0 = until further notice, 1 = while input active, 2 = for ...)
 unsigned long durationArray[MAXROWS] = {1000, 6000, 6000, 6000, 6000, 6000};  //actual effect duration in milliseconds
+FLASH_STRING(default_program, "1,1;1,2;1,1;0,0;1,2;1,1;2,2;1000,1000;");
 
 //"Settings" arrays
-byte inputActiveHiLowArray[] =  {1, 1, 1, 1, 1, 1};         //What signal level is considered "on" for each input (1 = High, 0 = Low)
-byte outputActiveHiLowArray[] = {1, 1, 1, 1, 1, 1};         //Output considered on when High (1) or Low (0)
+byte inputActiveHiLowArray[] =  {1, 1, 1, 1, 1, 1};                     //What signal level is considered "on" for each input (1 = High, 0 = Low)
+byte outputActiveHiLowArray[] = {1, 1, 1, 1, 1, 1};                     //Output considered on when High (1) or Low (0)
 unsigned int inputTriggerThresholdArray[] = {103,103,103,103,103,103};  //input trigger thresholds
 unsigned long inputRetriggerDelayArray[] = {100,100,100,100,100,100};   //retrigger time in milliseconds
 FLASH_STRING(default_settings, "1,1,1,1,1,1,1,1,1,1,1,1;garage,my room,hall,cemetery,cornfield,swamp;UV,light,strobe,sound,air horn,zombie;103,103,103,103,103,103;100,100,100,100,100,100;");
-FLASH_STRING(default_program, "1,1;1,2;1,1;0,0;1,2;1,1;2,2;1000,1000;");
 
 // Other arrays
 //---------intput & output indicator LEDs near screw terminals
 byte inputLEDArray [] =  {39,32,33,34,35,36};   //Array of arduino pins that correspond to the LEDs that indicate an input is triggered
 byte outputLEDArray [] = {47,46,45,44,43,42};   //Array of arduino pins that correspond to the LEDs that indicate an output is on
 
-
-//----------------------Define variables in code-----------------------------
-int d = 0;  //Delay used in testing of code.  Set to 0 if not testing code.
+// Misc variables
 char bonjourName[MAX_BONJOUR_NAME_LENGTH] = "hauntbox";     //default bonjour name if not set in bounjour.txt on SD card
-bool outputState[6] = {0,0,0,0,0,0};   //array to hold on/off (1/0) state of every given output. Manipulated by any/multiple rules
-                //***only 6 outputs!!!
-int stateRow[MAXROWS];              //array that defines each row's state. Gets initialized in initializeFunction called from main function
-int trigState[6];                      //gets initialized immediately before it is used
-unsigned long delayTimeStamp[MAXROWS];    //gets initialized immediately before it is used
-unsigned long timeStampDurationRow[MAXROWS]; //gets initialized immediately before it is used
-unsigned long nowTime;
-unsigned long netTime;                       //used to measure difference between now and delay time
-//unsigned long retriggerNetTime;              //used to measure difference between now and retrigger time
-int statesInitialized = 0;      //keeps track if the states have been initialized
+int guiFlag = 0;                      //GUI Flag tells us when there is a new program.txt/settings.txt from the GUI
+int currentRowCount = 6;              //current number of rows (starts at 6 and modified by gui)
+int newCurrentRowCount = 0;           //used in the bridge to count what the new row count should be
+bool automaticMode = true;            //keeps track of auto/manual override mode
+bool networkServicesDisabled = false; //true if ethernet doesn't start due to IP issue or unplugged CAT5. Still runs state machine, and skips any web.process and bonjour stuff.
+int d = 0;                            //Delay used in testing of code.  Set to 0 if not testing code.
+bool outputState[6] = {0,0,0,0,0,0};  //array to hold on/off (1/0) state of every given output. Manipulated by any/multiple rules
+                                      //***only 6 outputs!!!
+int stateRow[MAXROWS];                        //array that defines each row's state. Gets initialized in initializeFunction called from main function
+int trigState[6];                             //gets initialized immediately before it is used
+unsigned long delayTimeStamp[MAXROWS];        //gets initialized immediately before it is used
+unsigned long timeStampDurationRow[MAXROWS];  //gets initialized immediately before it is used
+unsigned long nowTime;                        //used to keep track of now.
+unsigned long netTime;                        //used to measure difference between now and delay time
+int statesInitialized = 0;                    //keeps track if the states have been initialized
 
 //Define I/O pins
 int pinIn1 = 10;  //Analog pin
@@ -89,22 +84,18 @@ int pinOut3 = 38; //Digital pin
 int pinOut4 = 41; //Digital pin
 int pinOut5 = 40; //Digital pin
 int pinOut6 = 37; //Digital pin
-// Pin0 unused
-// Pin1 unused
-// Pin9 unused
 
 //Reserved digital pins for Arduino Ethernet Module SPI
-// Pin 10 (SS)  This one is being called out below in the SD card setup
+// Pin 4  (SD card chip select)
+// Pin 10 (Ethernet Chip select)
 // Pin 11 (MOSI)
 // Pin 12 (MISO)
 // Pin 13 (SCK)
 
-
-const int SD_CS = 4;      // pin 4 is the SPI select pin for the SDcard
-const int ETHER_CS = 10;  // pin 10 is the SPI select pin for the Ethernet
-byte ip[] = { 192, 168, 0, 100 };                             // Static fallback IP if not set in ip.txt on SD card
-// byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xEE };          // static fallback MAC address if not set in uniqueID.txt on SD card
-byte mac[] = { 222, 173, 190, 239, 254, 238};          // static fallback MAC address if not set in uniqueID.txt on SD card
+const int SD_CS = 4;                          // pin 4 is the SPI select pin for the SDcard
+const int ETHER_CS = 10;                      // pin 10 is the SPI select pin for the Ethernet
+byte ip[] = { 192, 168, 0, 100 };             // Static fallback IP if not set in ip.txt on SD card
+byte mac[] = { 222, 173, 190, 239, 254, 238}; // static fallback MAC address if not set in uniqueID.txt on SD card
 
 //char* html_browser_header = "HTTP/1.0 200 OK\nContent-Type: text/html\n";  //2 line header including mandatory blank line to signify data below
 FLASH_STRING(html_browser_header, "HTTP/1.0 200 OK\nContent-Type: text/html\n");  //2 line header including mandatory blank line to signify data below
@@ -115,6 +106,7 @@ FLASH_STRING(prefixDEBUG_BONJOUR_NAME, "DEBUG_BOUNJOUR_NAME: ");
 FLASH_STRING(prefixDEBUG_BRIDGE, "DEBUG_BRIDGE:");
 FLASH_STRING(prefixDEBUG_MANUAL, "DEBUG_MANUAL: ");
 FLASH_STRING(prefixDEBUG_STATES, "DEBUG_STATES: ");
+//below is the bare bones html for when there's no SD card
 FLASH_STRING(sd_fail_html,"<html><body><h1>SD Card Failed</h1><ol><li>Verify your SD card works</li><li>Remove and reseat it in SD slot in hauntbox</li><li>Reset hauntbox</li><li>Reload this page in 30 seconds</li></ol></body></html>");
 
 
@@ -131,9 +123,9 @@ TinyWebServer::PathHandler handlers[] = {
   // {"/", TinyWebServer::GET, &index_handler },
   {"/", TinyWebServer::GET, &index_handler },
   {"/ram", TinyWebServer::GET, &ram_handler },
-  {"/row_status", TinyWebServer::GET, &row_status_handler },
+  // {"/row_status", TinyWebServer::GET, &row_status_handler },
   {"/status", TinyWebServer::GET, &status_handler },
-  {"/output_status", TinyWebServer::GET, &output_status_handler },
+  // {"/output_status", TinyWebServer::GET, &output_status_handler },
   {"/program", TinyWebServer::GET, &program_handler },
   {"/settings", TinyWebServer::GET, &settings_handler },
   {"/manual", TinyWebServer::POST, &manual_handler },
@@ -246,10 +238,10 @@ boolean ram_handler(TinyWebServer& web_server) {
 // -------------------- manual handler -------------------- 
 boolean manual_handler(TinyWebServer& web_server) {
   web_server.send_error_code(200);
-  //web_server.send_content_type("text/plain");
-  //web_server.end_headers();
-
+  web_server.send_content_type("text/plain");
+  web_server.end_headers();
   Client& client = web_server.get_client();
+
   if (client.available()) {
     bool tempOnOff = 0;             //keeps track of if we want it on or off
     int tempOutput = 0;             //keeps track of which input
@@ -266,8 +258,8 @@ boolean manual_handler(TinyWebServer& web_server) {
       tempOnOff = 0;
     }
     
-    // tempOutput = atoi(&ch);         //convert char address to an integer
-    if (ch == '1'){              //this could be cleaned probably by using atoi
+    // tempOutput = atoi(&ch);        //convert char address to an integer
+    if (ch == '1'){                   //this could be cleaned probably by using atoi
       tempOutput = 1;
     }else if (ch == '2'){
       tempOutput = 2;
@@ -299,10 +291,10 @@ boolean manual_handler(TinyWebServer& web_server) {
 // -------------------- trigger handler -------------------- 
 boolean trigger_handler(TinyWebServer& web_server) {
   web_server.send_error_code(200);
-  //web_server.send_content_type("text/plain");
-  //web_server.end_headers();
-
+  web_server.send_content_type("text/plain");
+  web_server.end_headers();
   Client& client = web_server.get_client();
+
   if (client.available()) {
     int tempInput = 0;             //keeps track of which input
     
@@ -318,19 +310,6 @@ boolean trigger_handler(TinyWebServer& web_server) {
       #endif
       return true;                          //exit handler
     }
-    // if (ch == '1'){                 //this could be cleaned probably by using atoi
-    //   tempInput = 1;
-    // }else if (ch == '2'){
-    //   tempInput = 2;
-    // }else if (ch == '3'){
-    //   tempInput = 3;
-    // }else if (ch == '4'){
-    //   tempInput = 4;
-    // }else if (ch == '5'){
-    //   tempInput = 5;
-    // }else if (ch == '6'){
-    //   tempInput = 6;
-    // }
     
     #ifdef DEBUG_MANUAL
       Serial << prefixDEBUG_MANUAL << F("Raw: ") << ch << F(" Converted: ") << tempInput << F("\n");
@@ -349,28 +328,27 @@ boolean trigger_handler(TinyWebServer& web_server) {
 
 
 // -------------------- trigger_all handler -------------------- 
-boolean trigger_all_handler(TinyWebServer& web_server) {   //turns all outputs on
+boolean trigger_all_handler(TinyWebServer& web_server) {   //triggers all inputs on
   web_server.send_error_code(200);
-  //web_server.send_content_type("text/plain");
-  //web_server.end_headers();
+  web_server.send_content_type("text/plain");
+  web_server.end_headers();
   
   #ifdef DEBUG_MANUAL
     Serial << prefixDEBUG_MANUAL << F("ALL\n");
   #endif
   
   for (byte i=0;i<=currentRowCount;i++){
-    //set all to state 2
-    stateRow[i] = 2;
+    stateRow[i] = 2;          //set all to state 2
   }
   return true;
 }
 
 
 // -------------------- trigger_all handler -------------------- 
-boolean automatic_on_handler(TinyWebServer& web_server) {   //turns all outputs on
+boolean automatic_on_handler(TinyWebServer& web_server) {   //turns on automatic mode
   web_server.send_error_code(200);
-  //web_server.send_content_type("text/plain");
-  //web_server.end_headers();
+  web_server.send_content_type("text/plain");
+  web_server.end_headers();
   #ifdef DEBUG_MANUAL
     Serial << prefixDEBUG_MANUAL << F("Automatic Mode ON\n");
   #endif
@@ -381,10 +359,10 @@ boolean automatic_on_handler(TinyWebServer& web_server) {   //turns all outputs 
 
 
 // -------------------- trigger_all handler -------------------- 
-boolean automatic_off_handler(TinyWebServer& web_server) {   //turns all outputs on
+boolean automatic_off_handler(TinyWebServer& web_server) {   //turns off automatic mode, ignoring physical input
   web_server.send_error_code(200);
-  //web_server.send_content_type("text/plain");
-  //web_server.end_headers();
+  web_server.send_content_type("text/plain");
+  web_server.end_headers();
   #ifdef DEBUG_MANUAL
     Serial << prefixDEBUG_MANUAL << F("Automatic Mode OFF\n");
   #endif
@@ -408,8 +386,8 @@ boolean mode_handler(TinyWebServer& web_server) {
 // -------------------- all_off handler -------------------- 
 boolean all_off_handler(TinyWebServer& web_server) {  //turns all outputs off
   web_server.send_error_code(200);
-  //web_server.send_content_type("text/plain");
-  //web_server.end_headers();
+  web_server.send_content_type("text/plain");
+  web_server.end_headers();
   
   #ifdef DEBUG_MANUAL
     Serial << prefixDEBUG_MANUAL << F("All Off\n");
@@ -426,8 +404,8 @@ boolean all_off_handler(TinyWebServer& web_server) {  //turns all outputs off
 // -------------------- all_on handler -------------------- 
 boolean all_on_handler(TinyWebServer& web_server) {   //turns all outputs on
   web_server.send_error_code(200);
-  //web_server.send_content_type("text/plain");
-  //web_server.end_headers();
+  web_server.send_content_type("text/plain");
+  web_server.end_headers();
   
   #ifdef DEBUG_MANUAL
     Serial << prefixDEBUG_MANUAL << F("All On\n");
@@ -442,20 +420,20 @@ boolean all_on_handler(TinyWebServer& web_server) {   //turns all outputs on
 
 
 // -------------------- row status handler -------------------- 
-boolean row_status_handler(TinyWebServer& web_server) {   //returns stateRow[]
-  web_server.send_error_code(200);
-  web_server.send_content_type("text/plain");
-  web_server.end_headers();
+// boolean row_status_handler(TinyWebServer& web_server) {   //returns stateRow[]
+//   web_server.send_error_code(200);
+//   web_server.send_content_type("text/plain");
+//   web_server.end_headers();
   
-  Client& client = web_server.get_client();
-  for (int i = 0; i < currentRowCount; i++){
-    client.print(stateRow[0], DEC);
-    if(i < (currentRowCount - 1)){
-      client.print(",");
-    }
-  }
-  return true;
-}
+//   Client& client = web_server.get_client();
+//   for (int i = 0; i < currentRowCount; i++){
+//     client.print(stateRow[i], DEC);
+//     if(i < (currentRowCount - 1)){
+//       client.print(",");
+//     }
+//   }
+//   return true;
+// }
 
 
 // -------------------- status handler -------------------- 
@@ -463,8 +441,8 @@ boolean status_handler(TinyWebServer& web_server) {   //returns trigState[];stat
   web_server.send_error_code(200);
   web_server.send_content_type("text/plain");
   web_server.end_headers();
-  
   Client& client = web_server.get_client();
+
   for (int i = 0; i < currentRowCount; i++){
     client.print(trigState[i], DEC);
     if(i < (currentRowCount - 1)){
@@ -491,21 +469,19 @@ boolean status_handler(TinyWebServer& web_server) {   //returns trigState[];stat
 
 
 // -------------------- output status handler -------------------- 
-boolean output_status_handler(TinyWebServer& web_server) {  //returns outputState[]
-  web_server.send_error_code(200);
-  web_server.send_content_type("text/plain");
-  web_server.end_headers();
-  Client& client = web_server.get_client();
-  
-  client.print("Current output states:\n");
-  for (int i = 0; i < 6; i++){
-    client.print(outputState[i], DEC);
-    if (i < 5){
-      client.print(",");
-    }
-  }
-  return true;
-}
+// boolean output_status_handler(TinyWebServer& web_server) {  //returns outputState[]
+//   web_server.send_error_code(200);
+//   web_server.send_content_type("text/plain");
+//   web_server.end_headers();
+//   Client& client = web_server.get_client();  
+//   for (int i = 0; i < 6; i++){
+//     client.print(outputState[i], DEC);
+//     if (i < 5){
+//       client.print(",");
+//     }
+//   }
+//   return true;
+// }
 
 
 // -------------------- file uploader -------------------- 
@@ -1514,7 +1490,7 @@ void disableNetworkServices(){    //disables network services (bonjour, web.proc
   Serial << F("Ethernet failed. Check network connections and reset Hauntbox. Proceeding without network services.\n");
 }
 
-void createDefaultFile(char* tempFileName){
+void createDefaultFile(char* tempFileName){ //creates a new program/settings.txt file based on defaults
   File myFile;
   bool tempConvertType;
   SD.remove(tempFileName);            // just in case, delete the file to prevent bad data
