@@ -648,72 +648,37 @@ void setup() {
     TinyWebPutHandler::put_handler_fn = file_uploader_handler;   // Assign our function to `upload_handler_fn'.
 
     //----------------------------------- load uniqueID.txt -----------------------------------
-      // char* mac_addr_temp = open_file("uniqueID.txt");    //try to open uniqueID.txt
-      // if (mac_addr_temp != ""){  
-      //   char* tok;
-      //   char* val[6];
-        
-      //   tok = strtok(mac_addr_temp, ":.-_, \r\n");   //separate string using ":" as a delimiter
-      //   val[0] = tok;
-      //   for (i = 1; i < 6; i++) {
-      //     if (tok == NULL)
-      //       break;
-      //     tok = strtok(NULL, ":.-_, \r\n");
-      //     val[i] = tok;
-      //   }
-    
-      //   for (i = 0; i < 6; i++) {
-      //     Serial << (val[i]) << ' ';
-      //   }
-      //   Serial << F("Changed mac from ");
-      //   int vb;
-      //   for (vb = 0; vb < 6; vb++)
-      //     Serial << mac[vb] << ' ';
-      //   Serial << F(" to ");
-      //   for (i = 0; i < 6; i++) {
-      //     mac[i] = (byte)atoi(val[i]);
-      //   }
-      //   for (vb = 0; vb < 6; vb++)
-      //     Serial << mac[vb] << ' ';
-      //   Serial << F("!!\n");
-      // }else{
-      //       // if not there random default
-    
-      //   Serial.println("No uniqueID.txt file.");
-      // }// end if uniqueID.txt exists
-
-      //----------------------------------- load uniqueID.txt -----------------------------------
-      char* mac_addr_temp = open_file("uniqueID.txt");    //try to open uniqueID.txt
-      if (mac_addr_temp != ""){  
-        char* tok;
-        char* val[6];
-        
-        tok = strtok(mac_addr_temp, ":.-_, \r\n");   //separate string using ":" as a delimiter
-        val[0] = tok;
-        for (i = 1; i < 6; i++) {
-          if (tok == NULL)
-            break;
-          tok = strtok(NULL, ":.-_, \r\n");
-          val[i] = tok;
-        }
-    
-        for (i = 0; i < 6; i++) {
-          Serial << (val[i]) << ' ';
-        }
-        Serial << F("Changed mac from ");
-        int vb;
-        for (vb = 0; vb < 6; vb++)
-          Serial << mac[vb] << ' ';
-        Serial << F(" to ");
-        for (i = 0; i < 6; i++) {
-          mac[i] = (byte)atoi(val[i]);
-        }
-        for (vb = 0; vb < 6; vb++)
-          Serial << mac[vb] << ' ';
-        Serial << F("!\n");
-      }else{      //use default mac address specified above.    
-        Serial << F("No uniqueID.txt file. Using default MAC address.\n");
-      }// end if uniqueID.txt exists
+    char* mac_addr_temp = open_file("uniqueID.txt");    //try to open uniqueID.txt
+    if (mac_addr_temp != ""){  
+      char* tok;
+      char* val[6];
+      
+      tok = strtok(mac_addr_temp, ":.-_, \r\n");   //separate string using ":" as a delimiter
+      val[0] = tok;
+      for (i = 1; i < 6; i++) {
+        if (tok == NULL)
+          break;
+        tok = strtok(NULL, ":.-_, \r\n");
+        val[i] = tok;
+      }
+  
+      for (i = 0; i < 6; i++) {
+        Serial << (val[i]) << ' ';
+      }
+      Serial << F("Changed mac from ");
+      int vb;
+      for (vb = 0; vb < 6; vb++)
+        Serial << mac[vb] << ' ';
+      Serial << F(" to ");
+      for (i = 0; i < 6; i++) {
+        mac[i] = (byte)atoi(val[i]);
+      }
+      for (vb = 0; vb < 6; vb++)
+        Serial << mac[vb] << ' ';
+      Serial << F("!\n");
+    }else{      //use default mac address specified above.    
+      Serial << F("No uniqueID.txt file. Using default MAC address.\n");
+    }// end if uniqueID.txt exists
   	
     //----------------------------------- load bonjour.txt -----------------------------------
     #ifdef DEBUG_BOUNJOUR_NAME
@@ -755,7 +720,7 @@ void setup() {
       #ifdef DEBUG_IP_ADDRESS
         Serial << F("DEBUG_IP_ADDRESS: ");
         for (i = 0; i < 4; i++) {
-          Serial << val[i] << " ";
+          Serial << val[i] << ".";
         }
         Serial.println();
       #endif
@@ -770,19 +735,17 @@ void setup() {
     }else{                                //if there is not a static ip specified... use DHCP
       Serial << F("Setting up the Ethernet card...\n");
       if (Ethernet.begin(mac) == 0) {     // Initialize ethernet with DHCP
-         Serial << F("DHCP failed\n");
          disableNetworkServices();        // disable any network services like web.process and bonjour
       }
     }
   }else{                                                    //If there is NO FILESYSTEM
     Serial << F("Setting up the Ethernet card...\n");       //still setup ethernet
     if (Ethernet.begin(mac) == 0) {                         // Initialize ethernet with DHCP
-      Serial << F("DHCP failed: Check network connections\n");
       disableNetworkServices();       // disable any network services like web.process and bonjour
       // directionalLEDFlasher(0,10,50,0);
     }
 
-    Serial << F("****** Warning: SD not working\n");
+    Serial << F("****** Warning: SD not working. Check card, formatting and reset.\n");
     // directionalLEDFlasher(1,10,50,0);
     LEDFlasher(10,200,200);  //visually alert user that something is awry by flashing all LEDs
   }//end if has filesystem
