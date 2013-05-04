@@ -42,7 +42,7 @@ FLASH_STRING(default_program, "1,1;1,2;1,1;0,0;1,2;1,1;2,2;1000,1000;");
 //"Settings" arrays
 byte inputActiveHiLowArray[] =  {1, 1, 1, 1, 1, 1};                     //What signal level is considered "on" for each input (1 = High, 0 = Low)
 byte outputActiveHiLowArray[] = {1, 1, 1, 1, 1, 1};                     //Output considered on when High (1) or Low (0)
-unsigned int inputTriggerThresholdArray[] = {103,103,103,103,103,103};  //input trigger thresholds
+int inputTriggerThresholdArray[] = {103,103,103,103,103,103};           //input trigger thresholds
 unsigned long inputRetriggerDelayArray[] = {100,100,100,100,100,100};   //retrigger time in milliseconds
 FLASH_STRING(default_settings, "1,1,1,1,1,1,1,1,1,1,1,1;garage,my room,hall,cemetery,cornfield,swamp;UV,light,strobe,sound,air horn,zombie;103,103,103,103,103,103;100,100,100,100,100,100;");
 
@@ -58,7 +58,6 @@ int currentRowCount = 6;              //current number of rows (starts at 6 and 
 int newCurrentRowCount = 0;           //used in the bridge to count what the new row count should be
 bool automaticMode = true;            //keeps track of auto/manual override mode
 bool networkServicesDisabled = false; //true if ethernet doesn't start due to IP issue or unplugged CAT5. Still runs state machine, and skips any web.process and bonjour stuff.
-int d = 0;                            //Delay used in testing of code.  Set to 0 if not testing code.
 bool outputState[6] = {0,0,0,0,0,0};  //array to hold on/off (1/0) state of every given output. Manipulated by any/multiple rules
                                       //***only 6 outputs!!!
 int stateRow[MAXROWS];                        //array that defines each row's state. Gets initialized in initializeFunction called from main function
@@ -67,7 +66,10 @@ unsigned long delayTimeStamp[MAXROWS];        //gets initialized immediately bef
 unsigned long timeStampDurationRow[MAXROWS];  //gets initialized immediately before it is used
 unsigned long nowTime;                        //used to keep track of now.
 unsigned long netTime;                        //used to measure difference between now and delay time
-int statesInitialized = 0;                    //keeps track if the states have been initialized
+unsigned long netTimeRetrigger;               //used to measure retrigger delay
+unsigned long nowTimeRetrigger;               //used to measure retrigger delay
+unsigned long tempRetriggerDelay;             //used to measure retrigger delay
+bool statesInitialized = 0;                   //keeps track if the states have been initialized
 
 //Define I/O pins
 int pinIn1 = 10;  //Analog pin
@@ -753,14 +755,12 @@ void initializeFunction() {
   // load settings and program from SD card
 
   //if they aren't there, create an intelligent default
-  //delay(d*3);
 
   for(int a = 0; a < 6; a++) {
     outputState[a] = 0;     //start with all pins off.
     outputSelectFunction(a, outputState[a]);  //set output according to outputState[] map
   }
   statesInitialized = 1;
-  //delay(d*3);
 }
 
 //----- Section AA4b -----
@@ -881,10 +881,7 @@ void outputSelectFunction(int outputNumber, bool action) {
   }
 
 //-------------------- Main Function ------------------------
-void loop(){
-  
-  //delay(d/2);  //For debug use only
-  
+void loop(){  
   //----- Section AA1a -----
   if(statesInitialized == 0) {  //If the states have not been initialized, do so.
     initializeFunction();
@@ -993,26 +990,26 @@ void loop(){
           stateRow[z] = 4;                    //If we've met our delay, go to next state
         }
       }else if(stateRow[z] == 4) {             //STATE 4 = Change output (make it on/off/toggle)
-        if (outputOnOffToggleArray[z] == 0){       //if it should be off
-          outputState[z] = 0;
-        }else if(outputOnOffToggleArray[z] == 1){  //if it should be on
-          outputState[z] = 1;
-        }else if(outputOnOffToggleArray[z] == 2){  //if it should toggle
-          outputState[z] = !outputState[z]; //flip the bit
+        if (outputOnOffToggleArray[z] == 0){      // if it should be off
+          outputState[z] = 0;                     // turn it off
+        }else if(outputOnOffToggleArray[z] == 1){ // if it should be on
+          outputState[z] = 1;                     // turn it on
+        }else if(outputOnOffToggleArray[z] == 2){ // if it should toggle
+          outputState[z] = !outputState[z];       // flip the bit
         }
-        outputSelectFunction(z, outputState[z]);    //enact the change
-        timeStampDurationRow[z] = millis();   //Get timestamp
-        stateRow[z] = 5;                      //Moves on to next state
+        outputSelectFunction(z, outputState[z]);  // enact the change
+        timeStampDurationRow[z] = millis();       // Get timestamp
+        stateRow[z] = 5;                          // Moves on to next state
       }else if(stateRow[z] == 5) {             //STATE 5 = Duration of output "on"
         #ifdef DEBUG_STATES
           printState(z);
         #endif
 
         //switch for 3 different duration types
-        if (durationTypeArray[z] == 0) {  //"until further notice"
-          stateRow[z] = 6;  //move to next state (retrigger delay)
-        }else if(durationTypeArray[z] == 1) {  //"while input triggered"
-          if(trigState[z] == 0){  //trigger has stopped active
+        if (durationTypeArray[z] == 0) {     //"until further notice"
+          stateRow[z] = 6;                      //move to next state (retrigger delay)
+        }else if(durationTypeArray[z] == 1) {   //"while input triggered"
+          if(trigState[z] == 0){                //trigger has stopped active
             if (outputOnOffToggleArray[z] == 1) //if on, turn back off
             {
               outputState[z] = 0;
@@ -1023,24 +1020,24 @@ void loop(){
               outputSelectFunction(z, 1);
             }
             else if(outputOnOffToggleArray[z] == 2){  //if toggle
-              outputState[z] = !outputState[z]; //change the current state
+              outputState[z] = !outputState[z];       //change the current state
               outputSelectFunction(z, outputState[z]);
             }
             
-            stateRow[z] = 6; //move to next state (retrigger delay)
+            stateRow[z] = 6;                          //move to next state (retrigger delay)
           }
-        }else if (durationTypeArray[z] == 2) {    //"for...seconds"
+        }else if (durationTypeArray[z] == 2) {  //"for...seconds"
           nowTime = millis();
           netTime = nowTime - timeStampDurationRow[z];
           if(netTime >= durationArray[z]) {
-            if (outputOnOffToggleArray[z] == 1) { //if on, turn back off
+            if (outputOnOffToggleArray[z] == 1) {       //if on, turn back off
               outputState[z] = 0;
               outputSelectFunction(z, 0);
-            }else if(outputOnOffToggleArray[z] == 0){ //if off, turn back on
+            }else if(outputOnOffToggleArray[z] == 0){   //if off, turn back on
               outputState[z] = 1;
               outputSelectFunction(z, 1);
-            }else if(outputOnOffToggleArray[z] == 2){  //if toggle
-              outputState[z] = !outputState[z]; //change the current state
+            }else if(outputOnOffToggleArray[z] == 2){   //if toggle
+              outputState[z] = !outputState[z];         //change the current state
               outputSelectFunction(z, outputState[z]);
             }
 
@@ -1049,23 +1046,18 @@ void loop(){
           }
         }
       }else if(stateRow[z] == 6) {             //STATE 6 = retrigger delay holding state (kind of like a lobby)
-        
         #ifdef DEBUG_STATES
           printState(z);
         #endif
 
-        unsigned long net;
-        unsigned long tempDelay = inputRetriggerDelayArray[(inputArray[z] - 1)];
-        unsigned long now = millis();
-
-        net = now - delayTimeStamp[z];
-
-        if(net >= tempDelay){
-          stateRow[z] = 1;
+        tempRetriggerDelay = inputRetriggerDelayArray[(inputArray[z] - 1)];
+        nowTimeRetrigger = millis();
+        netTimeRetrigger = nowTimeRetrigger - delayTimeStamp[z];        // subtract now - original trigger time
+        if(netTimeRetrigger >= tempRetriggerDelay){                 // if you've met the retrigger time
+          stateRow[z] = 1;                    // Go back to the beginning!
         }
-      }else {                                  //STATE = ??? if state is not 1-6, set to 1 (waiting)
+      }else {                                 //STATE = ??? if state is not 1-6, set to 1 (waiting)
         stateRow[z] = 1;
-        delay (d);
       }
     }
   }
