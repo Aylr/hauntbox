@@ -600,8 +600,7 @@ void setup() {
     pinMode(outputLEDArray[i], OUTPUT); //set outoutLED as output
   }
 
-  // directionalLEDFlasher(1,10,50,0);
-  // directionalLEDFlasher(0,10,50,0);
+  directionalLEDFlasher(1,1,30,0);
 
   //--------------------------------- Set up SD card ---------------------------------------
   Serial << F("Setting up SD card...\n");
@@ -718,11 +717,9 @@ void setup() {
     Serial << F("Setting up the Ethernet card...\n");       //still setup ethernet
     if (Ethernet.begin(mac) == 0) {                         // Initialize ethernet with DHCP
       disableNetworkServices();       // disable any network services like web.process and bonjour
-      // directionalLEDFlasher(0,10,50,0);
     }
 
     Serial << F("****** Warning: SD not working. Check card, formatting and reset.\n");
-    // directionalLEDFlasher(1,10,50,0);
     LEDFlasher(10,200,200);  //visually alert user that something is awry by flashing all LEDs
   }//end if has filesystem
   
@@ -745,7 +742,9 @@ void setup() {
     Serial << F("Ready to accept web requests at http://") << bonjourName << F(".local or at http://");
     Serial.println(Ethernet.localIP());
   }
-}
+
+  directionalLEDFlasher(0,1,0,40);
+} // end setup()
 
 
 //----- AA1b -- Initialize Output Function -----
@@ -890,7 +889,6 @@ void loop(){
   if(statesInitialized == 0) {  //If the states have not been initialized, do so.
     initializeFunction();
     guiFlag = 1;                //force loading of settings and program
-    LEDFlasher(2,250,150);
   }
 
   //----- Section AA9 ----- See if program or settings have changed
@@ -1451,35 +1449,25 @@ void LEDFlasher (int flashes, int timeOn, int timeOff){    //used to flash all i
   }//flashing loop
 }//end LEDFlasher function
 
-/*
-void directionalLEDFlasher (int direction, int cycles, int timeOn, int timeOff){    //used to flash all input/output LEDs as a warning something is awry
+// 
+void directionalLEDFlasher (int tempOnOff, int cycles, int timeOn, int timeOff){    //used to flash all input/output LEDs as a warning something is awry
   for (int i=0;i<cycles;i++){
-    if (direction == 1){                    //if forward
-      Serial.println("looping forwards");
+    if (tempOnOff == 1){                    //if on
       for (int j=0;j<=5;j++){
-        Serial.println(j);
         digitalWrite(inputLEDArray[j],HIGH);
         digitalWrite(outputLEDArray[j],HIGH);
-        delay(timeOn);
-        digitalWrite(inputLEDArray[j],LOW);
-        digitalWrite(outputLEDArray[j],LOW);
-        delay(timeOff);
+        if (j<5) delay(timeOn);
       }
     }else{
-      Serial.println("looping backwards");
-      for (int j=5;j<=0;j--){                 //if backwards
-        Serial.println(j);
-        digitalWrite(inputLEDArray[j],HIGH);
-        digitalWrite(outputLEDArray[j],HIGH);
-        delay(timeOn);
+      for (int j=0;j<=5;j++){                 //if off
         digitalWrite(inputLEDArray[j],LOW);
         digitalWrite(outputLEDArray[j],LOW);
-        delay(timeOff);
+        if (j<5) delay(timeOff);
       }
     }
   }// end one cycle
 }//end directionalLEDFlasher function
-*/
+
 
 void printState(int row){
   Serial << prefixDEBUG_STATES << F("Row=") << row << F(" State=") << stateRow[row] << "\n";
