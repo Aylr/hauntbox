@@ -13,11 +13,11 @@
 // #define DEBUG_FILES true              //prints file conversion details to serial
 // #define DEBUG_FILES_BY_CHARACTER true //prints file conversion details character by character to serial
 // #define DEBUG_PUT_HANDLER true        //prints file upload details to serial
-// #define DEBUG_OUTPUTS true            //prints outputSelect details to serial
+#define DEBUG_OUTPUTS true            //prints outputSelect details to serial
 // #define DEBUG_INPUTS true             //prints input details to serial
 // #define DEBUG_TRIGGERS true           //prints trigger details to serial
 // #define DEBUG_BRIDGE true             //prints bridge details to serial
-// #define DEBUG_MANUAL true             //prints manual mode details to serial
+#define DEBUG_MANUAL true             //prints manual mode details to serial
 // #define DEBUG_BOUNJOUR_NAME true      //details regarding custom bonjour naming
 // #define DEBUG_IP_ADDRESS  true        //details about static IP address
 // #define DEBUG_DECIPHER_INPUT_SENSOR true  //details about the inner workings of the decipherIntputSensor() function
@@ -48,8 +48,8 @@ FLASH_STRING(default_settings, "1,1,1,1,1,1,1,1,1,1,1,1;garage,my room,hall,ceme
 
 // Other arrays
 //---------intput & output indicator LEDs near screw terminals
-byte inputLEDArray [] =  {39,32,33,34,35,36};   //Array of arduino pins that correspond to the LEDs that indicate an input is triggered
-byte outputLEDArray [] = {47,46,45,44,43,42};   //Array of arduino pins that correspond to the LEDs that indicate an output is on
+byte inputLEDArray [6] =  {39,32,33,34,35,36};   //Array of arduino pins that correspond to the LEDs that indicate an input is triggered
+byte outputLEDArray [6] = {47,46,45,44,43,42};   //Array of arduino pins that correspond to the LEDs that indicate an output is on
 
 // Misc variables
 char bonjourName[MAX_BONJOUR_NAME_LENGTH] = "hauntbox";     //default bonjour name if not set in bounjour.txt on SD card
@@ -246,7 +246,7 @@ boolean manual_handler(TinyWebServer& web_server) {
 
   if (client.available()) {
     bool tempOnOff = 0;             //keeps track of if we want it on or off
-    int tempOutput = 0;             //keeps track of which input
+    byte tempOutput = 0;            //keeps track of which input
     
     char ch = (char)client.read();  //throw away the first character in "a=11"
     ch = (char)client.read();       //throw away the second character in "a=11"
@@ -285,7 +285,12 @@ boolean manual_handler(TinyWebServer& web_server) {
     #endif
 
     outputState[tempOutput-1] = tempOnOff;          //set map, remembering to shift by minus 1
-    outputSelectFunction(tempOutput-1, tempOnOff);  //set reality, remembering to shift by minus 1
+    Serial << prefixDEBUG_MANUAL << "outputState[tempOutput-1]=" << outputState[tempOutput-1] << "\n";          //set map, remembering to shift by minus 1
+    // outputSelectFunction(tempOutput-1, tempOnOff);  //set reality, remembering to shift by minus 1
+    actuallyChangeOutput(tempOutput, tempOnOff);  //set reality, remembering to shift by minus 1
+    #ifdef DEBUG_MANUAL
+      Serial << prefixDEBUG_MANUAL << "tempOutput=" << tempOutput << " tempOutput-1=" << tempOutput-1 << F("\n");
+    #endif
   }
   return true;
 }
@@ -395,9 +400,10 @@ boolean all_off_handler(TinyWebServer& web_server) {  //turns all outputs off
     Serial << prefixDEBUG_MANUAL << F("All Off\n");
   #endif
   
-  for (byte i=0;i<=5;i++){
-    outputState[i] = 0;          //set map
-    outputSelectFunction(i, 0);  //set reality
+  for (byte i=1;i<=6;i++){
+    outputState[i-1] = 1;          //set map (shift -1)
+    // outputSelectFunction(i, 0);  //set reality
+    actuallyChangeOutput(i, 0);  //set reality
   }
   return true;
 }
@@ -413,9 +419,10 @@ boolean all_on_handler(TinyWebServer& web_server) {   //turns all outputs on
     Serial << prefixDEBUG_MANUAL << F("All On\n");
   #endif
   
-  for (byte i=0;i<=5;i++){
-    outputState[i] = 1;          //set map
-    outputSelectFunction(i, 1);  //set reality
+  for (byte i=1;i<=6;i++){
+    outputState[i-1] = 1;          //set map (shift -1)
+    // outputSelectFunction(i, 1);  //set reality
+    actuallyChangeOutput(i, 1);  //set reality
   }
   return true;
 }
@@ -745,7 +752,7 @@ void setup() {
     Serial.println(Ethernet.localIP());
   }
 
-  directionalLEDFlasher(0,1,0,40);
+  directionalLEDFlasher(0,1,0,30);                            //turn bootup LEDs off to indicate complete bootup!
 } // end setup()
 
 
@@ -827,20 +834,38 @@ void statusMessage(int n) {
   if (n==6) {Serial << prefixSTATUS << F("Finished writing to .txt file\n");}
 }
 
+
 //----- Section AA4c -----
 // Function that pairs the output pins to the row that is controlling for it
-void outputSelectFunction(int outputNumber, bool action) {
+byte getOutputOfRowNumber(int rowNumber){
+  return outputArray[rowNumber];
+}
+
+// void changeOutputOfRowNumber(int rowNumber, bool action){
+//   outputSelectFunction(getOutputOfRowNumber(rowNumber),action);
+// }
+
+void outputSelectFunction(int rowNumber, bool action){
+  Serial << "outputSelectFunction: rowNumber=" << rowNumber << " mapped output=" << getOutputOfRowNumber(rowNumber) << "\n";
+  actuallyChangeOutput(getOutputOfRowNumber(rowNumber),action);
+}
+
+// void outputSelectFunction(int outputNumber, bool action) {
+void actuallyChangeOutput(int outputNumber, bool action) {    // takes an output number
+  // from 1-6 corresponding with outputs on Hauntbox labeled 1-6.
+  // If output 0 is passed, it is ignored.
   #ifdef DEBUG_OUTPUTS
-    Serial << F("DEBUG_OUTPUTS: outputSelectFunction ") << outputNumber << F(" ") << action << F("\n");
+    Serial << F("DEBUG_OUTPUTS: actuallyChangeOutput outputNumber=") << outputNumber << F(" action=") << action << F("\n");
   #endif
 
   //takes an output (outputNumber) and an action:
     //0 = off
     //1 = on
-  int x;      //local variable
-  int y;
-  x = outputArray[outputNumber]; //lookup which output is being controlled
-  y = outputActiveHiLowArray[x-1];// lookup which value is considered "on"
+  // int x;      //local variable
+  // int y;
+  // x = outputArray[outputNumber]; //lookup which output is being controlled
+  int x = outputNumber;
+  int y = outputActiveHiLowArray[x-1];// lookup which value is considered "on"
   
   if(action == 1) {        // turn output on
     if(y == 1) {           // "on" means turn output high
