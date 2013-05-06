@@ -13,11 +13,11 @@
 // #define DEBUG_FILES true              //prints file conversion details to serial
 // #define DEBUG_FILES_BY_CHARACTER true //prints file conversion details character by character to serial
 // #define DEBUG_PUT_HANDLER true        //prints file upload details to serial
-#define DEBUG_OUTPUTS true            //prints outputSelect details to serial
+// #define DEBUG_OUTPUTS true            //prints outputSelect details to serial
 // #define DEBUG_INPUTS true             //prints input details to serial
 #define DEBUG_TRIGGERS true           //prints trigger details to serial
 // #define DEBUG_BRIDGE true             //prints bridge details to serial
-#define DEBUG_MANUAL true             //prints manual mode details to serial
+// #define DEBUG_MANUAL true             //prints manual mode details to serial
 // #define DEBUG_BOUNJOUR_NAME true      //details regarding custom bonjour naming
 // #define DEBUG_IP_ADDRESS  true        //details about static IP address
 // #define DEBUG_DECIPHER_INPUT_SENSOR true  //details about the inner workings of the decipherIntputSensor() function
@@ -864,12 +864,12 @@ void outputSelectFunction(int rowNumber, bool action){
 //       if(x == 6) {digitalWrite(pinOut6, HIGH); digitalWrite(outputLEDArray[5], HIGH); } }
 //     if(y == 0) {           // "on" means turn output low
 //       if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
-//       if(x == 1) {digitalWrite(pinOut1, LOW); digitalWrite(outputLEDArray[0], LOW);}
-//       if(x == 2) {digitalWrite(pinOut2, LOW); digitalWrite(outputLEDArray[1], LOW);}
-//       if(x == 3) {digitalWrite(pinOut3, LOW); digitalWrite(outputLEDArray[2], LOW);}
-//       if(x == 4) {digitalWrite(pinOut4, LOW); digitalWrite(outputLEDArray[3], LOW);}
-//       if(x == 5) {digitalWrite(pinOut5, LOW); digitalWrite(outputLEDArray[4], LOW);}
-//       if(x == 6) {digitalWrite(pinOut6, LOW); digitalWrite(outputLEDArray[5], LOW);} }
+//       if(x == 1) {digitalWrite(pinOut1, LOW); digitalWrite(outputLEDArray[0], HIGH);}
+//       if(x == 2) {digitalWrite(pinOut2, LOW); digitalWrite(outputLEDArray[1], HIGH);}
+//       if(x == 3) {digitalWrite(pinOut3, LOW); digitalWrite(outputLEDArray[2], HIGH);}
+//       if(x == 4) {digitalWrite(pinOut4, LOW); digitalWrite(outputLEDArray[3], HIGH);}
+//       if(x == 5) {digitalWrite(pinOut5, LOW); digitalWrite(outputLEDArray[4], HIGH);}
+//       if(x == 6) {digitalWrite(pinOut6, LOW); digitalWrite(outputLEDArray[5], HIGH);} }
 //     return; }
 //   if(action == 0) {        //turn output off
 //     if(y == 1) {           // "off" means turn output low
@@ -882,12 +882,12 @@ void outputSelectFunction(int rowNumber, bool action){
 //       if(x == 6) {digitalWrite(pinOut6, LOW); digitalWrite(outputLEDArray[5], LOW);} }
 //     if(y == 0) {           // "off" means turn output high
 //       if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
-//       if(x == 1) {digitalWrite(pinOut1, HIGH); digitalWrite(outputLEDArray[0], HIGH); }
-//       if(x == 2) {digitalWrite(pinOut2, HIGH); digitalWrite(outputLEDArray[1], HIGH); }
-//       if(x == 3) {digitalWrite(pinOut3, HIGH); digitalWrite(outputLEDArray[2], HIGH); }
-//       if(x == 4) {digitalWrite(pinOut4, HIGH); digitalWrite(outputLEDArray[3], HIGH); }
-//       if(x == 5) {digitalWrite(pinOut5, HIGH); digitalWrite(outputLEDArray[4], HIGH); }
-//       if(x == 6) {digitalWrite(pinOut6, HIGH); digitalWrite(outputLEDArray[5], HIGH); } }
+//       if(x == 1) {digitalWrite(pinOut1, HIGH); digitalWrite(outputLEDArray[0], LOW); }
+//       if(x == 2) {digitalWrite(pinOut2, HIGH); digitalWrite(outputLEDArray[1], LOW); }
+//       if(x == 3) {digitalWrite(pinOut3, HIGH); digitalWrite(outputLEDArray[2], LOW); }
+//       if(x == 4) {digitalWrite(pinOut4, HIGH); digitalWrite(outputLEDArray[3], LOW); }
+//       if(x == 5) {digitalWrite(pinOut5, HIGH); digitalWrite(outputLEDArray[4], LOW); }
+//       if(x == 6) {digitalWrite(pinOut6, HIGH); digitalWrite(outputLEDArray[5], LOW); } }
 //     return; }
 //   }
 
@@ -904,12 +904,11 @@ void actuallyChangeOutput(byte outputNumber, bool action) {    // takes an outpu
   if (action == !y) highOrLow = LOW;
 
   #ifdef DEBUG_OUTPUTS
-    Serial << prefixDEBUG_OUTPUTS << "y=" << y << " !y=" << !y << F("\n");
     Serial << prefixDEBUG_OUTPUTS << F("actuallyChangeOutput outputNumber=") << outputNumber << F(" action=") << action << F(". Arduino pin=") << outputPinArray[outputNumber-1] << F(" HIGH/LOW=") << highOrLow << F("\n");
   #endif
 
-  digitalWrite(outputPinArray[outputNumber-1],highOrLow);
-  digitalWrite(outputLEDArray[outputNumber-1],highOrLow);
+  digitalWrite(outputPinArray[outputNumber-1],highOrLow);   // set the output HIGH or LOW (depending on what that means)
+  digitalWrite(outputLEDArray[outputNumber-1],action);      // set the outputLED according to the action "on" or "off"
 }
 
 //-------------------- Main Function ------------------------
