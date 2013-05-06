@@ -15,7 +15,7 @@
 // #define DEBUG_PUT_HANDLER true        //prints file upload details to serial
 #define DEBUG_OUTPUTS true            //prints outputSelect details to serial
 // #define DEBUG_INPUTS true             //prints input details to serial
-// #define DEBUG_TRIGGERS true           //prints trigger details to serial
+#define DEBUG_TRIGGERS true           //prints trigger details to serial
 // #define DEBUG_BRIDGE true             //prints bridge details to serial
 #define DEBUG_MANUAL true             //prints manual mode details to serial
 // #define DEBUG_BOUNJOUR_NAME true      //details regarding custom bonjour naming
@@ -31,7 +31,7 @@
 //"Program" arrays
 bool enableDisableArray[MAXROWS] = {1,1,1,1,1,1};       //if a row is enabled or disabled
 byte inputArray[MAXROWS] =       {1, 2, 3, 4, 5, 6};    //which input (0-6) is selected (0 = none, 1 = input #1, 2 = input #2, ...)
-byte inputOnOffArray[MAXROWS] =  {1, 1, 1, 1, 1, 1};    //when input is on/off
+bool inputOnOffArray[MAXROWS] =  {1, 1, 1, 1, 1, 1};    //when input is on/off
 unsigned long delayArray[MAXROWS] = {0, 0, 0, 0, 0, 0}; //actual delay in milliseconds
 byte outputArray[MAXROWS] =      {1, 2, 3, 4, 5, 6};    //which outputs (0-6) is selected (0 = none, 1 = output #1, 2 = output #2, ...)
 byte outputOnOffToggleArray[MAXROWS] = {1,1,1,1,1,1};   //What the output should do (on/off/toggle)
@@ -69,7 +69,7 @@ unsigned long netTime;                        //used to measure difference betwe
 unsigned long netTimeRetrigger;               //used to measure retrigger delay
 unsigned long nowTimeRetrigger;               //used to measure retrigger delay
 unsigned long tempRetriggerDelay;             //used to measure retrigger delay
-bool statesInitialized = 0;                   //keeps track if the states have been initialized
+bool statesInitialized = false;               //keeps track if the states have been initialized
 
 //Define I/O pins
 int pinIn1 = 10;  //Analog pin
@@ -86,6 +86,8 @@ int pinOut3 = 38; //Digital pin
 int pinOut4 = 41; //Digital pin
 int pinOut5 = 40; //Digital pin
 int pinOut6 = 37; //Digital pin
+int outputPinArray[] = {pinOut1, pinOut2, pinOut3, pinOut4, pinOut5, pinOut6};
+
 
 //Reserved digital pins for Arduino Ethernet Module SPI
 // Pin 4  (SD card chip select)
@@ -108,6 +110,7 @@ FLASH_STRING(prefixDEBUG_BONJOUR_NAME, "DEBUG_BOUNJOUR_NAME: ");
 FLASH_STRING(prefixDEBUG_BRIDGE, "DEBUG_BRIDGE:");
 FLASH_STRING(prefixDEBUG_MANUAL, "DEBUG_MANUAL: ");
 FLASH_STRING(prefixDEBUG_STATES, "DEBUG_STATES: ");
+FLASH_STRING(prefixDEBUG_OUTPUTS, "DEBUG_OUTPUTS: ");
 //below is the bare bones html for when there's no SD card
 FLASH_STRING(sd_fail_html,"<html><body><h1>SD Card Failed</h1><ol><li>Verify your SD card works</li><li>Remove and reseat it in SD slot in hauntbox</li><li>Reset hauntbox</li><li>Reload this page in 30 seconds</li></ol></body></html>");
 
@@ -279,17 +282,13 @@ boolean manual_handler(TinyWebServer& web_server) {
       #endif
       return true;
     }
-    
+
+    outputState[tempOutput-1] = tempOnOff;        //set map, remembering to shift by minus 1
+    actuallyChangeOutput(tempOutput, tempOnOff);  // set reality
+
     #ifdef DEBUG_MANUAL
       Serial << prefixDEBUG_MANUAL << F("Raw: ") << ch << " " << ch2 << F(" Converted: ") << tempOutput << " " << tempOnOff << F("\n");
-    #endif
-
-    outputState[tempOutput-1] = tempOnOff;          //set map, remembering to shift by minus 1
-    Serial << prefixDEBUG_MANUAL << "outputState[tempOutput-1]=" << outputState[tempOutput-1] << "\n";          //set map, remembering to shift by minus 1
-    // outputSelectFunction(tempOutput-1, tempOnOff);  //set reality, remembering to shift by minus 1
-    actuallyChangeOutput(tempOutput, tempOnOff);  //set reality, remembering to shift by minus 1
-    #ifdef DEBUG_MANUAL
-      Serial << prefixDEBUG_MANUAL << "tempOutput=" << tempOutput << " tempOutput-1=" << tempOutput-1 << F("\n");
+      Serial << prefixDEBUG_MANUAL << "outputState[tempOutput-1]=" << outputState[tempOutput-1] << " tempOutput=" << tempOutput << " tempOutput-1=" << tempOutput-1 << F("\n");
     #endif
   }
   return true;
@@ -401,9 +400,8 @@ boolean all_off_handler(TinyWebServer& web_server) {  //turns all outputs off
   #endif
   
   for (byte i=1;i<=6;i++){
-    outputState[i-1] = 1;          //set map (shift -1)
-    // outputSelectFunction(i, 0);  //set reality
-    actuallyChangeOutput(i, 0);  //set reality
+    outputState[i-1] = 1;        //set map (shift -1)
+    actuallyChangeOutput(i, 0);  //set reality (takes actual output #, not shifted)
   }
   return true;
 }
@@ -420,9 +418,8 @@ boolean all_on_handler(TinyWebServer& web_server) {   //turns all outputs on
   #endif
   
   for (byte i=1;i<=6;i++){
-    outputState[i-1] = 1;          //set map (shift -1)
-    // outputSelectFunction(i, 1);  //set reality
-    actuallyChangeOutput(i, 1);  //set reality
+    outputState[i-1] = 1;        //set map (shift -1)
+    actuallyChangeOutput(i, 1);  //set reality (takes actual output #, not shifted)
   }
   return true;
 }
@@ -763,23 +760,22 @@ void initializeFunction() {
 
   //if they aren't there, create an intelligent default
 
-  for(int a = 0; a < 6; a++) {
-    outputState[a] = 0;     //start with all pins off.
-    outputSelectFunction(a, outputState[a]);  //set output according to outputState[] map
+  for(int i = 1; i <= 6; i++) {
+    outputState[i-1] = 0;     //start with all pins off.
+    actuallyChangeOutput(i, outputState[i-1]);  //set output according to outputState[] map
   }
-  statesInitialized = 1;
+  statesInitialized = true;
 }
 
 //----- Section AA4b -----
 // Function that reads sensor, interprets what the value means (active hi/low) and 
 //returns int 1 for "triggered" or 0 for "not triggered"
-int decipherInputSensor(int x) {
-  // It is very important to realize that this takes an input # from 1-6 and
+bool decipherInputSensor(byte x) {
+  // It is very important to note that this takes an input # from 1-6 and
   // NOT 0-5. In this firmware an input = 0 is considered not active, or NO input.
   // This is why you see some of the indexes shifted + or - 1.
-  int trig; //returns 1 if input is considered triggered, 0 if not
+  bool trig = false;  //returns 1 if input is considered triggered, 0 if not
   int val;
-  // int x = tempInputNumber;
   int y;
 
   if(x == 0) {return 0;} //Do nothing for "N/A" case and break out of function
@@ -814,7 +810,7 @@ int decipherInputSensor(int x) {
   //if not trig (0)  == off (0) --> take action (1)
   //if not trig (0)  != on (1)  --> don't
   //Therefore, only take action when they == each other
-bool inputTakeAction(int rowNumber) {
+bool inputTakeAction(byte rowNumber) {
   bool shouldItTakeAction;
   if ( decipherInputSensor(inputArray[rowNumber]) == inputOnOffArray[rowNumber] ){
     shouldItTakeAction = 1;
@@ -837,73 +833,84 @@ void statusMessage(int n) {
 
 //----- Section AA4c -----
 // Function that pairs the output pins to the row that is controlling for it
-byte getOutputOfRowNumber(int rowNumber){
-  return outputArray[rowNumber];
-}
-
-// void changeOutputOfRowNumber(int rowNumber, bool action){
-//   outputSelectFunction(getOutputOfRowNumber(rowNumber),action);
-// }
-
 void outputSelectFunction(int rowNumber, bool action){
-  Serial << "outputSelectFunction: rowNumber=" << rowNumber << " mapped output=" << getOutputOfRowNumber(rowNumber) << "\n";
-  actuallyChangeOutput(getOutputOfRowNumber(rowNumber),action);
+  // Looks up an output from a given row number and passes along the action
+  // to the actuallyChangeOutput() function that enacts the change
+  #ifdef DEBUG_OUTPUTS
+    Serial << prefixDEBUG_OUTPUTS << F("outputSelectFunction: rowNumber=") << rowNumber << F(" mapped output=") << outputArray[rowNumber] << "\n";
+  #endif
+  actuallyChangeOutput(outputArray[rowNumber],action);    // make the change by passing the actual output # (1-6 on the PCB) and action
 }
 
-// void outputSelectFunction(int outputNumber, bool action) {
-void actuallyChangeOutput(int outputNumber, bool action) {    // takes an output number
+// void actuallyChangeOutput(byte outputNumber, bool action) {    // takes an output number
+//   // from 1-6 corresponding with outputs on Hauntbox labeled 1-6.
+//   // If output 0 is passed, it is ignored.
+//   //takes an outputNumber and an action: 0 = off, 1 = on
+//   #ifdef DEBUG_OUTPUTS
+//     Serial << prefixDEBUG_OUTPUTS << F("actuallyChangeOutput outputNumber=") << outputNumber << F(" action=") << action << F("\n");
+//   #endif
+
+//   byte x = outputNumber;                 // change to x for compact readability
+//   bool y = outputActiveHiLowArray[x-1];  // lookup which value is considered "on" (shifted by -1)
+  
+//   if(action == 1) {        // turn output on
+//     if(y == 1) {           // "on" means turn output high
+//       if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
+//       if(x == 1) {digitalWrite(pinOut1, HIGH); digitalWrite(outputLEDArray[0], HIGH); }
+//       if(x == 2) {digitalWrite(pinOut2, HIGH); digitalWrite(outputLEDArray[1], HIGH); }
+//       if(x == 3) {digitalWrite(pinOut3, HIGH); digitalWrite(outputLEDArray[2], HIGH); }
+//       if(x == 4) {digitalWrite(pinOut4, HIGH); digitalWrite(outputLEDArray[3], HIGH); }
+//       if(x == 5) {digitalWrite(pinOut5, HIGH); digitalWrite(outputLEDArray[4], HIGH); }
+//       if(x == 6) {digitalWrite(pinOut6, HIGH); digitalWrite(outputLEDArray[5], HIGH); } }
+//     if(y == 0) {           // "on" means turn output low
+//       if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
+//       if(x == 1) {digitalWrite(pinOut1, LOW); digitalWrite(outputLEDArray[0], LOW);}
+//       if(x == 2) {digitalWrite(pinOut2, LOW); digitalWrite(outputLEDArray[1], LOW);}
+//       if(x == 3) {digitalWrite(pinOut3, LOW); digitalWrite(outputLEDArray[2], LOW);}
+//       if(x == 4) {digitalWrite(pinOut4, LOW); digitalWrite(outputLEDArray[3], LOW);}
+//       if(x == 5) {digitalWrite(pinOut5, LOW); digitalWrite(outputLEDArray[4], LOW);}
+//       if(x == 6) {digitalWrite(pinOut6, LOW); digitalWrite(outputLEDArray[5], LOW);} }
+//     return; }
+//   if(action == 0) {        //turn output off
+//     if(y == 1) {           // "off" means turn output low
+//       if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
+//       if(x == 1) {digitalWrite(pinOut1, LOW); digitalWrite(outputLEDArray[0], LOW);}
+//       if(x == 2) {digitalWrite(pinOut2, LOW); digitalWrite(outputLEDArray[1], LOW);}
+//       if(x == 3) {digitalWrite(pinOut3, LOW); digitalWrite(outputLEDArray[2], LOW);}
+//       if(x == 4) {digitalWrite(pinOut4, LOW); digitalWrite(outputLEDArray[3], LOW);}
+//       if(x == 5) {digitalWrite(pinOut5, LOW); digitalWrite(outputLEDArray[4], LOW);}
+//       if(x == 6) {digitalWrite(pinOut6, LOW); digitalWrite(outputLEDArray[5], LOW);} }
+//     if(y == 0) {           // "off" means turn output high
+//       if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
+//       if(x == 1) {digitalWrite(pinOut1, HIGH); digitalWrite(outputLEDArray[0], HIGH); }
+//       if(x == 2) {digitalWrite(pinOut2, HIGH); digitalWrite(outputLEDArray[1], HIGH); }
+//       if(x == 3) {digitalWrite(pinOut3, HIGH); digitalWrite(outputLEDArray[2], HIGH); }
+//       if(x == 4) {digitalWrite(pinOut4, HIGH); digitalWrite(outputLEDArray[3], HIGH); }
+//       if(x == 5) {digitalWrite(pinOut5, HIGH); digitalWrite(outputLEDArray[4], HIGH); }
+//       if(x == 6) {digitalWrite(pinOut6, HIGH); digitalWrite(outputLEDArray[5], HIGH); } }
+//     return; }
+//   }
+
+void actuallyChangeOutput(byte outputNumber, bool action) {    // takes an output number
   // from 1-6 corresponding with outputs on Hauntbox labeled 1-6.
   // If output 0 is passed, it is ignored.
+  //takes an outputNumber and an action: 0 = off, 1 = on
+  
+  bool y = outputActiveHiLowArray[outputNumber-1];
+  int highOrLow;
+
+  if (outputNumber == 0) return;  //break out of function for case "n/a" (represented as output 0)
+  if (action == y) highOrLow = HIGH;
+  if (action == !y) highOrLow = LOW;
+
   #ifdef DEBUG_OUTPUTS
-    Serial << F("DEBUG_OUTPUTS: actuallyChangeOutput outputNumber=") << outputNumber << F(" action=") << action << F("\n");
+    Serial << prefixDEBUG_OUTPUTS << "y=" << y << " !y=" << !y << F("\n");
+    Serial << prefixDEBUG_OUTPUTS << F("actuallyChangeOutput outputNumber=") << outputNumber << F(" action=") << action << F(". Arduino pin=") << outputPinArray[outputNumber-1] << F(" HIGH/LOW=") << highOrLow << F("\n");
   #endif
 
-  //takes an output (outputNumber) and an action:
-    //0 = off
-    //1 = on
-  // int x;      //local variable
-  // int y;
-  // x = outputArray[outputNumber]; //lookup which output is being controlled
-  int x = outputNumber;
-  int y = outputActiveHiLowArray[x-1];// lookup which value is considered "on"
-  
-  if(action == 1) {        // turn output on
-    if(y == 1) {           // "on" means turn output high
-      if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
-      if(x == 1) {digitalWrite(pinOut1, HIGH); digitalWrite(outputLEDArray[0], HIGH); }
-      if(x == 2) {digitalWrite(pinOut2, HIGH); digitalWrite(outputLEDArray[1], HIGH); }
-      if(x == 3) {digitalWrite(pinOut3, HIGH); digitalWrite(outputLEDArray[2], HIGH); }
-      if(x == 4) {digitalWrite(pinOut4, HIGH); digitalWrite(outputLEDArray[3], HIGH); }
-      if(x == 5) {digitalWrite(pinOut5, HIGH); digitalWrite(outputLEDArray[4], HIGH); }
-      if(x == 6) {digitalWrite(pinOut6, HIGH); digitalWrite(outputLEDArray[5], HIGH); } }
-    if(y == 0) {           // "on" means turn output low
-      if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
-      if(x == 1) {digitalWrite(pinOut1, LOW); digitalWrite(outputLEDArray[0], LOW);}
-      if(x == 2) {digitalWrite(pinOut2, LOW); digitalWrite(outputLEDArray[1], LOW);}
-      if(x == 3) {digitalWrite(pinOut3, LOW); digitalWrite(outputLEDArray[2], LOW);}
-      if(x == 4) {digitalWrite(pinOut4, LOW); digitalWrite(outputLEDArray[3], LOW);}
-      if(x == 5) {digitalWrite(pinOut5, LOW); digitalWrite(outputLEDArray[4], LOW);}
-      if(x == 6) {digitalWrite(pinOut6, LOW); digitalWrite(outputLEDArray[5], LOW);} }
-    return; }
-  if(action == 0) {        //turn output off
-    if(y == 1) {           // "off" means turn output low
-      if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
-      if(x == 1) {digitalWrite(pinOut1, LOW); digitalWrite(outputLEDArray[0], LOW);}
-      if(x == 2) {digitalWrite(pinOut2, LOW); digitalWrite(outputLEDArray[1], LOW);}
-      if(x == 3) {digitalWrite(pinOut3, LOW); digitalWrite(outputLEDArray[2], LOW);}
-      if(x == 4) {digitalWrite(pinOut4, LOW); digitalWrite(outputLEDArray[3], LOW);}
-      if(x == 5) {digitalWrite(pinOut5, LOW); digitalWrite(outputLEDArray[4], LOW);}
-      if(x == 6) {digitalWrite(pinOut6, LOW); digitalWrite(outputLEDArray[5], LOW);} }
-    if(y == 0) {           // "off" means turn output high
-      if(x == 0) {return;} //Do nothing for "N/A" case and break out of function
-      if(x == 1) {digitalWrite(pinOut1, HIGH); digitalWrite(outputLEDArray[0], HIGH); }
-      if(x == 2) {digitalWrite(pinOut2, HIGH); digitalWrite(outputLEDArray[1], HIGH); }
-      if(x == 3) {digitalWrite(pinOut3, HIGH); digitalWrite(outputLEDArray[2], HIGH); }
-      if(x == 4) {digitalWrite(pinOut4, HIGH); digitalWrite(outputLEDArray[3], HIGH); }
-      if(x == 5) {digitalWrite(pinOut5, HIGH); digitalWrite(outputLEDArray[4], HIGH); }
-      if(x == 6) {digitalWrite(pinOut6, HIGH); digitalWrite(outputLEDArray[5], HIGH); } }
-    return; }
-  }
+  digitalWrite(outputPinArray[outputNumber-1],highOrLow);
+  digitalWrite(outputLEDArray[outputNumber-1],highOrLow);
+}
 
 //-------------------- Main Function ------------------------
 void loop(){  
@@ -1016,13 +1023,13 @@ void loop(){
         }
       }else if(stateRow[z] == 4) {             //STATE 4 = Change output (make it on/off/toggle)
         if (outputOnOffToggleArray[z] == 0){      // if it should be off
-          outputState[z] = 0;                     // turn it off
+          outputState[outputArray[z]-1] = 0;                     // turn it off
         }else if(outputOnOffToggleArray[z] == 1){ // if it should be on
-          outputState[z] = 1;                     // turn it on
+          outputState[outputArray[z]-1] = 1;                     // turn it on
         }else if(outputOnOffToggleArray[z] == 2){ // if it should toggle
-          outputState[z] = !outputState[z];       // flip the bit
+          outputState[outputArray[z]-1] = !outputState[outputArray[z]-1];       // flip the bit
         }
-        outputSelectFunction(z, outputState[z]);  // enact the change
+        outputSelectFunction(z, outputState[outputArray[z]-1]);  // enact the change
         timeStampDurationRow[z] = millis();       // Get timestamp
         stateRow[z] = 5;                          // Moves on to next state
       }else if(stateRow[z] == 5) {             //STATE 5 = Duration of output "on"
@@ -1031,22 +1038,23 @@ void loop(){
         #endif
 
         //switch for 3 different duration types
-        if (durationTypeArray[z] == 0) {     //"until further notice"
+        if (durationTypeArray[z] == 0) {        //"until further notice"
           stateRow[z] = 6;                      //move to next state (retrigger delay)
         }else if(durationTypeArray[z] == 1) {   //"while input triggered"
+          trigState[z] = inputTakeAction(z); //Call function and pass(Row number) to see if input is triggered
           if(trigState[z] == 0){                //trigger has stopped active
             if (outputOnOffToggleArray[z] == 1) //if on, turn back off
             {
-              outputState[z] = 0;
+              outputState[outputArray[z]-1] = 0;
               outputSelectFunction(z, 0);
             }
             else if(outputOnOffToggleArray[z] == 0){ //if off, turn back on
-              outputState[z] = 1;
+              outputState[outputArray[z]-1] = 1;
               outputSelectFunction(z, 1);
             }
             else if(outputOnOffToggleArray[z] == 2){  //if toggle
-              outputState[z] = !outputState[z];       //change the current state
-              outputSelectFunction(z, outputState[z]);
+              outputState[outputArray[z]-1] = !outputState[outputArray[z]-1];       //change the current state
+              outputSelectFunction(z, outputState[outputArray[z]-1]);
             }
             
             stateRow[z] = 6;                          //move to next state (retrigger delay)
@@ -1056,18 +1064,17 @@ void loop(){
           netTime = nowTime - timeStampDurationRow[z];
           if(netTime >= durationArray[z]) {
             if (outputOnOffToggleArray[z] == 1) {       //if on, turn back off
-              outputState[z] = 0;
+              outputState[outputArray[z]-1] = 0;
               outputSelectFunction(z, 0);
             }else if(outputOnOffToggleArray[z] == 0){   //if off, turn back on
-              outputState[z] = 1;
+              outputState[outputArray[z]-1] = 1;
               outputSelectFunction(z, 1);
             }else if(outputOnOffToggleArray[z] == 2){   //if toggle
-              outputState[z] = !outputState[z];         //change the current state
-              outputSelectFunction(z, outputState[z]);
+              outputState[outputArray[z]-1] = !outputState[outputArray[z]-1];         //change the current state
+              outputSelectFunction(z, outputState[outputArray[z]-1]);
             }
 
             stateRow[z] = 6;    //move to next state (retrigger delay)
-            
           }
         }
       }else if(stateRow[z] == 6) {             //STATE 6 = retrigger delay holding state (kind of like a lobby)
