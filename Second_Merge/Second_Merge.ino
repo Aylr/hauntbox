@@ -22,12 +22,15 @@
 // #define DEBUG_IP_ADDRESS  true        //details about static IP address
 // #define DEBUG_DECIPHER_INPUT_SENSOR true  //details about the inner workings of the decipherIntputSensor() function
 
-#define MAXROWS 20                  //Maximum # of rows. Please adjust MAX_FILE_LENGTH up accordingly
-#define MINROWS 1                   //minimum # of rows
-#define MIN_BONJOUR_NAME_LENGTH 3   //minimum length of bonjour name. Unreliable below 3.
-#define MAX_BONJOUR_NAME_LENGTH 16  //maximum length of bonjour name
-#define MAX_FILE_LENGTH 681         //maximum length of program/settings file (major impact on memory)
-                                    // should be at least 34 x MAXROWS, as that is the largest input.
+#define MAXROWS 20                            //Maximum # of rows. Please adjust MAX_FILE_LENGTH up accordingly
+#define MINROWS 1                             //minimum # of rows
+#define MIN_BONJOUR_NAME_LENGTH 3             //minimum length of bonjour name. Unreliable below 3.
+#define MAX_BONJOUR_NAME_LENGTH 16            //maximum length of bonjour name
+#define MAX_FILE_LENGTH (MAXROWS * 34) + 1    //maximum length of program/settings file (major impact on memory)
+                                              //should be at least 34 x MAXROWS, as that is the largest input.
+                                              // longest valid program string: 34*MAXROWS characters
+                                              // longest valid settings string: 318 characters
+
 
 //"Program" arrays. Note these arrays are not limited by the 6 IO pins, but the number of rows
 bool enableDisableArray[MAXROWS] = {1,1,1,1,1,1};       //if a row is enabled or disabled
