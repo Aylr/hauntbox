@@ -53,7 +53,7 @@ byte outputLEDArray [6] = {47,46,45,44,43,42};   //Array of arduino pins that co
 
 // Misc variables
 char bonjourName[MAX_BONJOUR_NAME_LENGTH] = "hauntbox";     //default bonjour name if not set in bounjour.txt on SD card
-int guiFlag = 0;                      //GUI Flag tells us when there is a new program.txt/settings.txt from the GUI
+bool guiFlag = true;                  //GUI Flag tells us when there is a new program.txt/settings.txt from the GUI. Start as 1 to load the inital program/settings.
 int currentRowCount = 6;              //current number of rows (starts at 6 and modified by gui)
 int newCurrentRowCount = 0;           //used in the bridge to count what the new row count should be
 bool automaticMode = true;            //keeps track of auto/manual override mode
@@ -69,7 +69,6 @@ unsigned long netTime;                        //used to measure difference betwe
 unsigned long netTimeRetrigger;               //used to measure retrigger delay
 unsigned long nowTimeRetrigger;               //used to measure retrigger delay
 unsigned long tempRetriggerDelay;             //used to measure retrigger delay
-bool statesInitialized = false;               //keeps track if the states have been initialized
 
 //Define I/O pins
 int pinIn1 = 10;  //Analog pin
@@ -755,16 +754,11 @@ void setup() {
 
 //----- AA1b -- Initialize Output Function -----
 // Function that initializes the outputs states to "off"
-void initializeFunction() {
-  // load settings and program from SD card
-
-  //if they aren't there, create an intelligent default
-
+void initializeFunctionHighLow() {
   for(int i = 1; i <= 6; i++) {
     outputState[i-1] = 0;     //start with all pins off.
     actuallyChangeOutput(i, outputState[i-1]);  //set output according to outputState[] map
   }
-  statesInitialized = true;
 }
 
 //----- Section AA4b -----
@@ -913,77 +907,13 @@ void actuallyChangeOutput(byte outputNumber, bool action) {    // takes an outpu
 
 //-------------------- Main Function ------------------------
 void loop(){  
-  //----- Section AA1a -----
-  if(statesInitialized == 0) {  //If the states have not been initialized, do so.
-    initializeFunction();
-    guiFlag = 1;                //force loading of settings and program
-  }
-
   //----- Section AA9 ----- See if program or settings have changed
-  if(guiFlag == 1) {  //If there are new program/settings ...
-    #ifdef DEBUG_BRIDGE
-      Serial << prefixDEBUG_BRIDGE << F("New info from gui received\n");
-    #endif
-
-    //----- Section AB1 -----
-    //READ program.txt and settings.txt
-    char* newvar = open_file("program.txt");  //store the program.txt in a var
-    #ifdef DEBUG_BRIDGE
-      Serial << prefixDEBUG_BRIDGE << F("program.txt=") << newvar << F("\n");                 //print the file out
-    #endif
-
-    if (newvar != 0 && newvar != ""){
-      convert(newvar,1);                        //convert the file to arrays
-      #ifdef DEBUG_BRIDGE
-        Serial << prefixDEBUG_BRIDGE << F("program.txt converted\n");
-      #endif
-    } else {  // if we've gotten here we need to remove, then create & populate a new settings.txt file
-      createDefaultFile("program.txt");
-      #ifdef DEBUG_BRIDGE
-        Serial << prefixDEBUG_BRIDGE << F("Default program used.\n");
-      #endif
-    }
-
-    newvar = 0;                               //erase the newvar
-    
-    newvar = open_file("settings.txt");       //store the settings.txt in a var
-
-    #ifdef DEBUG_BRIDGE
-      Serial << prefixDEBUG_BRIDGE << F("settings.txt=") << newvar << F("\n");
-    #endif
-    if (newvar != 0 && newvar != ""){
-      convert(newvar,0);                        //convert the file to arrays
-      #ifdef DEBUG_BRIDGE
-        Serial << prefixDEBUG_BRIDGE << F("settings.txt converted\n");
-      #endif
-    } else {  // if we've gotten here we need to remove, then create & populate a new settings.txt file
-      createDefaultFile("settings.txt");
-      #ifdef DEBUG_BRIDGE
-        Serial << prefixDEBUG_BRIDGE << F("Default settings used.\n");
-      #endif
-    }
-
-    
-    //----- Section AB2 -----
-    //FUNCTION TO MAKE SURE GUI DEFINITIONS MAKE SENSE
-    
-    //----- Section AB3 -----
-    //FUNCTION TO SAVE DEFINITIONS TO SD CARD
-    //saved to disk with the put handler
-
-    //CHECK TO SEE IF SD CARD IS THERE
-    //already done with has_filesystem
-    
-    //----- Section AB4 -----
-    //FUNCTION TO READ DEFINITIONS ON SD CARD
-    
-    //COMPARE TO VALUES FROM AB1
-    
-    //Sends GUI confirmation message
-    statusMessage(5);  //GUI message #5
-    
-    guiFlag = 0;                                //reset guiFlag
+  if(guiFlag == 1) {                  // If there are new program/settings ...
+    loadProgramAndSettings();         // load the new program/settings from the GUI
+    initializeFunctionHighLow();      // re-initialize the outputs according to the new program/settings
+    guiFlag = 0;                      // reset guiFlag
   }
+  
 
   //----- Section AA4a ----- Main State Machine: Reading Inputs and Writing to Outputs -----
   for(int z = 0; z < currentRowCount; z++) {              //runs loop for each row
@@ -1131,6 +1061,51 @@ void loop(){
     EthernetBonjour.run();  // run zeroconf/bonjour
   }
 }// end void loop
+
+
+void loadProgramAndSettings() {
+  #ifdef DEBUG_BRIDGE
+    Serial << prefixDEBUG_BRIDGE << F("New info from gui received\n");
+  #endif
+  //----- Section AB1 -----  READ program.txt and settings.txt
+  char* newvar = open_file("program.txt");  //store the program.txt in a var
+  #ifdef DEBUG_BRIDGE
+    Serial << prefixDEBUG_BRIDGE << F("program.txt=") << newvar << F("\n");                 //print the file out
+  #endif
+
+  if (newvar != 0 && newvar != ""){
+    convert(newvar,1);                        //convert the file to arrays
+    #ifdef DEBUG_BRIDGE
+      Serial << prefixDEBUG_BRIDGE << F("program.txt converted\n");
+    #endif
+  } else {  // if we've gotten here we need to remove, then create & populate a new settings.txt file
+    createDefaultFile("program.txt");
+    #ifdef DEBUG_BRIDGE
+      Serial << prefixDEBUG_BRIDGE << F("Default program used.\n");
+    #endif
+  }
+
+  newvar = 0;                               //erase the newvar
+  newvar = open_file("settings.txt");       //store the settings.txt in a var
+
+  #ifdef DEBUG_BRIDGE
+    Serial << prefixDEBUG_BRIDGE << F("settings.txt=") << newvar << F("\n");
+  #endif
+  if (newvar != 0 && newvar != ""){
+    convert(newvar,0);                        //convert the file to arrays
+    #ifdef DEBUG_BRIDGE
+      Serial << prefixDEBUG_BRIDGE << F("settings.txt converted\n");
+    #endif
+  } else {  // if we've gotten here we need to remove, then create & populate a new settings.txt file
+    createDefaultFile("settings.txt");
+    #ifdef DEBUG_BRIDGE
+      Serial << prefixDEBUG_BRIDGE << F("Default settings used.\n");
+    #endif
+  }
+
+  statusMessage(5);  //GUI message #5 Sends GUI confirmation message
+} // end void loadProgramAndSettings()
+
 
 
 //----- Section open SD file for conversion to arrays -----
