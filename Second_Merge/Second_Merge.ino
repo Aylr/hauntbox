@@ -16,17 +16,18 @@
 // #define DEBUG_OUTPUTS true            //prints outputSelect details to serial
 // #define DEBUG_INPUTS true             //prints input details to serial
 // #define DEBUG_TRIGGERS true           //prints trigger details to serial
-// #define DEBUG_BRIDGE true             //prints bridge details to serial
+#define DEBUG_BRIDGE true             //prints bridge details to serial
 // #define DEBUG_MANUAL true             //prints manual mode details to serial
 // #define DEBUG_BOUNJOUR_NAME true      //details regarding custom bonjour naming
 // #define DEBUG_IP_ADDRESS  true        //details about static IP address
-#define DEBUG_DECIPHER_INPUT_SENSOR true  //details about the inner workings of the decipherIntputSensor() function
+// #define DEBUG_DECIPHER_INPUT_SENSOR true  //details about the inner workings of the decipherIntputSensor() function
 
-#define MAXROWS 20                  //Maximum # of rows
+#define MAXROWS 20                  //Maximum # of rows. Please adjust MAX_FILE_LENGTH up accordingly
 #define MINROWS 1                   //minimum # of rows
 #define MIN_BONJOUR_NAME_LENGTH 3   //minimum length of bonjour name. Unreliable below 3.
 #define MAX_BONJOUR_NAME_LENGTH 16  //maximum length of bonjour name
-#define MAX_FILE_LENGTH 400         //maximum length of program/settings file (major impact on memory)
+#define MAX_FILE_LENGTH 681         //maximum length of program/settings file (major impact on memory)
+                                    // should be at least 34 x MAXROWS, as that is the largest input.
 
 //"Program" arrays. Note these arrays are not limited by the 6 IO pins, but the number of rows
 bool enableDisableArray[MAXROWS] = {1,1,1,1,1,1};       //if a row is enabled or disabled
@@ -40,8 +41,8 @@ unsigned long durationArray[MAXROWS] = {1000, 6000, 6000, 6000, 6000, 6000};  //
 FLASH_STRING(default_program, "1,1;1,2;1,1;0,0;1,2;1,1;2,2;1000,1000;");
 
 //"Settings" arrays. Note these arrays are limited to 6 physical IO pins
-byte inputActiveHiLowArray[6] =  {1, 1, 1, 1, 1, 1};                     //What signal level is considered "on" for each input (1 = High, 0 = Low)
-byte outputActiveHiLowArray[6] = {1, 1, 1, 1, 1, 1};                     //Output considered on when High (1) or Low (0)
+bool inputActiveHiLowArray[6] =  {1, 1, 1, 1, 1, 1};                     //What signal level is considered "on" for each input (1 = High, 0 = Low)
+bool outputActiveHiLowArray[6] = {1, 1, 1, 1, 1, 1};                     //Output considered on when High (1) or Low (0)
 int inputTriggerThresholdArray[6] = {103,103,103,103,103,103};           //input trigger thresholds
 unsigned long inputRetriggerDelayArray[6] = {100,100,100,100,100,100};   //retrigger time in milliseconds
 FLASH_STRING(default_settings, "1,1,1,1,1,1,1,1,1,1,1,1;garage,my room,hall,cemetery,cornfield,swamp;UV,light,strobe,sound,air horn,zombie;103,103,103,103,103,103;100,100,100,100,100,100;");
@@ -59,15 +60,15 @@ bool automaticMode = true;                    //keeps track of auto/manual overr
 bool networkServicesDisabled = false;         //true if ethernet doesn't start due to IP issue or unplugged CAT5. Still runs state machine, and skips any web.process and bonjour stuff.
 bool outputState[6] = {0,0,0,0,0,0};          //array to hold on/off (1/0) state of every given output. Manipulated by any/multiple rules
                                               //***only 6 outputs!!!
-int stateRow[MAXROWS];                        //array that defines each row's state. Gets initialized in initializeFunction called from main function
+byte stateRow[MAXROWS];                       //array that defines each row's state. Gets initialized in initializeFunction called from main function
 bool trigState[MAXROWS];                      //gets initialized immediately before it is used
 unsigned long delayTimeStamp[MAXROWS];        //gets initialized immediately before it is used
 unsigned long timeStampDurationRow[MAXROWS];  //gets initialized immediately before it is used
 unsigned long nowTime;                        //used to keep track of now.
 unsigned long netTime;                        //used to measure difference between now and delay time
-unsigned long netTimeRetrigger;               //used to measure retrigger delay
-unsigned long nowTimeRetrigger;               //used to measure retrigger delay
-unsigned long tempRetriggerDelay;             //used to measure retrigger delay
+unsigned long netTimeRetrigger;               //single temp variable used to measure retrigger delay
+unsigned long nowTimeRetrigger;               //single temp variable used to measure retrigger delay
+unsigned long tempRetriggerDelay;             //single temp variable used to measure retrigger delay
 
 //Define I/O pins
 int pinIn1 = 10;  //Analog pin
@@ -1115,12 +1116,12 @@ char* open_file(char* input_file){
   #ifdef DEBUG_FILES
     Serial << prefixDEBUG_FILES << F("open_file(") << input_file << F(")\n");
   #endif
-  char storage[MAX_FILE_LENGTH] = {0};      //used to store read stuff
-  char ch;                                  //used to store incoming byte
-  int i = 0;                                //used as counter for building string
-  char* fail = "";                          //the failure return
-  int tempMaxFileLength = MAX_FILE_LENGTH;  //largest file to use (to protect limited memory)
-  byte tempMinFileLength = 10;               //smallest file to consider valid (used in open_file() testing file.available())
+  char storage[MAX_FILE_LENGTH] = {0};                //used to store read stuff
+  char ch;                                            //used to store incoming byte
+  int i = 0;                                          //used as counter for building string
+  char* fail = "";                                    //the failure return
+  unsigned int tempMaxFileLength = MAX_FILE_LENGTH;   //largest file to use (to protect limited memory)
+  byte tempMinFileLength = 10;                        //smallest file to consider valid (used in open_file() testing file.available())
 
   
   int tempSDStatus = SD.begin(SD_CS);
@@ -1150,6 +1151,11 @@ char* open_file(char* input_file){
       tempMinFileLength = 11;                 //min possible MAC n:n:n:n:n:n
       tempMaxFileLength = 23;                 //max possible MAC nnn:nnn:nnn:nnn:nnn:nnn
     }else{
+      // else if (input_file == "program.txt"){
+      //   tempMinFileLength = ;
+      //   tempMaxFileLength = MAX_FILE_LENGTH;
+      // }
+      //else if (unt)
       //use defaults of min & max specified at top of function
     }
 
@@ -1239,9 +1245,9 @@ char convert(char* readString, bool type){
       if (tok == NULL)
         break;
       if (i < 6){                     //since this is in a string of 12, do first 6 as input last 6 as output
-        inputActiveHiLowArray[i] = (byte)atoi(tok);
+        inputActiveHiLowArray[i] = (bool)atoi(tok);
       }else{
-        outputActiveHiLowArray[i-6] = (byte)atoi(tok);
+        outputActiveHiLowArray[i-6] = (bool)atoi(tok);
       }
       tok = strtok(NULL, ",");
     }
@@ -1258,7 +1264,7 @@ char convert(char* readString, bool type){
     for (i = 0; i < 6; i++) {
       if (tok == NULL)
         break;
-      inputRetriggerDelayArray[i] = (unsigned long)atoi(tok);
+      inputRetriggerDelayArray[i] = strtoul(tok, NULL, 0);      //string to unsigned long
       tok = strtok(NULL, ",");
     }
     
@@ -1309,7 +1315,7 @@ char convert(char* readString, bool type){
     for (i = 0; i < MAXROWS; i++) {
       if (tok == NULL)
         break;
-      enableDisableArray[i] = (byte)atoi(tok);
+      enableDisableArray[i] = (bool)atoi(tok);
     
       newCurrentRowCount = i + 1;
 
@@ -1337,7 +1343,7 @@ char convert(char* readString, bool type){
     for (i = 0; i < currentRowCount; i++) {
       if (tok == NULL)
         break;
-      inputOnOffArray[i] = (byte)atoi(tok);
+      inputOnOffArray[i] = (bool)atoi(tok);
       tok = strtok(NULL, ",");
     }
     // delayArray
@@ -1345,7 +1351,7 @@ char convert(char* readString, bool type){
     for (i = 0; i < currentRowCount; i++) {
       if (tok == NULL)
         break;
-      delayArray[i] = (unsigned int)atoi(tok);
+      delayArray[i] = strtoul(tok, NULL, 0);      //string to unsigned long
       tok = strtok(NULL, ",");
     }
     // outputArray
@@ -1377,7 +1383,7 @@ char convert(char* readString, bool type){
     for (i = 0; i < currentRowCount; i++) {
       if (tok == NULL)
         break;
-      durationArray[i] = (unsigned int)atoi(tok);
+      durationArray[i] = strtoul(tok, NULL, 0);      //string to unsigned long
       tok = strtok(NULL, ",");
     }
     
