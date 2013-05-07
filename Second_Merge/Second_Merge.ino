@@ -15,12 +15,12 @@
 // #define DEBUG_PUT_HANDLER true        //prints file upload details to serial
 // #define DEBUG_OUTPUTS true            //prints outputSelect details to serial
 // #define DEBUG_INPUTS true             //prints input details to serial
-#define DEBUG_TRIGGERS true           //prints trigger details to serial
+// #define DEBUG_TRIGGERS true           //prints trigger details to serial
 // #define DEBUG_BRIDGE true             //prints bridge details to serial
 // #define DEBUG_MANUAL true             //prints manual mode details to serial
 // #define DEBUG_BOUNJOUR_NAME true      //details regarding custom bonjour naming
 // #define DEBUG_IP_ADDRESS  true        //details about static IP address
-// #define DEBUG_DECIPHER_INPUT_SENSOR true  //details about the inner workings of the decipherIntputSensor() function
+#define DEBUG_DECIPHER_INPUT_SENSOR true  //details about the inner workings of the decipherIntputSensor() function
 
 #define MAXROWS 20                  //Maximum # of rows
 #define MINROWS 1                   //minimum # of rows
@@ -28,7 +28,7 @@
 #define MAX_BONJOUR_NAME_LENGTH 16  //maximum length of bonjour name
 #define MAX_FILE_LENGTH 400         //maximum length of program/settings file (major impact on memory)
 
-//"Program" arrays
+//"Program" arrays. Note these arrays are not limited by the 6 IO pins, but the number of rows
 bool enableDisableArray[MAXROWS] = {1,1,1,1,1,1};       //if a row is enabled or disabled
 byte inputArray[MAXROWS] =       {1, 2, 3, 4, 5, 6};    //which input (0-6) is selected (0 = none, 1 = input #1, 2 = input #2, ...)
 bool inputOnOffArray[MAXROWS] =  {1, 1, 1, 1, 1, 1};    //when input is on/off
@@ -39,29 +39,28 @@ byte durationTypeArray[MAXROWS] = {0,1,2,0,1,2};        //The type of duration (
 unsigned long durationArray[MAXROWS] = {1000, 6000, 6000, 6000, 6000, 6000};  //actual effect duration in milliseconds
 FLASH_STRING(default_program, "1,1;1,2;1,1;0,0;1,2;1,1;2,2;1000,1000;");
 
-//"Settings" arrays
-byte inputActiveHiLowArray[] =  {1, 1, 1, 1, 1, 1};                     //What signal level is considered "on" for each input (1 = High, 0 = Low)
-byte outputActiveHiLowArray[] = {1, 1, 1, 1, 1, 1};                     //Output considered on when High (1) or Low (0)
-int inputTriggerThresholdArray[] = {103,103,103,103,103,103};           //input trigger thresholds
-unsigned long inputRetriggerDelayArray[] = {100,100,100,100,100,100};   //retrigger time in milliseconds
+//"Settings" arrays. Note these arrays are limited to 6 physical IO pins
+byte inputActiveHiLowArray[6] =  {1, 1, 1, 1, 1, 1};                     //What signal level is considered "on" for each input (1 = High, 0 = Low)
+byte outputActiveHiLowArray[6] = {1, 1, 1, 1, 1, 1};                     //Output considered on when High (1) or Low (0)
+int inputTriggerThresholdArray[6] = {103,103,103,103,103,103};           //input trigger thresholds
+unsigned long inputRetriggerDelayArray[6] = {100,100,100,100,100,100};   //retrigger time in milliseconds
 FLASH_STRING(default_settings, "1,1,1,1,1,1,1,1,1,1,1,1;garage,my room,hall,cemetery,cornfield,swamp;UV,light,strobe,sound,air horn,zombie;103,103,103,103,103,103;100,100,100,100,100,100;");
 
 // Other arrays
-//---------intput & output indicator LEDs near screw terminals
 byte inputLEDArray [6] =  {39,32,33,34,35,36};   //Array of arduino pins that correspond to the LEDs that indicate an input is triggered
 byte outputLEDArray [6] = {47,46,45,44,43,42};   //Array of arduino pins that correspond to the LEDs that indicate an output is on
 
 // Misc variables
 char bonjourName[MAX_BONJOUR_NAME_LENGTH] = "hauntbox";     //default bonjour name if not set in bounjour.txt on SD card
-bool guiFlag = true;                  //GUI Flag tells us when there is a new program.txt/settings.txt from the GUI. Start as 1 to load the inital program/settings.
-int currentRowCount = 6;              //current number of rows (starts at 6 and modified by gui)
-int newCurrentRowCount = 0;           //used in the bridge to count what the new row count should be
-bool automaticMode = true;            //keeps track of auto/manual override mode
-bool networkServicesDisabled = false; //true if ethernet doesn't start due to IP issue or unplugged CAT5. Still runs state machine, and skips any web.process and bonjour stuff.
-bool outputState[6] = {0,0,0,0,0,0};  //array to hold on/off (1/0) state of every given output. Manipulated by any/multiple rules
-                                      //***only 6 outputs!!!
+bool guiFlag = true;                          //GUI Flag tells us when there is a new program.txt/settings.txt from the GUI. Start as 1 to load the inital program/settings.
+byte currentRowCount = 6;                     //current number of rows (starts at 6 and modified by gui)
+byte newCurrentRowCount = 0;                  //used in the bridge to count what the new row count should be
+bool automaticMode = true;                    //keeps track of auto/manual override mode
+bool networkServicesDisabled = false;         //true if ethernet doesn't start due to IP issue or unplugged CAT5. Still runs state machine, and skips any web.process and bonjour stuff.
+bool outputState[6] = {0,0,0,0,0,0};          //array to hold on/off (1/0) state of every given output. Manipulated by any/multiple rules
+                                              //***only 6 outputs!!!
 int stateRow[MAXROWS];                        //array that defines each row's state. Gets initialized in initializeFunction called from main function
-int trigState[6];                             //gets initialized immediately before it is used
+bool trigState[MAXROWS];                      //gets initialized immediately before it is used
 unsigned long delayTimeStamp[MAXROWS];        //gets initialized immediately before it is used
 unsigned long timeStampDurationRow[MAXROWS];  //gets initialized immediately before it is used
 unsigned long nowTime;                        //used to keep track of now.
@@ -754,7 +753,7 @@ void setup() {
 
 //----- AA1b -- Initialize Output Function -----
 // Function that initializes the outputs states to "off"
-void initializeFunctionHighLow() {
+void initializeOutputs() {
   for(int i = 1; i <= 6; i++) {
     outputState[i-1] = 0;     //start with all pins off.
     actuallyChangeOutput(i, outputState[i-1]);  //set output according to outputState[] map
@@ -910,7 +909,7 @@ void loop(){
   //----- Section AA9 ----- See if program or settings have changed
   if(guiFlag == 1) {                  // If there are new program/settings ...
     loadProgramAndSettings();         // load the new program/settings from the GUI
-    initializeFunctionHighLow();      // re-initialize the outputs according to the new program/settings
+    initializeOutputs();      // re-initialize the outputs according to the new program/settings
     guiFlag = 0;                      // reset guiFlag
   }
   
@@ -921,46 +920,50 @@ void loop(){
       Serial << prefixDEBUG_STATES << F("") << millis() << F("\n");
     #endif
     if(enableDisableArray[z] == 1) {   //only run the state machine for a row that's enabled
-      if(stateRow[z] == 1) {                   //STATE 1 = Waiting for a trigger
-        trigState[z] = inputTakeAction(z); //Call function and pass(Row number) to see if input is triggered
-        if(trigState[z] == 1 && automaticMode == true) {   //If triggered AND in automaticMode
+      if(stateRow[z] == 1) {                              //STATE 1 = Waiting for a trigger
+        trigState[z] = inputTakeAction(z);                //Call function and pass(Row number) to see if input is triggered
+        if(trigState[z] == 1 && automaticMode == true) {  //If triggered AND in automaticMode
 
           //loop through each row to see if it is controlled by the triggered input
           for (int i=0; i < currentRowCount; i++){
-            if (inputArray[i] == inputArray[z]){      //if the row is controlld by the input
-              trigState[i] = 1;                   //set trigState as triggered
-              stateRow[i] = 2;                    //advance to next state
+            if (inputArray[i] == inputArray[z]){      //if the row is controlled by the currently triggered input
+              trigState[i] = 1;                       //set trigState as triggered
+              stateRow[i] = 2;                        //advance to next state
             }
           }
 
           stateRow[z] = 2;                     //Moves to next state
-        }else{//if(trigState[z] == 0) {               //If not triggered (or not in automaticMode)
+        }else{//if(trigState[z] == 0) {        //If not triggered (or not in automaticMode)
           //Do nothing
         }
-      }else if(stateRow[z] == 2) {             //STATE 2 = Trigger message just received
-        delayTimeStamp[z] = millis();      //Gets time stamp
+
+      }else if(stateRow[z] == 2) {              //STATE 2 = Trigger message just received
+        delayTimeStamp[z] = millis();           //Gets time stamp
         
         #ifdef DEBUG_TRIGGERS
           Serial << F("DEBUG_TRIGGERS: Trigger Row ") << z+1 << F(": ") << delayTimeStamp[z] << F("\n");     // z+1 is the row number starting from 1 for the user, not starting from 0 for the array
         #endif
-        stateRow[z] = 3;                      //Moves on to next state
-      }else if(stateRow[z] == 3) {             //STATE 3 = Delay vs. timeStamp
+        stateRow[z] = 3;                        //Moves on to next state
+
+      }else if(stateRow[z] == 3) {              //STATE 3 = Delay vs. timeStamp
         nowTime = millis();
         netTime = nowTime - delayTimeStamp[z];
         if(netTime >= delayArray[z]) {   //Tests to see if time > delay
           stateRow[z] = 4;                    //If we've met our delay, go to next state
         }
+
       }else if(stateRow[z] == 4) {             //STATE 4 = Change output (make it on/off/toggle)
-        if (outputOnOffToggleArray[z] == 0){      // if it should be off
-          outputState[outputArray[z]-1] = 0;                     // turn it off
-        }else if(outputOnOffToggleArray[z] == 1){ // if it should be on
-          outputState[outputArray[z]-1] = 1;                     // turn it on
-        }else if(outputOnOffToggleArray[z] == 2){ // if it should toggle
-          outputState[outputArray[z]-1] = !outputState[outputArray[z]-1];       // flip the bit
+        if (outputOnOffToggleArray[z] == 0){                              // if it should be off
+          outputState[outputArray[z]-1] = 0;                                // turn it off
+        }else if(outputOnOffToggleArray[z] == 1){                         // if it should be on
+          outputState[outputArray[z]-1] = 1;                                // turn it on
+        }else if(outputOnOffToggleArray[z] == 2){                         // if it should toggle
+          outputState[outputArray[z]-1] = !outputState[outputArray[z]-1];   // toggle = flip the bit
         }
         outputSelectFunction(z, outputState[outputArray[z]-1]);  // enact the change
         timeStampDurationRow[z] = millis();       // Get timestamp
         stateRow[z] = 5;                          // Moves on to next state
+
       }else if(stateRow[z] == 5) {             //STATE 5 = Duration of output "on"
         #ifdef DEBUG_STATES
           printState(z);
@@ -968,25 +971,22 @@ void loop(){
 
         //switch for 3 different duration types
         if (durationTypeArray[z] == 0) {        //"until further notice"
-          stateRow[z] = 6;                      //move to next state (retrigger delay)
+          stateRow[z] = 6;                            //move to next state (retrigger delay)
         }else if(durationTypeArray[z] == 1) {   //"while input triggered"
-          trigState[z] = inputTakeAction(z); //Call function and pass(Row number) to see if input is triggered
-          if(trigState[z] == 0){                //trigger has stopped active
-            if (outputOnOffToggleArray[z] == 1) //if on, turn back off
-            {
+          trigState[z] = inputTakeAction(z);          //Call function and pass(Row number) to see if input is triggered
+          if(trigState[z] == 0){                      //trigger has stopped active
+            if (outputOnOffToggleArray[z] == 1) {     //if on, turn back off
               outputState[outputArray[z]-1] = 0;
               outputSelectFunction(z, 0);
-            }
-            else if(outputOnOffToggleArray[z] == 0){ //if off, turn back on
+            }else if(outputOnOffToggleArray[z] == 0){ //if off, turn back on
               outputState[outputArray[z]-1] = 1;
               outputSelectFunction(z, 1);
-            }
-            else if(outputOnOffToggleArray[z] == 2){  //if toggle
-              outputState[outputArray[z]-1] = !outputState[outputArray[z]-1];       //change the current state
+            }else if(outputOnOffToggleArray[z] == 2){ //if toggle
+              outputState[outputArray[z]-1] = !outputState[outputArray[z]-1];       //toggle: flip the bit
               outputSelectFunction(z, outputState[outputArray[z]-1]);
             }
             
-            stateRow[z] = 6;                          //move to next state (retrigger delay)
+            stateRow[z] = 6;                          //move to next state
           }
         }else if (durationTypeArray[z] == 2) {  //"for...seconds"
           nowTime = millis();
@@ -1006,6 +1006,7 @@ void loop(){
             stateRow[z] = 6;    //move to next state (retrigger delay)
           }
         }
+
       }else if(stateRow[z] == 6) {             //STATE 6 = retrigger delay holding state (kind of like a lobby)
         #ifdef DEBUG_STATES
           printState(z);
@@ -1030,6 +1031,7 @@ void loop(){
   for(int j=0;j<=5;j++){                    //loop through each input
     if(decipherInputSensor(j+1) == 1){      //if input is (on). Shift +1 to account for inputArray[0] = no input
       digitalWrite(inputLEDArray[j],HIGH);  //turn on LED
+
       #ifdef DEBUG_INPUTS
         Serial << F("DEBUG_INPUTS: input ") << tempInputLetterArray[j] << F(": actual/threshold: ") << analogRead(inputPinArray[j]) << F("/") << inputTriggerThresholdArray[j];
         Serial.println();
