@@ -16,7 +16,7 @@
 // #define DEBUG_OUTPUTS true            //prints outputSelect details to serial
 // #define DEBUG_INPUTS true             //prints input details to serial
 // #define DEBUG_TRIGGERS true           //prints trigger details to serial
-#define DEBUG_BRIDGE true             //prints bridge details to serial
+// #define DEBUG_BRIDGE true             //prints bridge details to serial
 // #define DEBUG_MANUAL true             //prints manual mode details to serial
 // #define DEBUG_BOUNJOUR_NAME true      //details regarding custom bonjour naming
 // #define DEBUG_IP_ADDRESS  true        //details about static IP address
@@ -103,7 +103,6 @@ const int ETHER_CS = 10;                      // pin 10 is the SPI select pin fo
 byte ip[] = { 192, 168, 0, 100 };             // Static fallback IP if not set in ip.txt on SD card
 byte mac[] = { 222, 173, 190, 239, 254, 238}; // static fallback MAC address if not set in uniqueID.txt on SD card
 
-//char* html_browser_header = "HTTP/1.0 200 OK\nContent-Type: text/html\n";  //2 line header including mandatory blank line to signify data below
 FLASH_STRING(html_browser_header, "HTTP/1.0 200 OK\nContent-Type: text/html\n");  //2 line header including mandatory blank line to signify data below
 // Store frequently used strings in eprom flash to save on ram.
 FLASH_STRING(prefixSTATUS, "STATUS: ");
@@ -130,9 +129,7 @@ TinyWebServer::PathHandler handlers[] = {
   // {"/", TinyWebServer::GET, &index_handler },
   {"/", TinyWebServer::GET, &index_handler },
   {"/ram", TinyWebServer::GET, &ram_handler },
-  // {"/row_status", TinyWebServer::GET, &row_status_handler },
   {"/status", TinyWebServer::GET, &status_handler },
-  // {"/output_status", TinyWebServer::GET, &output_status_handler },
   {"/program", TinyWebServer::GET, &program_handler },
   {"/settings", TinyWebServer::GET, &settings_handler },
   {"/manual", TinyWebServer::POST, &manual_handler },
@@ -169,14 +166,16 @@ void send_file_name(TinyWebServer& web_server, const char* filename) {
     web_server << F("Could not parse URL");
   } else {
     TinyWebServer::MimeType mime_type = TinyWebServer::get_mime_type_from_filename(filename);
-    web_server.send_error_code(200);
-    web_server.send_content_type(mime_type);
-    web_server.end_headers();
     if (file.open(&root, filename, O_READ)) {
+      web_server.send_error_code(200);
+      web_server.send_content_type(mime_type);
+      web_server.end_headers();
+
       Serial << F("Read file "); Serial.println(filename);
       web_server.send_file(file);
       file.close();
     } else {
+      web_server.send_error_code(404);
       web_server << F("Could not find file: ") << filename << "\n";
     }
   }
@@ -427,23 +426,6 @@ boolean all_on_handler(TinyWebServer& web_server) {   //turns all outputs on
 }
 
 
-// -------------------- row status handler -------------------- 
-// boolean row_status_handler(TinyWebServer& web_server) {   //returns stateRow[]
-//   web_server.send_error_code(200);
-//   web_server.send_content_type("text/plain");
-//   web_server.end_headers();
-  
-//   Client& client = web_server.get_client();
-//   for (int i = 0; i < currentRowCount; i++){
-//     client.print(stateRow[i], DEC);
-//     if(i < (currentRowCount - 1)){
-//       client.print(",");
-//     }
-//   }
-//   return true;
-// }
-
-
 // -------------------- status handler -------------------- 
 boolean status_handler(TinyWebServer& web_server) {   //returns trigState[];stateRow[];outputState[];
   web_server.send_error_code(200);
@@ -474,22 +456,6 @@ boolean status_handler(TinyWebServer& web_server) {   //returns trigState[];stat
   client.print(";");
   return true;
 }
-
-
-// -------------------- output status handler -------------------- 
-// boolean output_status_handler(TinyWebServer& web_server) {  //returns outputState[]
-//   web_server.send_error_code(200);
-//   web_server.send_content_type("text/plain");
-//   web_server.end_headers();
-//   Client& client = web_server.get_client();  
-//   for (int i = 0; i < 6; i++){
-//     client.print(outputState[i], DEC);
-//     if (i < 5){
-//       client.print(",");
-//     }
-//   }
-//   return true;
-// }
 
 
 // -------------------- file uploader -------------------- 
@@ -659,8 +625,8 @@ void setup() {
       for (vb = 0; vb < 6; vb++)
         Serial << mac[vb] << ' ';
       Serial << F("!\n");
-    }else{      //use default mac address specified above.    
-      Serial << F("No uniqueID.txt file. Using default MAC address.\n");
+    }else{      //use default mac address specified above.
+      statusMessage(11);
     }// end if uniqueID.txt exists
   	
     //----------------------------------- load bonjour.txt -----------------------------------
@@ -727,7 +693,7 @@ void setup() {
       disableNetworkServices();       // disable any network services like web.process and bonjour
     }
 
-    Serial << F("****** Warning: SD not working. Check card, formatting and reset.\n");
+    statusMessage(12);
     LEDFlasher(10,200,200);  //visually alert user that something is awry by flashing all LEDs
   }//end if has filesystem
   
@@ -818,13 +784,20 @@ bool inputTakeAction(byte rowNumber) {
 }
 
 //  Function to write messages to gui            CURRENTLY WRITTEN FOR SERIAL, NOT GUI!
-void statusMessage(int n) {
+void statusMessage(byte n) {
   if (n==1) {Serial << prefixSTATUS << F("Definitions don't make sense\n");}
   if (n==2) {Serial << prefixSTATUS << F("No SD Card anymore\n");}
   if (n==3) {Serial << prefixSTATUS << F("Problem opening file on SD card\n");}
   if (n==4) {Serial << prefixSTATUS << F("Corrupted SD file -Read/Write fail\n");}
   if (n==5) {Serial << prefixSTATUS << F("Successfully updated programming\n");}
   if (n==6) {Serial << prefixSTATUS << F("Finished writing to .txt file\n");}
+  if (n==7) {Serial << prefixSTATUS << F("Default settings used.\n");}
+  if (n==8) {Serial << prefixSTATUS << F("Default program used.\n");}
+  if (n==9) {Serial << prefixSTATUS << F("Error creating new default file. Check SD and reset.\n");}
+  if (n==10) {Serial << prefixSTATUS << F("Ethernet failed. Check network connections and reset Hauntbox. Proceeding without network services.\n");}
+  if (n==11) {Serial << prefixSTATUS << F("No uniqueID.txt file. Using default MAC address.\n");}
+  if (n==11) {Serial << prefixSTATUS << F("****** Warning: SD not working. Check card, formatting and reset.\n");}
+
 }
 
 
@@ -911,10 +884,10 @@ void actuallyChangeOutput(byte outputNumber, bool action) {    // takes an outpu
 //-------------------- Main Function ------------------------
 void loop(){  
   //----- Section AA9 ----- See if program or settings have changed
-  if(guiFlag == 1) {                  // If there are new program/settings ...
-    loadProgramAndSettings();         // load the new program/settings from the GUI
-    initializeOutputs();      // re-initialize the outputs according to the new program/settings
-    guiFlag = 0;                      // reset guiFlag
+  if(guiFlag == 1) {            // If there are new program/settings. Or upon first boot.
+    loadProgramAndSettings();   // load the new program/settings from the GUI
+    initializeOutputs();        // initialize the outputs according to the new program/settings
+    guiFlag = 0;                // reset guiFlag
   }
   
 
@@ -1086,9 +1059,6 @@ void loadProgramAndSettings() {
     #endif
   } else {  // if we've gotten here we need to remove, then create & populate a new settings.txt file
     createDefaultFile("program.txt");
-    #ifdef DEBUG_BRIDGE
-      Serial << prefixDEBUG_BRIDGE << F("Default program used.\n");
-    #endif
   }
 
   newvar = 0;                               //erase the newvar
@@ -1104,9 +1074,6 @@ void loadProgramAndSettings() {
     #endif
   } else {  // if we've gotten here we need to remove, then create & populate a new settings.txt file
     createDefaultFile("settings.txt");
-    #ifdef DEBUG_BRIDGE
-      Serial << prefixDEBUG_BRIDGE << F("Default settings used.\n");
-    #endif
   }
 
   statusMessage(5);  //GUI message #5 Sends GUI confirmation message
@@ -1182,8 +1149,9 @@ char* open_file(char* input_file){
     file.close();                      //close the file
     return storage;                    //return the read bytes
   }else{                              //no file
-    Serial << F("No file: ") << input_file;
-    Serial.println("");
+    statusMessage(3);
+    // Serial << F("No file: ") << input_file;
+    // Serial.println("");
     return fail;                      //return w/ fail
   }
 }//end open_file
@@ -1458,7 +1426,7 @@ void LEDFlasher (int flashes, int timeOn, int timeOff){    //used to flash all i
   }//flashing loop
 }//end LEDFlasher function
 
-// 
+
 void directionalLEDFlasher (int tempOnOff, int cycles, int timeOn, int timeOff){    //used to flash all input/output LEDs as a warning something is awry
   for (int i=0;i<cycles;i++){
     if (tempOnOff == 1){                    //if on
@@ -1484,10 +1452,11 @@ void printState(int row){
 
 void disableNetworkServices(){    //disables network services (bonjour, web.process, etc)
   networkServicesDisabled = true;
-  Serial << F("Ethernet failed. Check network connections and reset Hauntbox. Proceeding without network services.\n");
+  statusMessage(10);
 }
 
 void createDefaultFile(char* tempFileName){ //creates a new program/settings.txt file based on defaults
+  byte tempStatus = 0;
   File myFile;
   bool tempConvertType;
   SD.remove(tempFileName);            // just in case, delete the file to prevent bad data
@@ -1496,17 +1465,20 @@ void createDefaultFile(char* tempFileName){ //creates a new program/settings.txt
   if (myFile) {                   // if the file opened okay, write to it:
     Serial << F("Creating new ") << tempFileName << F(" file.\n");
     if (tempFileName == "settings.txt") {
-      tempConvertType = 0;
       myFile << default_settings;
+      tempConvertType = 0;
+      tempStatus = 7;
     }
     if (tempFileName == "program.txt") {
       myFile << default_program;
       tempConvertType = 1;
+      tempStatus = 8;
     }
     myFile.close();             // close the file:
   } else {         // if the file didn't open, print an error:
-    Serial << F("Error creating new ") << tempFileName << F(" file.\n");
+    statusMessage(9);
   }
 
   convert(open_file(tempFileName),tempConvertType);
+  statusMessage(tempStatus);
 }
