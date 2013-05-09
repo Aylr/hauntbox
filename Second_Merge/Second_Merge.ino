@@ -20,7 +20,7 @@
 // #define DEBUG_MANUAL true             //prints manual mode details to serial
 // #define DEBUG_BOUNJOUR_NAME true      //details regarding custom bonjour naming
 // #define DEBUG_IP_ADDRESS  true        //details about static IP address
-// #define DEBUG_DECIPHER_INPUT_SENSOR true  //details about the inner workings of the decipherIntputSensor() function
+#define DEBUG_DECIPHER_INPUT_SENSOR true  //details about the inner workings of the decipherIntputSensor() function
 
 #define MAXROWS 20                            //Maximum # of rows. Please adjust MAX_FILE_LENGTH up accordingly
 #define MINROWS 1                             //minimum # of rows
@@ -30,7 +30,7 @@
                                               //should be at least 34 x MAXROWS, as that is the largest input.
                                               // longest valid program string: 34*MAXROWS characters
                                               // longest valid settings string: 318 characters
-
+#define HYSTERESIS_BUFFER_PERCENT 10.0        // percent buffer to add/subtrack to the trigger  low ---|--- buffer --|---- high
 
 //"Program" arrays. Note these arrays are not limited by the 6 IO pins, but the number of rows
 bool enableDisableArray[MAXROWS] = {1,1,1,1,1,1};       //if a row is enabled or disabled
@@ -737,11 +737,12 @@ bool decipherInputSensor(byte x) {
   // It is very important to note that this takes an input # from 1-6 and
   // NOT 0-5. In this firmware an input = 0 is considered not active, or NO input.
   // This is why you see some of the indexes shifted + or - 1.
-  bool trig = false;  //returns 1 if input is considered triggered, 0 if not
+  bool trig = false;                      //returns 1 if input is considered triggered, 0 if not
   int val;
   int y;
+  float thresholdWithBuffer;
 
-  if(x == 0) {return 0;} //Do nothing for "N/A" case and break out of function
+  if(x == 0 || x > 6) {return 0;}         //Do nothing for "N/A" case and break out of function
   if(x == 1) {val = analogRead(pinIn1);}
   if(x == 2) {val = analogRead(pinIn2);}
   if(x == 3) {val = analogRead(pinIn3);}
@@ -749,16 +750,20 @@ bool decipherInputSensor(byte x) {
   if(x == 5) {val = analogRead(pinIn5);}
   if(x == 6) {val = analogRead(pinIn6);}
 
-  y = inputActiveHiLowArray[x-1];  // Returns Acvive High/Low definition for corresponding input
+  y = inputActiveHiLowArray[x-1];         // Returns Acvive High/Low definition for corresponding input
       // x-1 because in the inputArray we are using 0 as "none"
       // whereas in inputActiveHiLowArray & inputTriggerThresholdArray we are not
-  if((y == 1) && (val >= inputTriggerThresholdArray[x-1])) {trig = 1;}    // if high and supposed to be, consider input "triggered"
-  if((y == 0) && (val >= inputTriggerThresholdArray[x-1])) {trig = 0;}    // if low and supposed to be high, don't
-  if((y == 1) && (val <  inputTriggerThresholdArray[x-1])) {trig = 0;}
-  if((y == 0) && (val <  inputTriggerThresholdArray[x-1])) {trig = 1;}    // if low and supposed to be, consider input "triggered"
+  if (y == 1) thresholdWithBuffer = (float)inputTriggerThresholdArray[x-1] * ((100.0 + HYSTERESIS_BUFFER_PERCENT) / 100.0);     //do a little maths to add a hysteresis buffer
+  if (y == 0) thresholdWithBuffer = (float)inputTriggerThresholdArray[x-1] * ((100.0 - HYSTERESIS_BUFFER_PERCENT) / 100.0);
+
+
+  if((y == 1) && (val >= thresholdWithBuffer)) {trig = 1;}    // if high and supposed to be, consider input "triggered"
+  if((y == 0) && (val >= thresholdWithBuffer)) {trig = 0;}    // if low and supposed to be high, don't
+  if((y == 1) && (val <  thresholdWithBuffer)) {trig = 0;}
+  if((y == 0) && (val <  thresholdWithBuffer)) {trig = 1;}    // if low and supposed to be, consider input "triggered"
 
   #ifdef DEBUG_DECIPHER_INPUT_SENSOR
-    Serial << "DEBUG_DECIPHER_INPUT_SENSOR: x=" << x << " val=" << val << " inputTriggerThresholdArray[x-1]=" << inputTriggerThresholdArray[x-1] << " trig=" << trig << "\n";
+    if (trig == 1)  Serial << "DEBUG_DECIPHER_INPUT_SENSOR: x=" << x << " val=" << val << " inputTriggerThresholdArray[x-1]=" << inputTriggerThresholdArray[x-1] <<  " thresholdWithBuffer=" << thresholdWithBuffer << " trig=" << trig << "\n";
   #endif
 
   return trig;
