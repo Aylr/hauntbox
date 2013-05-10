@@ -894,13 +894,13 @@ $(function(){//shortcut for doc.ready
 		}
 	}
 
-	function input_up(current){								//this increments the current value up to 999
+	function input_up(current){								//this increments the current value up to unsigned long value of 4294967.0
 		//console.log("input_up " + current);
 		var newval;
-		if(current < 999){									//if less than 999
+		if(current < 4294967.0){									//if less than 999
 			newval = current + 1;							//add 1
 		}else{
-			newval = 999;									//if at 999, leave at 999
+			newval = 4294967.0;									//if at 999, leave at 999
 			stop_auto();									//stop auto timer, we're at zero
 			//flash limit message here if you want				
 		};
@@ -914,8 +914,9 @@ $(function(){//shortcut for doc.ready
 			newval = 0;										//set to zero
 			stop_auto();									//stop auto timer, we're at zero
 			//flash limit message here if you want
-		}else{												//if positive
-			newval = current - 1;							//subtract 1
+		}else{
+			var tempCurrent = sanitize(current - 1);								
+			newval = tempCurrent >= 0 ? tempCurrent : 0;	//subtract 1 only if tempCurrent is greater than 0 (we don't want negative numbers)
 		};
 		return newval;
 	};//end input_limits
@@ -970,7 +971,7 @@ $(function(){//shortcut for doc.ready
 					if ($(selector).attr("type") != "radio") {
 						//if the selector is a time field, convert data from milliseconds back to seconds
 						if (selector == "input.wait_time" || selector == "input.output_duration" || selector == "div.settings input.retrigger"){
-							$(this).val(array[i]/1000);
+							$(this).val(sanitize(array[i]/1000));
 						}else{
 							$(this).val(array[i]);			//set the value of normal fields (not radios or time fields)
 						}
@@ -1111,7 +1112,7 @@ $(function(){//shortcut for doc.ready
 				type = "alert-error";
 				break;
 		}//end case
-		
+
 		var alert = $("div.alert");
 		alert.hide();
 		alert.attr("class","alert " + type).children("h4").html(header).next().html(message);
@@ -1129,7 +1130,10 @@ $(function(){//shortcut for doc.ready
 			console.log("ERROR: num = " + num + "  	parseFloat(num) = " + sanitizedNum + "   ==> NaN");
 			return "0";								//If the user entered garbage return 0
 		}else{
-			return sanitizedNum;					//Return the clean value
+			if (sanitizedNum > 4294967.0) {
+				sanitizedNum = 4294967.0;
+			}
+			return Math.round(sanitizedNum * 10) / 10; //Return the clean value, rounded to 1 decimal
 		};
 	};//end sanitize()
 	
@@ -1255,7 +1259,7 @@ $(function(){//shortcut for doc.ready
 								<span class="up">+</span>
 								<span class="down">-</span>
 							</div>
-							<input type="text" class="retrigger" maxlength="5" value="0" /> seconds before input retrigger.
+							<input type="text" class="retrigger" maxlength="9" value="0" /> seconds before input retrigger.
 						</div>
 				</div>
 				
@@ -1457,7 +1461,7 @@ $(function(){//shortcut for doc.ready
 						<span class="up">+</span>
 						<span class="down">-</span>
 					</div>
-					<input type="text" class="wait_time" name="wait_time" maxlength="5" value="0" disabled="disabled" />
+					<input type="text" class="wait_time" name="wait_time" maxlength="9" value="0" disabled="disabled" />
 					second(s) then turn
 				</span><span class="output">
 					<select class="output" name="output" disabled="disabled">
@@ -1485,7 +1489,7 @@ $(function(){//shortcut for doc.ready
 							<span class="up">+</span>
 							<span class="down">-</span>
 						</div>
-						<input type="text" class="output_duration" name="output_duration" maxlength="5" value="0" disabled="disabled" />
+						<input type="text" class="output_duration" name="output_duration" maxlength="9" value="0" disabled="disabled" />
 						second(s).
 					</div>
 				</span>
