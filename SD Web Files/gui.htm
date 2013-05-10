@@ -258,7 +258,7 @@ $(function(){//shortcut for doc.ready
 	$("div.alert").hide();					//hide the alerts
 	$("div.manual_mode_warning").hide();	//hide the manual mode warning
 	$("#display_container").children().hide();			//load with all "tabs" hidden
-	$(".inner_sentence").fadeTo(0,.5);
+	$(".inner_sentence").fadeTo(0,.3);
 	
 	for (i=1;i<initial_rows;i++){						//dynamically build the program rows
 		$("div.program .sentence").first().clone({deepWithDataAndEvents: true}).appendTo(".sentence_container");
@@ -972,9 +972,9 @@ $(function(){//shortcut for doc.ready
 					//if the selector is a CHECKBOX (used for the enable/disable checkbox in program)
 					if ($(selector).attr("type") == "checkbox"){
 						if (array[i] == 1){
-							$(this).attr("checked", true).val(1);
+							$(this).attr("checked", true).val(1).trigger("change");
 						}else{
-							$(this).attr("checked", false).val(0);
+							$(this).attr("checked", false).val(0).trigger("change");
 						}
 					}
 
@@ -1126,7 +1126,7 @@ $(function(){//shortcut for doc.ready
 		};
 	};//end sanitize()
 	
-	$("input[name='enable_disable']").click(function(){
+	$("input[name='enable_disable']").change(function(){
 		if($(this).attr("checked") == "checked"){
 			$(this).attr("checked", true).val(1).next().fadeTo(100,1).find("input, select").prop("disabled", false);
 		} else {
