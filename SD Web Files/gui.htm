@@ -741,12 +741,16 @@ $(function(){//shortcut for doc.ready
 		modal.children().first().children("h3").html(type + " saved");		//change the modal h3 header
 		modal.children().last().children("p").html(type + " saved");		//change the modal body
 		modal.modal('show');												//show the modal
+		reset_save_button();
 		timeout = setTimeout(function(){									//do stuff in... 2 seconds
-				$(".save_program").html("Save Program");	//reset the Save button
-				modal.modal('hide');										//hide the modal
-			},2000);														//2 seconds
+			modal.modal('hide');										//hide the modal
+		},2000);														//2 seconds
 	}
 	
+	function reset_save_button(){
+		$(".save_program").html("Save Program");							//reset the Save button
+	}
+
 	function set_active_nav(selector){	//this function acts like a tab manager
 	//setting the clicked one to active, showing & hiding the appropriate content
 	
@@ -817,6 +821,7 @@ $(function(){//shortcut for doc.ready
 				}
 			},
 			error: function(){		//keep unsaved_changes = true
+				reset_save_button();
 				//alert which file failed --> take action
 				status_message(7);
 			}
