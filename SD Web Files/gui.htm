@@ -191,6 +191,9 @@
 		height: 60px;
 		padding: 2px 0 0 0;
 	}
+	.inner_sentence {
+		opacity: 0.3;
+	}
 	span.input, span.output, span.duration, span.delay {
 		display: inline-block;
 		margin: 0 10px 0 0;
@@ -258,10 +261,9 @@ $(function(){//shortcut for doc.ready
 	$("div.alert").hide();					//hide the alerts
 	$("div.manual_mode_warning").hide();	//hide the manual mode warning
 	$("#display_container").children().hide();			//load with all "tabs" hidden
-	$(".inner_sentence").fadeTo(0,.3);
 	
 	for (i=1;i<initial_rows;i++){						//dynamically build the program rows
-		$("div.program .sentence").first().clone({deepWithDataAndEvents: true}).appendTo(".sentence_container");
+		$($("#program_row").html()).appendTo(".sentence_container");
 	}
 	for (i=1;i<6;i++){						//dynamically build the settings rows
 		//the settings rows are complicated by the radios that must be uniquely named
@@ -327,7 +329,7 @@ $(function(){//shortcut for doc.ready
 
 			if (count_rows() < current_rows_from_program){		//if there are less rows than there should be
 				while (count_rows() < current_rows_from_program) {	//add them
-					$("div.program .sentence").first().clone({deepWithDataAndEvents: true}).appendTo(".sentence_container");
+					$($("#program_row").html()).appendTo(".sentence_container");
 				}
 			}else if (count_rows() > current_rows_from_program){	//if there are more rows than there should be
 				while (count_rows() > current_rows_from_program) {	//remove them
@@ -1207,66 +1209,7 @@ $(function(){//shortcut for doc.ready
 					<h3 class="duration">Duration</h3>
 				</div>
 				<div class="sentence_container">
-					<div class="sentence">
-						<input type="checkbox" name="enable_disable">
-						<div class="inner_sentence">
-							<span class="input">
-								When
-								<select class="sensor" name="sensor" disabled="disabled">
-									<option value="0">-</option>
-									<option value="1">input A</option>
-									<option value="2">input B</option>
-									<option value="3">input C</option>
-									<option value="4">input D</option>
-									<option value="5">input E</option>
-									<option value="6">input F</option>
-								</select>
-								is
-								<select class="sensor_state" name="sensor_state" disabled="disabled">
-									<option value="1">on</option>
-									<option value="0">off</option>
-								</select>
-							</span><span class="delay">
-								Wait
-								<div class="wait">
-									<span class="up">+</span>
-									<span class="down">-</span>
-								</div>
-								<input type="text" class="wait_time" name="wait_time" maxlength="5" value="0" disabled="disabled" />
-								second(s) then turn
-							</span><span class="output">
-								<select class="output" name="output" disabled="disabled">
-									<option value="0">-</option>
-									<option value="1">output 1</option>
-									<option value="2">output 2</option>
-									<option value="3">output 3</option>
-									<option value="4">output 4</option>
-									<option value="5">output 5</option>
-									<option value="6">output 6</option>
-								</select>
-								<select class="output_state" name="output_state" disabled="disabled">
-									<option value="1">on</option>
-									<option value="0">off</option>
-									<option value="2">toggled</option>
-								</select>
-							</span><span class="duration">
-								<select class="duration_type" disabled="disabled">
-									<option value="0">until further notice.</option>
-									<option value="1">while input is triggered.</option>
-									<option value="2">for...</option>
-								</select>
-								<div class="duration_container">
-									<div class="duration">
-										<span class="up">+</span>
-										<span class="down">-</span>
-									</div>
-									<input type="text" class="output_duration" name="output_duration" maxlength="5" value="0" disabled="disabled" />
-									second(s).
-								</div>
-							</span>
-							<span class="row_status"></span>
-						</div>
-					</div>
+					<!-- Template for Program Rows -->
 				</div>
 				
 				<div class="button_container">
@@ -1483,5 +1426,67 @@ $(function(){//shortcut for doc.ready
 	<script src="bs_full.js" type="text/javascript" charset="utf-8"></script>
 	<script src="frmrstmn.js" type="text/javascript" charset="utf-8"></script>
 	<script src="alphnmin.js" type="text/javascript" charset="utf-8"></script>
+	<script type="text/template" id="program_row">
+		<div class="sentence">
+			<input type="checkbox" name="enable_disable">
+			<div class="inner_sentence">
+				<span class="input">
+					When
+					<select class="sensor" name="sensor" disabled="disabled">
+						<option value="0">-</option>
+						<option value="1">input A</option>
+						<option value="2">input B</option>
+						<option value="3">input C</option>
+						<option value="4">input D</option>
+						<option value="5">input E</option>
+						<option value="6">input F</option>
+					</select>
+					is
+					<select class="sensor_state" name="sensor_state" disabled="disabled">
+						<option value="1">on</option>
+						<option value="0">off</option>
+					</select>
+				</span><span class="delay">
+					Wait
+					<div class="wait">
+						<span class="up">+</span>
+						<span class="down">-</span>
+					</div>
+					<input type="text" class="wait_time" name="wait_time" maxlength="5" value="0" disabled="disabled" />
+					second(s) then turn
+				</span><span class="output">
+					<select class="output" name="output" disabled="disabled">
+						<option value="0">-</option>
+						<option value="1">output 1</option>
+						<option value="2">output 2</option>
+						<option value="3">output 3</option>
+						<option value="4">output 4</option>
+						<option value="5">output 5</option>
+						<option value="6">output 6</option>
+					</select>
+					<select class="output_state" name="output_state" disabled="disabled">
+						<option value="1">on</option>
+						<option value="0">off</option>
+						<option value="2">toggled</option>
+					</select>
+				</span><span class="duration">
+					<select class="duration_type" disabled="disabled">
+						<option value="0">until further notice.</option>
+						<option value="1">while input is triggered.</option>
+						<option value="2">for...</option>
+					</select>
+					<div class="duration_container">
+						<div class="duration">
+							<span class="up">+</span>
+							<span class="down">-</span>
+						</div>
+						<input type="text" class="output_duration" name="output_duration" maxlength="5" value="0" disabled="disabled" />
+						second(s).
+					</div>
+				</span>
+				<span class="row_status"></span>
+			</div>
+		</div>
+	</script>
 </body>
 </html>
