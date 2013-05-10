@@ -219,7 +219,7 @@ $(function(){//shortcut for doc.ready
 	
 	var initial_rows = 6;					//how many rows to start with
 	var current_rows_from_program = initial_rows
-	var max_rows = 12;						//maximum number of rows (based on arduino capability)
+	var max_rows = 20;						//maximum number of rows (based on arduino capability)
 	var min_rows = 1;						//minimum number of rows (based on usability)
 	var increment_on_hold_speed = 50;		//auto ++ing value every n milliseconds
 	var increment_hold_delay = 1000;		//the delay in milliseconds (timeout) before auto ++ing
@@ -1089,7 +1089,7 @@ $(function(){//shortcut for doc.ready
 			case 8:
 				//8 = Loading program/settings failed
 				header = "Loading program.txt or settings.txt failed";
-				message = "Please check that your SD card is functioning normally and reset power.";
+				message = "Please check that your SD card &amp; network are working then reset power.";
 				button1 = "button1";
 				button2 = "button2";
 				type = "alert-error";
