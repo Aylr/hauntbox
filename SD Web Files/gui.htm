@@ -418,25 +418,18 @@ $(function(){//shortcut for doc.ready
 		
 		function update_status_and_ram(data){
 			data = data.split(";");									//parse the incoming string on ";"
-			ram_status(data[data.length - 2]);						//update the free ram display (the 2nd to last element)
-			status_message(parseInt(data[data.length - 3]));		//update the status alert (the 3rd to last element)
+			ram_status(data[data.length - 3]);						//update the free ram display (the 2nd to last element)
+			status_message(parseInt(data[data.length - 4]));		//update the status alert (the 3rd to last element)
+			update_mode(parseInt(data[data.length - 2]));		//update the status alert (the 3rd to last element)
 		}
 	};//end load_settings()
 
 	function load_mode(){
 		$.ajax({						//get current mode (auto/manual) and update buttons, etc
-				url: '/mode',				// /mode returns a 0 (manual) or 1 (automatic)
+				url: '/mode',				// /mode returns a M0 (manual) or 1 (automatic)
 				type: 'GET',
 				success: function(data){
-					if (data == 1){		//automatic mode
-						$("div.manual_mode_warning").fadeOut();								//hide warning
-						automatic_mode = 1;
-						$("div.manual_override_mode button[value='1']").button('toggle');	//toggle radio button
-					}else{				//manual mode
-						$("div.manual_mode_warning").fadeIn();								//show warning
-						automatic_mode = 0;
-						$("div.manual_override_mode button[value='0']").button('toggle');	//toggle radio button
-					}
+					update_mode(data);
 				}
 			});
 	}//end load_mode()
@@ -460,7 +453,7 @@ $(function(){//shortcut for doc.ready
 
 	set_voltage_thresholds();			//setup the settings form with proper threshold values
 	load_settings();					//load the data and populate form
-	load_mode();						//load the mode (auto/manual) and display appropriate warnings
+	// load_mode();						//load the mode (auto/manual) and display appropriate warnings
 
 
 	//##################################### General navigation manager ##################################### 
@@ -1144,6 +1137,20 @@ $(function(){//shortcut for doc.ready
 			$(this).attr("checked", false).val(0).next().fadeTo(100,.3).find("input, select").prop("disabled", true);
 		}
 	});
+
+	function update_mode(data){
+		if (data[0] != "M" || data.length > 2) return;				//if the incoming data string does not start with "M", get out of the function. Data should look like "M0" or "M1"
+
+		if (data[1] == 1){		//automatic mode
+			$("div.manual_mode_warning").fadeOut();								//hide warning
+			automatic_mode = 1;
+			$("div.manual_override_mode button[value='1']").button('toggle');	//toggle radio button
+		}else if (data[1] == 0) {				//manual mode
+			$("div.manual_mode_warning").fadeIn();								//show warning
+			automatic_mode = 0;
+			$("div.manual_override_mode button[value='0']").button('toggle');	//toggle radio button
+		}
+	}
 
 	function count_rows(){		//counts rows in program page
 		var current_rows = $("div.program div.sentence_container").children().size();
