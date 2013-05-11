@@ -238,8 +238,8 @@ $(function(){//shortcut for doc.ready
 	var threshold_12V = 246;			//(12V / 5)*1024 = 246
 	var threshold_24V = 492;			//(24V / 5)*1024 = 492
 	
-	var default_program = "1,0,1,0,0,0;0,0,0,0,0,0;1,1,1,1,1,1;0,0,0,0,0,0;0,0,0,0,0,0;1,1,1,1,1,1;0,1,2,0,1,2;0,1,3,5,10,30;2;00";//"0,0,0;1,1,1;0,0,0;0,0,0;1,1,1;0,1,2;5,10,30;2;00";
-	var default_settings = "1,1,1,1,1,1,1,1,1,1,1,1;garage,my room,hall,cemetery,cornfield,swamp;UV,light,strobe,sound,air horn,zombie;" + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + ";1,1,1,1,1,1;2;00;"
+	var default_program = "1,1;1,2;1,1;0,0;1,2;1,1;2,2;1000,1000;";
+	var default_settings = "1,1,1,1,1,1,1,1,1,1,1,1;garage,my room,hall,cemetery,cornfield,swamp;UV,light,strobe,sound,air horn,zombie;" + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + "," + threshold_5V + ";100,100,100,100,100,100;";
 	var local_input_names = local_output_names = new Array();
 
 	//##################################### Mobile Detection #####################################
@@ -661,7 +661,7 @@ $(function(){//shortcut for doc.ready
 		e.preventDefault();
 	});
 
-	$("div.help a.factory_defaults").click(function(){
+	$("div.help .factory_defaults").click(function(){
 		factory_defaults();
 	});
 	
