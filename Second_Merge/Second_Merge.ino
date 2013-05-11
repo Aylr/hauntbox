@@ -208,10 +208,7 @@ boolean index_handler(TinyWebServer& web_server) {
 boolean program_handler(TinyWebServer& web_server){
   send_file_name(web_server, "program.txt");
   Client& client = web_server.get_client();
-  client.print("0;");    //send status code = 0
-  client.print(FreeRam());
-  client.print(";");
-  client.print("\n");
+  client << "0;" << FreeRam() << ";M" << (bool)automaticMode << ";\n";
   client.stop();
   return true; //exit the handler 
 }
@@ -220,10 +217,7 @@ boolean program_handler(TinyWebServer& web_server){
 boolean settings_handler(TinyWebServer& web_server){
   send_file_name(web_server, "settings.txt");
   Client& client = web_server.get_client();
-  client.print("0;");    //send status code = 0
-  client.print(FreeRam());
-  client.print(";");
-  client.print("\n");
+  client << "0;" << FreeRam() << ";M" << (bool)automaticMode << ";\n";
   client.stop();
   return true; //exit the handler 
 }
@@ -385,7 +379,8 @@ boolean mode_handler(TinyWebServer& web_server) {
   web_server.send_content_type("text/plain");
   web_server.end_headers();
   Client& client = web_server.get_client();
-  client.println((bool)automaticMode);
+  client << "M" << (bool)automaticMode << F("\n");
+  client.stop();
   return true;
 }
 
@@ -790,19 +785,18 @@ bool inputTakeAction(byte rowNumber) {
 
 //  Function to write messages to gui            CURRENTLY WRITTEN FOR SERIAL, NOT GUI!
 void statusMessage(byte n) {
-  if (n==1) {Serial << prefixSTATUS << F("Definitions don't make sense\n");}
-  if (n==2) {Serial << prefixSTATUS << F("No SD Card anymore\n");}
-  if (n==3) {Serial << prefixSTATUS << F("Problem opening file on SD card\n");}
-  if (n==4) {Serial << prefixSTATUS << F("Corrupted SD file -Read/Write fail\n");}
-  if (n==5) {Serial << prefixSTATUS << F("Successfully updated programming\n");}
-  if (n==6) {Serial << prefixSTATUS << F("Finished writing to .txt file\n");}
-  if (n==7) {Serial << prefixSTATUS << F("Default settings used.\n");}
-  if (n==8) {Serial << prefixSTATUS << F("Default program used.\n");}
-  if (n==9) {Serial << prefixSTATUS << F("Error creating new default file. Check SD and reset.\n");}
-  if (n==10) {Serial << prefixSTATUS << F("Ethernet failed. Check network connections and reset Hauntbox. Proceeding without network services.\n");}
-  if (n==11) {Serial << prefixSTATUS << F("No uniqueID.txt file. Using default MAC address.\n");}
-  if (n==11) {Serial << prefixSTATUS << F("****** Warning: SD not working. Check card, formatting and reset.\n");}
-
+  if (n==1) {Serial << prefixSTATUS << F("Definitions don't make sense\n"); return;}
+  if (n==2) {Serial << prefixSTATUS << F("No SD Card anymore\n"); return;}
+  if (n==3) {Serial << prefixSTATUS << F("Problem opening file on SD card\n"); return;}
+  if (n==4) {Serial << prefixSTATUS << F("Corrupted SD file -Read/Write fail\n"); return;}
+  if (n==5) {Serial << prefixSTATUS << F("Successfully updated programming\n"); return;}
+  if (n==6) {Serial << prefixSTATUS << F("Finished writing to .txt file\n"); return;}
+  if (n==7) {Serial << prefixSTATUS << F("Default settings used.\n"); return;}
+  if (n==8) {Serial << prefixSTATUS << F("Default program used.\n"); return;}
+  if (n==9) {Serial << prefixSTATUS << F("Error creating new default file. Check SD and reset.\n"); return;}
+  if (n==10) {Serial << prefixSTATUS << F("Ethernet failed. Check network connections and reset Hauntbox. Proceeding without network services.\n"); return;}
+  if (n==11) {Serial << prefixSTATUS << F("No uniqueID.txt file. Using default MAC address.\n"); return;}
+  if (n==11) {Serial << prefixSTATUS << F("****** Warning: SD not working. Check card, formatting and reset.\n"); return;}
 }
 
 
