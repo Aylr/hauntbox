@@ -90,7 +90,7 @@
 	div.settings input[type="text"] {
 		width: 8.5em;
 	}
-	div.alert{
+	div.alert, div.manual_mode_warning{
 		display:none;
 	}
 	input, div.settings input.retrigger { /*slim up the wide 999 second boxes */
@@ -420,7 +420,7 @@ $(function(){//shortcut for doc.ready
 			data = data.split(";");									//parse the incoming string on ";"
 			ram_status(data[data.length - 3]);						//update the free ram display (the 2nd to last element)
 			status_message(parseInt(data[data.length - 4]));		//update the status alert (the 3rd to last element)
-			update_mode(parseInt(data[data.length - 2]));		//update the status alert (the 3rd to last element)
+			update_mode(data[data.length - 2]);		//update the status alert (the 3rd to last element)
 		}
 	};//end load_settings()
 
@@ -528,9 +528,9 @@ $(function(){//shortcut for doc.ready
 					}
 				});//end ajax
 		}else if (chosen == "override"){	//"override" clicked
+			load_mode();					//load the mode and set buttons, warnings appropriately
 			set_override_output_names();	//set the io names
 			set_override_input_names();
-			load_mode();					//load the mode and set buttons, warnings appropriately
 		}
 
 		set_active_nav(next_page);
