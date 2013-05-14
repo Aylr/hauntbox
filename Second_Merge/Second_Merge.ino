@@ -20,7 +20,7 @@
 // #define DEBUG_MANUAL true             //prints manual mode details to serial
 // #define DEBUG_BOUNJOUR_NAME true      //details regarding custom bonjour naming
 // #define DEBUG_IP_ADDRESS  true        //details about static IP address
-#define DEBUG_DECIPHER_INPUT_SENSOR true  //details about the inner workings of the decipherIntputSensor() function
+// #define DEBUG_DECIPHER_INPUT_SENSOR true  //details about the inner workings of the decipherIntputSensor() function
 
 #define MAXROWS 20                            //Maximum # of rows. Please adjust MAX_FILE_LENGTH up accordingly
 #define MINROWS 1                             //minimum # of rows
@@ -53,6 +53,7 @@ FLASH_STRING(default_settings, "1,1,1,1,1,1,1,1,1,1,1,1;garage,my room,hall,ceme
 // Other arrays
 byte inputLEDArray [6] =  {39,32,33,34,35,36};   //Array of arduino pins that correspond to the LEDs that indicate an input is triggered
 byte outputLEDArray [6] = {47,46,45,44,43,42};   //Array of arduino pins that correspond to the LEDs that indicate an output is on
+byte outputLogicPinArray [6] = {23,24,25,26,27,28};   //Array of arduino pins that correspond to the logic triggers L1-L6
 
 // Misc variables
 char bonjourName[MAX_BONJOUR_NAME_LENGTH] = "hauntbox";     //default bonjour name if not set in bounjour.txt on SD card
@@ -113,7 +114,7 @@ FLASH_STRING(prefixDEBUG_MANUAL, "DEBUG_MANUAL: ");
 FLASH_STRING(prefixDEBUG_STATES, "DEBUG_STATES: ");
 FLASH_STRING(prefixDEBUG_OUTPUTS, "DEBUG_OUTPUTS: ");
 //below is the bare bones html for when there's no SD card
-FLASH_STRING(sd_fail_html,"<html><body><h1>SD Card Failed</h1><ol><li>Verify your SD card works</li><li>Remove and reseat it in SD slot in hauntbox</li><li>Reset hauntbox</li><li>Reload this page in 30 seconds</li></ol></body></html>");
+FLASH_STRING(sd_fail_html,"<html><body><h1>SD Card Failed</h1><ol><li>Verify your SD card works and has the right files on it.</li><li>Remove and reseat it in SD slot in hauntbox</li><li>Reset hauntbox.</li><li>Reload this page in 30 seconds</li></ol></body></html>");
 
 
 //--------------------------- Define Handlers ----------------------------
@@ -196,9 +197,13 @@ boolean index_handler(TinyWebServer& web_server) {
   if(has_filesystem){                             //if SD is working send main gui file
     send_file_name(web_server, "gui.htm");
   }else{                                          //if SD has failed, send an informative help page
+    web_server.send_error_code(200);
+    web_server.send_content_type("text/html");
+    web_server.end_headers();
     Client& client = web_server.get_client();
-    client << html_browser_header;
+
     client << sd_fail_html;                       //the actual SD fail html page is stored in eprom flash
+    client.stop();
   }
   return true;
 }
@@ -557,16 +562,18 @@ void setup() {
   digitalWrite(SD_CS, HIGH); 	// Turn off the SD card! (wait for configuration)
 
   //Set up arduino pins as outputs
-  pinMode(pinOut1, OUTPUT);
-  pinMode(pinOut2, OUTPUT);
-  pinMode(pinOut3, OUTPUT);
-  pinMode(pinOut4, OUTPUT);
-  pinMode(pinOut5, OUTPUT);
-  pinMode(pinOut6, OUTPUT);
+  // pinMode(pinOut1, OUTPUT);
+  // pinMode(pinOut2, OUTPUT);
+  // pinMode(pinOut3, OUTPUT);
+  // pinMode(pinOut4, OUTPUT);
+  // pinMode(pinOut5, OUTPUT);
+  // pinMode(pinOut6, OUTPUT);
 
   for (int i = 0;i <=5;i++){  // loop through all inputLEDs & outputLEDS and set as outputs
-    pinMode(inputLEDArray[i], OUTPUT);  //set inputLED as output
-    pinMode(outputLEDArray[i], OUTPUT); //set outoutLED as output
+    pinMode(inputLEDArray[i], OUTPUT);        //set inputLED as output
+    pinMode(outputLEDArray[i], OUTPUT);       //set outoutLED as output
+    pinMode(outputLogicPinArray[i], OUTPUT);  //set output logic pins as output
+    pinMode(outputPinArray[i], OUTPUT);       //set output pins as output
   }
 
   directionalLEDFlasher(1,1,30,0);
@@ -878,149 +885,154 @@ void actuallyChangeOutput(byte outputNumber, bool action) {    // takes an outpu
 
   digitalWrite(outputPinArray[outputNumber-1],highOrLow);   // set the output HIGH or LOW (depending on what that means)
   digitalWrite(outputLEDArray[outputNumber-1],action);      // set the outputLED according to the action "on" or "off"
+  digitalWrite(outputLogicPinArray[outputNumber-1],action); // set the output logic pins (L1-L6) according to the action "on" or "off"
 }
 
 //-------------------- Main Function ------------------------
-void loop(){  
-  //----- Section AA9 ----- See if program or settings have changed
-  if(guiFlag == 1) {            // If there are new program/settings. Or upon first boot.
-    loadProgramAndSettings();   // load the new program/settings from the GUI
-    initializeOutputs();        // initialize the outputs according to the new program/settings
-    guiFlag = 0;                // reset guiFlag
-  }
-  
+void loop(){
+  if (has_filesystem){            //if there's a filesystem, load the program/settings and run the state machine
+              // there is no point in running the state machine if there is no SD card.
+    //----- Section AA9 ----- See if program or settings have changed
+    if(guiFlag == 1) {            // If there are new program/settings. Or upon first boot.
+      loadProgramAndSettings();   // load the new program/settings from the GUI
+      initializeOutputs();        // initialize the outputs according to the new program/settings
+      guiFlag = 0;                // reset guiFlag
+    }
+    
 
-  //----- Section AA4a ----- Main State Machine: Reading Inputs and Writing to Outputs -----
-  for(int z = 0; z < currentRowCount; z++) {              //runs loop for each row
-    #ifdef DEBUG_STATES
-      Serial << prefixDEBUG_STATES << F("") << millis() << F("\n");
-    #endif
-    if(enableDisableArray[z] == 1) {   //only run the state machine for a row that's enabled
-      if(stateRow[z] == 1) {                              //STATE 1 = Waiting for a trigger
-        trigState[z] = inputTakeAction(z);                //Call function and pass(Row number) to see if input is triggered
-        if(trigState[z] == 1 && automaticMode == true) {  //If triggered AND in automaticMode
+    //----- Section AA4a ----- Main State Machine: Reading Inputs and Writing to Outputs -----
+    for(int z = 0; z < currentRowCount; z++) {              //runs loop for each row
+      #ifdef DEBUG_STATES
+        Serial << prefixDEBUG_STATES << F("") << millis() << F("\n");
+      #endif
+      if(enableDisableArray[z] == 1) {   //only run the state machine for a row that's enabled
+        if(stateRow[z] == 1) {                              //STATE 1 = Waiting for a trigger
+          trigState[z] = inputTakeAction(z);                //Call function and pass(Row number) to see if input is triggered
+          if(trigState[z] == 1 && automaticMode == true) {  //If triggered AND in automaticMode
 
-          //loop through each row to see if it is controlled by the triggered input
-          for (int i=0; i < currentRowCount; i++){
-            if (inputArray[i] == inputArray[z]){      //if the row is controlled by the currently triggered input
-              trigState[i] = 1;                       //set trigState as triggered
-              stateRow[i] = 2;                        //advance to next state
+            //loop through each row to see if it is controlled by the triggered input
+            for (int i=0; i < currentRowCount; i++){
+              if (inputArray[i] == inputArray[z]){      //if the row is controlled by the currently triggered input
+                trigState[i] = 1;                       //set trigState as triggered
+                stateRow[i] = 2;                        //advance to next state
+              }
             }
+
+            stateRow[z] = 2;                     //Moves to next state
+          }else{//if(trigState[z] == 0) {        //If not triggered (or not in automaticMode)
+            //Do nothing
           }
 
-          stateRow[z] = 2;                     //Moves to next state
-        }else{//if(trigState[z] == 0) {        //If not triggered (or not in automaticMode)
-          //Do nothing
-        }
+        }else if(stateRow[z] == 2) {              //STATE 2 = Trigger message just received
+          delayTimeStamp[z] = millis();           //Gets time stamp
+          
+          #ifdef DEBUG_TRIGGERS
+            Serial << F("DEBUG_TRIGGERS: Trigger Row ") << z+1 << F(": ") << delayTimeStamp[z] << F("\n");     // z+1 is the row number starting from 1 for the user, not starting from 0 for the array
+          #endif
+          stateRow[z] = 3;                        //Moves on to next state
 
-      }else if(stateRow[z] == 2) {              //STATE 2 = Trigger message just received
-        delayTimeStamp[z] = millis();           //Gets time stamp
-        
-        #ifdef DEBUG_TRIGGERS
-          Serial << F("DEBUG_TRIGGERS: Trigger Row ") << z+1 << F(": ") << delayTimeStamp[z] << F("\n");     // z+1 is the row number starting from 1 for the user, not starting from 0 for the array
-        #endif
-        stateRow[z] = 3;                        //Moves on to next state
-
-      }else if(stateRow[z] == 3) {              //STATE 3 = Delay vs. timeStamp
-        nowTime = millis();
-        netTime = nowTime - delayTimeStamp[z];
-        if(netTime >= delayArray[z]) {   //Tests to see if time > delay
-          stateRow[z] = 4;                    //If we've met our delay, go to next state
-        }
-
-      }else if(stateRow[z] == 4) {             //STATE 4 = Change output (make it on/off/toggle)
-        if (outputOnOffToggleArray[z] == 0){                              // if it should be off
-          outputState[outputArray[z]-1] = 0;                                // turn it off
-        }else if(outputOnOffToggleArray[z] == 1){                         // if it should be on
-          outputState[outputArray[z]-1] = 1;                                // turn it on
-        }else if(outputOnOffToggleArray[z] == 2){                         // if it should toggle
-          outputState[outputArray[z]-1] = !outputState[outputArray[z]-1];   // toggle = flip the bit
-        }
-        outputSelectFunction(z, outputState[outputArray[z]-1]);  // enact the change
-        timeStampDurationRow[z] = millis();       // Get timestamp
-        stateRow[z] = 5;                          // Moves on to next state
-
-      }else if(stateRow[z] == 5) {             //STATE 5 = Duration of output "on"
-        #ifdef DEBUG_STATES
-          printState(z);
-        #endif
-
-        //switch for 3 different duration types
-        if (durationTypeArray[z] == 0) {        //"until further notice"
-          stateRow[z] = 6;                            //move to next state (retrigger delay)
-        }else if(durationTypeArray[z] == 1) {   //"while input triggered"
-          trigState[z] = inputTakeAction(z);          //Call function and pass(Row number) to see if input is triggered
-          if(trigState[z] == 0){                      //trigger has stopped active
-            if (outputOnOffToggleArray[z] == 1) {     //if on, turn back off
-              outputState[outputArray[z]-1] = 0;
-              outputSelectFunction(z, 0);
-            }else if(outputOnOffToggleArray[z] == 0){ //if off, turn back on
-              outputState[outputArray[z]-1] = 1;
-              outputSelectFunction(z, 1);
-            }else if(outputOnOffToggleArray[z] == 2){ //if toggle
-              outputState[outputArray[z]-1] = !outputState[outputArray[z]-1];       //toggle: flip the bit
-              outputSelectFunction(z, outputState[outputArray[z]-1]);
-            }
-            
-            stateRow[z] = 6;                          //move to next state
-          }
-        }else if (durationTypeArray[z] == 2) {  //"for...seconds"
+        }else if(stateRow[z] == 3) {              //STATE 3 = Delay vs. timeStamp
           nowTime = millis();
-          netTime = nowTime - timeStampDurationRow[z];
-          if(netTime >= durationArray[z]) {
-            if (outputOnOffToggleArray[z] == 1) {       //if on, turn back off
-              outputState[outputArray[z]-1] = 0;
-              outputSelectFunction(z, 0);
-            }else if(outputOnOffToggleArray[z] == 0){   //if off, turn back on
-              outputState[outputArray[z]-1] = 1;
-              outputSelectFunction(z, 1);
-            }else if(outputOnOffToggleArray[z] == 2){   //if toggle
-              outputState[outputArray[z]-1] = !outputState[outputArray[z]-1];         //change the current state
-              outputSelectFunction(z, outputState[outputArray[z]-1]);
-            }
-
-            stateRow[z] = 6;    //move to next state (retrigger delay)
+          netTime = nowTime - delayTimeStamp[z];
+          if(netTime >= delayArray[z]) {   //Tests to see if time > delay
+            stateRow[z] = 4;                    //If we've met our delay, go to next state
           }
-        }
 
-      }else if(stateRow[z] == 6) {             //STATE 6 = retrigger delay holding state (kind of like a lobby)
-        #ifdef DEBUG_STATES
-          printState(z);
-        #endif
+        }else if(stateRow[z] == 4) {             //STATE 4 = Change output (make it on/off/toggle)
+          if (outputOnOffToggleArray[z] == 0){                              // if it should be off
+            outputState[outputArray[z]-1] = 0;                                // turn it off
+          }else if(outputOnOffToggleArray[z] == 1){                         // if it should be on
+            outputState[outputArray[z]-1] = 1;                                // turn it on
+          }else if(outputOnOffToggleArray[z] == 2){                         // if it should toggle
+            outputState[outputArray[z]-1] = !outputState[outputArray[z]-1];   // toggle = flip the bit
+          }
+          outputSelectFunction(z, outputState[outputArray[z]-1]);  // enact the change
+          timeStampDurationRow[z] = millis();       // Get timestamp
+          stateRow[z] = 5;                          // Moves on to next state
 
-        tempRetriggerDelay = inputRetriggerDelayArray[(inputArray[z] - 1)];
-        nowTimeRetrigger = millis();
-        netTimeRetrigger = nowTimeRetrigger - delayTimeStamp[z];        // subtract now - original trigger time
-        if(netTimeRetrigger >= tempRetriggerDelay){                 // if you've met the retrigger time
-          stateRow[z] = 1;                    // Go back to the beginning!
+        }else if(stateRow[z] == 5) {             //STATE 5 = Duration of output "on"
+          #ifdef DEBUG_STATES
+            printState(z);
+          #endif
+
+          //switch for 3 different duration types
+          if (durationTypeArray[z] == 0) {        //"until further notice"
+            stateRow[z] = 6;                            //move to next state (retrigger delay)
+          }else if(durationTypeArray[z] == 1) {   //"while input triggered"
+            trigState[z] = inputTakeAction(z);          //Call function and pass(Row number) to see if input is triggered
+            if(trigState[z] == 0){                      //trigger has stopped active
+              if (outputOnOffToggleArray[z] == 1) {     //if on, turn back off
+                outputState[outputArray[z]-1] = 0;
+                outputSelectFunction(z, 0);
+              }else if(outputOnOffToggleArray[z] == 0){ //if off, turn back on
+                outputState[outputArray[z]-1] = 1;
+                outputSelectFunction(z, 1);
+              }else if(outputOnOffToggleArray[z] == 2){ //if toggle
+                outputState[outputArray[z]-1] = !outputState[outputArray[z]-1];       //toggle: flip the bit
+                outputSelectFunction(z, outputState[outputArray[z]-1]);
+              }
+              
+              stateRow[z] = 6;                          //move to next state
+            }
+          }else if (durationTypeArray[z] == 2) {  //"for...seconds"
+            nowTime = millis();
+            netTime = nowTime - timeStampDurationRow[z];
+            if(netTime >= durationArray[z]) {
+              if (outputOnOffToggleArray[z] == 1) {       //if on, turn back off
+                outputState[outputArray[z]-1] = 0;
+                outputSelectFunction(z, 0);
+              }else if(outputOnOffToggleArray[z] == 0){   //if off, turn back on
+                outputState[outputArray[z]-1] = 1;
+                outputSelectFunction(z, 1);
+              }else if(outputOnOffToggleArray[z] == 2){   //if toggle
+                outputState[outputArray[z]-1] = !outputState[outputArray[z]-1];         //change the current state
+                outputSelectFunction(z, outputState[outputArray[z]-1]);
+              }
+
+              stateRow[z] = 6;    //move to next state (retrigger delay)
+            }
+          }
+
+        }else if(stateRow[z] == 6) {             //STATE 6 = retrigger delay holding state (kind of like a lobby)
+          #ifdef DEBUG_STATES
+            printState(z);
+          #endif
+
+          tempRetriggerDelay = inputRetriggerDelayArray[(inputArray[z] - 1)];
+          nowTimeRetrigger = millis();
+          netTimeRetrigger = nowTimeRetrigger - delayTimeStamp[z];        // subtract now - original trigger time
+          if(netTimeRetrigger >= tempRetriggerDelay){                 // if you've met the retrigger time
+            stateRow[z] = 1;                    // Go back to the beginning!
+          }
+        }else {                                 //STATE = ??? if state is not 1-6, set to 1 (waiting)
+          stateRow[z] = 1;
         }
-      }else {                                 //STATE = ??? if state is not 1-6, set to 1 (waiting)
-        stateRow[z] = 1;
       }
     }
-  }
-    
-  //----- Section AA5 ----- Update the input status LEDs on shield -----
-  #ifdef DEBUG_INPUTS
-    char tempInputLetterArray[] = "ABCDEF";   //letter prefix for serial debugging
-  #endif
-  for(int j=0;j<=5;j++){                    //loop through each input
-    if(decipherInputSensor(j+1) == 1){      //if input is (on). Shift +1 to account for inputArray[0] = no input
-      digitalWrite(inputLEDArray[j],HIGH);  //turn on LED
+      
+    //----- Section AA5 ----- Update the input status LEDs on shield -----
+    #ifdef DEBUG_INPUTS
+      char tempInputLetterArray[] = "ABCDEF";   //letter prefix for serial debugging
+    #endif
+    for(int j=0;j<=5;j++){                    //loop through each input
+      if(decipherInputSensor(j+1) == 1){      //if input is (on). Shift +1 to account for inputArray[0] = no input
+        digitalWrite(inputLEDArray[j],HIGH);  //turn on LED
 
-      #ifdef DEBUG_INPUTS
-        Serial << F("DEBUG_INPUTS: input ") << tempInputLetterArray[j] << F(": actual/threshold: ") << analogRead(inputPinArray[j]) << F("/") << inputTriggerThresholdArray[j];
-        Serial.println();
-      #endif
-    }else{                                  //else (off)
-      digitalWrite(inputLEDArray[j],LOW);   //turn off LED
+        #ifdef DEBUG_INPUTS
+          Serial << F("DEBUG_INPUTS: input ") << tempInputLetterArray[j] << F(": actual/threshold: ") << analogRead(inputPinArray[j]) << F("/") << inputTriggerThresholdArray[j];
+          Serial.println();
+        #endif
+      }else{                                  //else (off)
+        digitalWrite(inputLEDArray[j],LOW);   //turn off LED
+      }
     }
-  }
     
   
   //----- Section AA6 ----- Update the Status variables for GUI to read
   
-  
+  }else{  //if there is no filesystem blink some warning lights
+    LEDFlasher(2,200,200);  //visually alert user that something is awry by flashing all LEDs
+  }// end if has_filesystem
   
   
   
