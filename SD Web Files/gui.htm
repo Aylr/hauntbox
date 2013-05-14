@@ -28,6 +28,9 @@
 		background: url(navbg.gif);
 		background-repeat:repeat-x;
 	}
+	.body_container {
+		padding-bottom: 25px;
+	}
 	.navbar {
 		margin-top: 107px; /* puts the navbar where it should be */
 		margin-left: 12px;	/* lines up everything left except checkboxes */
@@ -337,17 +340,6 @@ $(function(){//shortcut for doc.ready
 				}
 			}
 			update_row_buttons(current_rows_from_program);
-		
-			console.log("Converted program arrays");
-			console.log(enable_disable_array);
-			console.log(input_array);
-			console.log(input_onoff);
-			console.log(on_delay);
-			console.log(output_array);
-			console.log(output_onoff);
-			console.log(duration_type);
-			console.log(duration);
-			
 			
 			set_inputs("input[name='enable_disable']",enable_disable_array);	//NEEDS TO BE PATCHED IN
 			set_inputs("select.sensor",input_array);			//set each input with the appropriate array
@@ -395,13 +387,6 @@ $(function(){//shortcut for doc.ready
 			array_of_strings_to_ints(io_definitions);
 			array_of_strings_to_ints(input_voltage_thresholds);
 			array_of_strings_to_ints(retrigger_delays);
-		
-			console.log("Converted settings arrays:")
-			console.log(io_definitions);
-			console.log(input_names);
-			console.log(output_names);
-			console.log(input_voltage_thresholds);
-			console.log(retrigger_delays);
 			
 			local_input_names = input_names;
 			local_output_names = output_names;
@@ -466,7 +451,6 @@ $(function(){//shortcut for doc.ready
 	//##################################### General navigation manager ##################################### 
 	$(".navbar .nav a").click(function(e){
 		next_page = $(this);				//where are you navigating to?
-		
 		if (unsaved_changes) {				//check for change
 			unsaved_modal();					//yes: present dialog
 		}else{									//no: proceed with navigation change
@@ -500,8 +484,6 @@ $(function(){//shortcut for doc.ready
 						//hide alert
 						//$("div.alert").alert('close');
 						$("div.help pre.settings").html(data);
-						console.log("file: " + data);
-
 						//Nest the other .ajax call to program.txt here...
 					},
 					statusCode: {
@@ -527,7 +509,6 @@ $(function(){//shortcut for doc.ready
 						//hide alert
 						//$("div.alert").alert('close');
 						$("div.help pre.program").html(data);
-						console.log("file: " + data);
 					},
 					error: function(){
 						//alert: fail
@@ -549,7 +530,6 @@ $(function(){//shortcut for doc.ready
 		var modal_body = $("#unsaved_modal p");						//save the body
 		modal_h3.html("Saving");									//change header to "saving"
 		modal_body.html("Please wait while saving...");
-		console.log(current_page);
 		save(current_page);											//try to save
 		$(this).button('reset');									//reset button
 		$("#unsaved_modal").modal("hide");							//hide the modal
@@ -569,7 +549,7 @@ $(function(){//shortcut for doc.ready
 		load_settings();
 	});
 
-	$("input, select").change(function(){
+	$("input, select").change(function(e){
 		if (unsaved_changes == false){
 			unsaved_changes = true;
 		}
@@ -580,7 +560,6 @@ $(function(){//shortcut for doc.ready
 	});
 
 	$(".save_program").click(function(){
-		console.log("you clicked save program");
 		$(this).html("Saving...");
 		save("program");
 	});
@@ -624,7 +603,6 @@ $(function(){//shortcut for doc.ready
 			newval = current;
 		}
 		$(this).val(newval);										//update field with either 1 or clean value
-		console.log("changed, duration = " + newval);
 	});
 
 	$("select.duration_type").change(function(){					//when duration_type dropdown changes
@@ -636,8 +614,6 @@ $(function(){//shortcut for doc.ready
 			$(this).next(".duration_container").fadeIn(250);		//show buttons & field
 			$(this).children('option[value="2"]').html("for");		//update grammar
 		}
-
-		console.log("duration_type, value = " + $(".duration_type").val());
 	});//duration_type.change()
 	
 	$(".input_name, output_name").alphanumeric({allow:" -.!@"});			//relies on the excellent work of https://github.com/treyhunner/jquery-formrestrict
@@ -667,7 +643,6 @@ $(function(){//shortcut for doc.ready
 	
 	$("div.override_outputs button").click(function(){	//override controls
 		var tempval = $(this).attr("value");
-		//console.log(tempval);
 
 		if (tempval == "all_on"){				//if all on
 			$.get("all_on");					//go to url "/all_on"
@@ -735,7 +710,6 @@ $(function(){//shortcut for doc.ready
 	}//end unsaved_modal()
 	
 	function saved_successfully(type){
-		console.log("saved_successfully has been called on line 598")
 		var modal = $("#successful_save_modal");							//select the modal
 		type = type.charAt(0).toUpperCase() + type.slice(1);				//capitalize first letter (program --> Program)
 		modal.children().first().children("h3").html(type + " saved");		//change the modal h3 header
@@ -784,7 +758,6 @@ $(function(){//shortcut for doc.ready
 				counter ++;						//increment counter
 				if(column_names[i] == "div.program input.wait_time" || column_names[i] == "div.program input.output_duration" || column_names[i] == "div.settings input.retrigger"){
 					//undecimalify
-					//console.log("**** i:" + i + " this.val(): " + $(this).val() + " this.val()*1000: " + $(this).val()*1000);
 					post_data += ($(this).val() * 1000);	//the singular conversion from seconds to milliseconds
 				}else{
 					post_data += $(this).val();		//append value of input
@@ -798,8 +771,6 @@ $(function(){//shortcut for doc.ready
 				};
 			});//each element loop
 		};//loop through each column
-
-		console.log(post_data);				//log to firebug
 		
 		$.ajax({
 			//ERROR HANDLING ********************************** PUT IN HERE ****************
@@ -816,7 +787,6 @@ $(function(){//shortcut for doc.ready
 					navigation_manager();
 				}else{
 					status_message(0);
-					console.log(type + "changes saved");
 					saved_successfully(type);
 				}
 			},
@@ -830,13 +800,11 @@ $(function(){//shortcut for doc.ready
 
 	function factory_defaults(){
 		var ajax_status = 0;				//used to count if both .ajax calls succeeded for alerts
-		console.log("resetting to defaults");
 		$.ajax({
 			url: '/upload/program.txt',		//uploads program file
 			type: 'PUT',
 			data: default_program,
 			success: function(){
-				console.log("reset program")
 				ajax_status += 1;
 				succeeded(ajax_status);
 			},
@@ -849,7 +817,6 @@ $(function(){//shortcut for doc.ready
 			type: 'PUT',
 			data: default_settings,
 			success: function(){
-				console.log("reset settings")
 				ajax_status += 1;
 				succeeded(ajax_status);
 			},
@@ -895,7 +862,6 @@ $(function(){//shortcut for doc.ready
 	}
 
 	function input_up(current){								//this increments the current value up to unsigned long value of 4294967.0
-		//console.log("input_up " + current);
 		var newval;
 		if(current < 4294967.0){									//if less than 999
 			newval = current + 1;							//add 1
@@ -908,7 +874,6 @@ $(function(){//shortcut for doc.ready
 	};//end input_limits
 
 	function input_down(current){							//this increments the current down to 0
-		//console.log("input_down " + current);
 		var newval;
 		if(current <= 0){									//if 0 or negative
 			newval = 0;										//set to zero
@@ -937,8 +902,6 @@ $(function(){//shortcut for doc.ready
 		for (i in array){
 			new_padded_array.splice(new_padded_array.length,0,array[i],1-array[i]);	//add the orig and inverted to the end of the new array (1-array[i] does the actual inversion)
 		}
-		//console.log("pad_radio_array input:  " + array);
-		//console.log("pad_radio_array output: " + new_padded_array);
 		return new_padded_array;
 	};//end pad_radio_array()
 	
@@ -980,9 +943,9 @@ $(function(){//shortcut for doc.ready
 					//if the selector is a CHECKBOX (used for the enable/disable checkbox in program)
 					if ($(selector).attr("type") == "checkbox"){
 						if (array[i] == 1){
-							$(this).attr("checked", true).val(1).trigger("change");
+							$(this).attr("checked", true).val(1).trigger("change").trigger("reset_warnings");
 						}else{
-							$(this).attr("checked", false).val(0).trigger("change");
+							$(this).attr("checked", false).val(0).trigger("change").trigger("reset_warnings");
 						}
 					}
 
@@ -1137,12 +1100,14 @@ $(function(){//shortcut for doc.ready
 		};
 	};//end sanitize()
 	
-	$("input[name='enable_disable']").change(function(){
+	$("input[name='enable_disable']").change(function(e){
 		if($(this).attr("checked") == "checked"){
 			$(this).attr("checked", true).val(1).next().fadeTo(100,1).find("input, select").prop("disabled", false);
 		} else {
 			$(this).attr("checked", false).val(0).next().fadeTo(100,.3).find("input, select").prop("disabled", true);
 		}
+	}).on("reset_warnings", function(){
+		unsaved_changes = false;
 	});
 
 	function count_rows(){		//counts rows in program page
@@ -1222,12 +1187,12 @@ $(function(){//shortcut for doc.ready
 				</div>
 				
 				<div class="button_container">
-					<button class="add_row" type="button"> + </button>
-					<button class="subtract_row" type="button"> - </button>
+					<button class="btn add_row" type="button"> + </button>
+					<button class="btn subtract_row" type="button"> - </button>
 
 					<span class="row_count">Rows: </span>
-					<button class="save_program" name="save" type="button">Save Program</button>
-					<button id="restore_program" name="restore" type="button">Restore Program</button>
+					<button class="btn save_program" name="save" type="button">Save Program</button>
+					<button class="btn" id="restore_program" name="restore" type="button">Restore Program</button>
 				</div>
 				<div id="status_program"></div>
 			</div><!-- //end program -->
@@ -1275,8 +1240,8 @@ $(function(){//shortcut for doc.ready
 					</div>
 				</div>
 				<div class="button_container">
-					<button class="save_settings" name="save" type="button">Save Settings</button>
-					<button id="restore_settings" name="restore" type="button">Restore Settings</button>
+					<button class="btn save_settings" name="save" type="button">Save Settings</button>
+					<button class="btn" id="restore_settings" name="restore" type="button">Restore Settings</button>
 				</div>
 				<div id="status_settings"></div>
 			</div><!--//end div.settings -->
