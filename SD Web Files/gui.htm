@@ -542,14 +542,14 @@ $(function(){//shortcut for doc.ready
 		load_settings();
 	});
 
-	$("input, select").change(function(e){
+	$("body").on("change", "input, select", function(e){
 		if (unsaved_changes == false){
 			unsaved_changes = true;
 		}
 	});
 	
-	$("input.wait_time").change(function(){					//whenever the wait field changes
-		$(this).val(sanitize($(this).val()));		//update the input with sanitized
+	$("body").on("change", "input.wait_time", function(){			//whenever the wait field changes
+		$(this).val(sanitize($(this).val()));						//update the input with sanitized
 	});
 
 	$(".save_program").click(function(){
@@ -589,7 +589,7 @@ $(function(){//shortcut for doc.ready
 		});
 	}
 
-	$("input.output_duration").change(function(){		//on manual keybaord entry
+	$("body").on("change", "input.output_duration", function(){					//on manual keybaord entry
 		var newval = 1;												//default new value
 		var current = sanitize($(this).val());						//get the sanitized value
 		if(current != 0){											//if sanitized not 0, then let it pass, otherwise use the default of 1
@@ -598,18 +598,18 @@ $(function(){//shortcut for doc.ready
 		$(this).val(newval);										//update field with either 1 or clean value
 	});
 
-	$("select.duration_type").change(function(){					//when duration_type dropdown changes
+	$("body").on("change", "select.duration_type", function(){					//when duration_type dropdown changes
 		temp = $(this).val();										//get current value
 		if(temp == "1" || temp == "0"){								//if "1" = "while input is triggered" or "0" (until further notice)
 			$(this).next(".duration_container").fadeOut(250);		//fade out buttons & field
 			$(this).children('option[value="2"]').html("for...")	//update grammar
-		}else if(temp == "2"){									//if 2 (for...)
+		}else if(temp == "2"){										//if 2 (for...)
 			$(this).next(".duration_container").fadeIn(250);		//show buttons & field
 			$(this).children('option[value="2"]').html("for");		//update grammar
 		}
 	});//duration_type.change()
 	
-	$(".input_name, output_name").alphanumeric({allow:" -.!@"});			//relies on the excellent work of https://github.com/treyhunner/jquery-formrestrict
+	$(".input_name, .output_name").alphanumeric({allow:" -.!@"});			//relies on the excellent work of https://github.com/treyhunner/jquery-formrestrict
 	
 	// $(".wait_time").numeric({allow:"1.111"});
 	$("input.retrigger").change(function(){
@@ -708,7 +708,6 @@ $(function(){//shortcut for doc.ready
 		modal.children().first().children("h3").html(type + " saved");		//change the modal h3 header
 		modal.children().last().children("p").html(type + " saved");		//change the modal body
 		modal.modal('show');												//show the modal
-		reset_save_button();
 		timeout = setTimeout(function(){									//do stuff in... 2 seconds
 			modal.modal('hide');										//hide the modal
 		},2000);														//2 seconds
@@ -782,6 +781,7 @@ $(function(){//shortcut for doc.ready
 					status_message(0);
 					saved_successfully(type);
 				}
+				reset_save_button();
 			},
 			error: function(){		//keep unsaved_changes = true
 				reset_save_button();
@@ -1093,7 +1093,7 @@ $(function(){//shortcut for doc.ready
 		};
 	};//end sanitize()
 	
-	$("input[name='enable_disable']").change(function(e){
+	$("body").on("change", "input[name='enable_disable']", function(e){
 		if($(this).attr("checked") == "checked"){
 			$(this).attr("checked", true).val(1).next().fadeTo(100,1).find("input, select").prop("disabled", false);
 		} else {
@@ -1140,9 +1140,11 @@ $(function(){//shortcut for doc.ready
 	$("div.program .button_container button.add_row").click(function(){		//adds a row to the program page
 		var temp_count = count_rows();
 		if (temp_count < max_rows){
-			$("div.program .sentence").last().clone({deepWithDataAndEvents: true}).appendTo("div.sentence_container");
+			$($("#program_row").html()).appendTo(".sentence_container");
+			// $("div.program .sentence").last().clone({deepWithDataAndEvents: true}).appendTo("div.sentence_container");
 		}
 		update_row_buttons(temp_count + 1);
+		unsaved_changes = true;
 	});
 
 	$("div.program .button_container button.subtract_row").click(function(){	//subtracts a row
@@ -1151,6 +1153,7 @@ $(function(){//shortcut for doc.ready
 			$("div.program .sentence").last().remove();
 		}
 		update_row_buttons(temp_count - 1);
+		unsaved_changes = true;
 	});
 });//doc.ready
 </script>
@@ -1456,7 +1459,7 @@ $(function(){//shortcut for doc.ready
 						<option value="1">while input is triggered.</option>
 						<option value="2">for...</option>
 					</select>
-					<div class="duration_container">
+					<div class="duration_container" style="display: none;">
 						<div class="duration">
 							<span class="up">+</span>
 							<span class="down">-</span>
