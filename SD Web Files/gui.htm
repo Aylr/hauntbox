@@ -235,6 +235,7 @@ $(function(){//shortcut for doc.ready
 	var next_page = null;					//keeps track of next page
 	var ABC = ["A","B","C","D","E","F"]		//used when naming the dynamically generated rows
 	var automatic_mode = true;				//keeps track if hauntbox is in manual mode
+	var HB = {};							//initial thoughts of a global name space
 	
 	//ADC threshold values for inputs/outputs. Maths are done here to spare Arduino CPU cycles
 	var threshold_5V = 103;				//(5V / 5)*1024 = 103
@@ -393,6 +394,9 @@ $(function(){//shortcut for doc.ready
 		
 			set_io_names("select.sensor",input_names);				//call the set io name functions
 			set_io_names("select.output",output_names);
+			//Hang on to the input names
+			HB.input_names = input_names;
+			HB.output_names = output_names;
 			
 			set_inputs("input.highlow",pad_radio_array(io_definitions));	//be sure to pad the radio array with it's paired inversions before sending to the set_inputs function
 			set_inputs(".input_name",input_names);
@@ -1144,6 +1148,8 @@ $(function(){//shortcut for doc.ready
 			// $("div.program .sentence").last().clone({deepWithDataAndEvents: true}).appendTo("div.sentence_container");
 		}
 		update_row_buttons(temp_count + 1);
+		set_io_names("select.sensor",HB.input_names);				//call the set io name functions
+		set_io_names("select.output",HB.output_names);
 		unsaved_changes = true;
 	});
 
