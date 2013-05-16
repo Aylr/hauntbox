@@ -194,9 +194,6 @@
 		height: 60px;
 		padding: 2px 0 0 0;
 	}
-	.inner_sentence {
-		opacity: 0.3;
-	}
 	span.input, span.output, span.duration, span.delay {
 		display: inline-block;
 		margin: 0 10px 0 0;
@@ -1418,11 +1415,11 @@ $(function(){//shortcut for doc.ready
 	<script src="alphnmin.js" type="text/javascript" charset="utf-8"></script>
 	<script type="text/template" id="program_row">
 		<div class="sentence">
-			<input type="checkbox" name="enable_disable">
+			<input type="checkbox" name="enable_disable" checked="checked">
 			<div class="inner_sentence">
 				<span class="input">
 					When
-					<select class="sensor" name="sensor" disabled="disabled">
+					<select class="sensor" name="sensor">
 						<option value="0">-</option>
 						<option value="1">input A</option>
 						<option value="2">input B</option>
@@ -1432,7 +1429,7 @@ $(function(){//shortcut for doc.ready
 						<option value="6">input F</option>
 					</select>
 					is
-					<select class="sensor_state" name="sensor_state" disabled="disabled">
+					<select class="sensor_state" name="sensor_state">
 						<option value="1">on</option>
 						<option value="0">off</option>
 					</select>
@@ -1442,10 +1439,10 @@ $(function(){//shortcut for doc.ready
 						<span class="up">+</span>
 						<span class="down">-</span>
 					</div>
-					<input type="text" class="wait_time" name="wait_time" maxlength="9" value="0" disabled="disabled" />
+					<input type="text" class="wait_time" name="wait_time" maxlength="9" value="0" />
 					second(s) then turn
 				</span><span class="output">
-					<select class="output" name="output" disabled="disabled">
+					<select class="output" name="output">
 						<option value="0">-</option>
 						<option value="1">output 1</option>
 						<option value="2">output 2</option>
@@ -1454,13 +1451,13 @@ $(function(){//shortcut for doc.ready
 						<option value="5">output 5</option>
 						<option value="6">output 6</option>
 					</select>
-					<select class="output_state" name="output_state" disabled="disabled">
+					<select class="output_state" name="output_state">
 						<option value="1">on</option>
 						<option value="0">off</option>
 						<option value="2">toggled</option>
 					</select>
 				</span><span class="duration">
-					<select class="duration_type" disabled="disabled">
+					<select class="duration_type">
 						<option value="0">until further notice.</option>
 						<option value="1">while input is triggered.</option>
 						<option value="2">for...</option>
@@ -1470,7 +1467,7 @@ $(function(){//shortcut for doc.ready
 							<span class="up">+</span>
 							<span class="down">-</span>
 						</div>
-						<input type="text" class="output_duration" name="output_duration" maxlength="9" value="0" disabled="disabled" />
+						<input type="text" class="output_duration" name="output_duration" maxlength="9" value="0" />
 						second(s).
 					</div>
 				</span>
