@@ -202,10 +202,10 @@
 	}
 	div.alert {
 		position: absolute;
-		top: 0px;
-		left:50%;
-		margin-left: -160px;
+		top: 20px;
+		left: 450px;
 		width: 320px;
+
 	}
 	div.manual_mode_warning h2 {
 		position: absolute;
@@ -982,7 +982,7 @@ $(function(){//shortcut for doc.ready
 		switch	(status_code){					//this entire switch really just changes the message in the alert
 			case 0:
 				//0 = all good
-				return;
+				return;							//*****^^^^____-----____ temp. disable annoying status (0)
 				header = "All systems go.";
 				message = "Everything appears normal, sir/madam.";
 				button1 = "button1";
@@ -1051,7 +1051,7 @@ $(function(){//shortcut for doc.ready
 			case 8:
 				//8 = Loading program/settings failed
 				header = "Loading program.txt or settings.txt failed";
-				message = "Please check that your SD card &amp; network are working then reset power.";
+				message = "Please check that your SD card &amp; network are working, reset the hauntbox power and refresh this page in 30 seconds.";
 				button1 = "button1";
 				button2 = "button2";
 				type = "alert-error";
@@ -1177,7 +1177,7 @@ $(function(){//shortcut for doc.ready
 				<h4 class="alert-heading">Alert</h4>
 				<p>Alert Info</p>
 			</div>
-			<p class="nav pull-right">Free RAM: ?</p>
+			<!--<p class="nav pull-right">Free RAM: ?</p>-->
 		</div>
 
 		<div id="display_container">
@@ -1197,12 +1197,12 @@ $(function(){//shortcut for doc.ready
 				</div>
 				
 				<div class="button_container">
-					<button class="btn add_row" type="button"> + </button>
-					<button class="btn subtract_row" type="button"> - </button>
+					<button class="btn btn-large add_row" type="button"> + </button>
+					<button class="btn btn-large subtract_row" type="button"> - </button>
 
 					<span class="row_count">Rows: </span>
-					<button class="btn save_program" name="save" type="button">Save Program</button>
-					<button class="btn" id="restore_program" name="restore" type="button">Restore Program</button>
+					<button class="btn btn-large btn-primary save_program" name="save" type="button">Save Program</button>
+					<button class="btn btn-large" id="restore_program" name="restore" type="button">Restore Program</button>
 				</div>
 				<div id="status_program"></div>
 			</div><!-- //end program -->
@@ -1250,8 +1250,8 @@ $(function(){//shortcut for doc.ready
 					</div>
 				</div>
 				<div class="button_container">
-					<button class="btn save_settings" name="save" type="button">Save Settings</button>
-					<button class="btn" id="restore_settings" name="restore" type="button">Restore Settings</button>
+					<button class="btn btn-large btn-primary save_settings" name="save" type="button">Save Settings</button>
+					<button class="btn btn-large" id="restore_settings" name="restore" type="button">Restore Settings</button>
 				</div>
 				<div id="status_settings"></div>
 			</div><!--//end div.settings -->
@@ -1267,8 +1267,8 @@ $(function(){//shortcut for doc.ready
 						<div class="override_triggers span4">
 							<h3>Inputs</h3>
 							<div class="btn-group manual_override_mode" data-toggle="buttons-radio">
-								<button type="button" class="btn" value="1">Automatic (normal)</button>
-								<button type="button" class="btn" value="0">Manual (disables inputs)</button>
+								<button type="button" class="btn btn-large" value="1">Automatic (normal)</button>
+								<button type="button" class="btn btn-large" value="0">Manual (disables inputs)</button>
 							</div>
 							<p>When you are in <strong>manual mode</strong> the Hauntbox will ignore physical sensors and only pay attention to the trigger buttons below.<p>
 							<table>
@@ -1302,31 +1302,31 @@ $(function(){//shortcut for doc.ready
 								<!--<tr><th>Output</th><th>Control</th></tr>-->
 								<tr><td class="override_output_name">1</td><td><div class="btn-group">
 										<button type="button" class="btn btn-large" value="11">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
-										<button type="button" class="btn-large btn" value="10">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
+										<button type="button" class="btn btn-large" value="10">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
 									</div></td></tr>
 								<tr><td class="override_output_name">2</td><td><div class="btn-group">
 										<button type="button" class="btn btn-large" value="21">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
-										<button type="button" class="btn-large btn" value="20">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
+										<button type="button" class="btn btn-large" value="20">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
 									</div></td></tr>
 								<tr><td class="override_output_name">3</td><td><div class="btn-group">
 										<button type="button" class="btn btn-large" value="31">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
-										<button type="button" class="btn-large btn" value="30">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
+										<button type="button" class="btn btn-large" value="30">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
 									</div></td></tr>
 								<tr><td class="override_output_name">4</td><td><div class="btn-group">
 										<button type="button" class="btn btn-large" value="41">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
-										<button type="button" class="btn-large btn" value="40">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
+										<button type="button" class="btn btn-large" value="40">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
 									</div></td></tr>
 								<tr><td class="override_output_name">5</td><td><div class="btn-group">
 										<button type="button" class="btn btn-large" value="51">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
-										<button type="button" class="btn-large btn" value="50">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
+										<button type="button" class="btn btn-large" value="50">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
 									</div></td></tr>
 								<tr><td class="override_output_name">6</td><td><div class="btn-group">
 										<button type="button" class="btn btn-large" value="61">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
-										<button type="button" class="btn-large btn" value="60">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
+										<button type="button" class="btn btn-large" value="60">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
 									</div></td></tr>
 								<tr><td colspan="3"><div class="btn-group">
 										<button type="button" class="btn btn-large" value="all_on">&nbsp;&nbsp;&nbsp; ALL ON &nbsp;&nbsp;&nbsp;</button>
-										<button type="button" class="btn-large btn" value="all_off">&nbsp;&nbsp;&nbsp; ALL OFF &nbsp;&nbsp;&nbsp;</button>
+										<button type="button" class="btn btn-large" value="all_off">&nbsp;&nbsp;&nbsp; ALL OFF &nbsp;&nbsp;&nbsp;</button>
 									</div></td></tr>
 							</table>
 						</div>
@@ -1340,45 +1340,61 @@ $(function(){//shortcut for doc.ready
 					<p>Stumped?<br />Find some answers.</p>
 				</div>
 				<div class="container">
-					<p>Please visit <a href="http://hauntbox.net/">hauntbox.net</a> for our store.</p>
-					
-					<p>Please consider adding to our <a href="https://github.com/Aylr/theHB/wiki">wiki</a> and you can find, hack, and contribute to our code at <a href="https://github.com/Aylr/theHB/">github</a>.</p>
-					
-					<button type="button" class="factory_defaults btn btn-danger">Reset to factory defaults</button>
-					
-					<p>kickstarter</p>
-					<p>email</p>
-					<p><a href="https://twitter.com/hauntbox" class="twitter-follow-button" data-show-count="false">Follow @hauntbox</a>
-					<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-					<br />
-					<a href="https://twitter.com/intent/tweet?screen_name=hauntbox" class="twitter-mention-button" data-size="large" data-related="hauntbox">Tweet to @hauntbox</a>
-					<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-					</p>
+					<h3>Where to find help</h3>
+					<ul>
+						<li>Please visit <a href="http://hauntbox.net/">hauntbox.net</a> for our store.</li>
+						<li>Please add to our <a href="https://github.com/Aylr/theHB/wiki">wiki</a> where you can find the latest instrucions, tips and tricks.</li>
+						<li>You can find, hack, and contribute to all our source code at <a href="https://github.com/Aylr/theHB/">github</a>.</li>
+						<li>Please do your duty and <a href="https://github.com/Aylr/theHB/issues/new">report all bugs</a></li>
+						<li>We are <a href="http://twitter.com/hauntbox">@hauntbox</a> on twitter. <a href="https://twitter.com/intent/tweet?screen_name=hauntbox">Tweet to us.</a></li>
+						<li>Our original kickstarter page.</li>
+					</ul>
 
-					<h3>URL schema</h3>
-					<pre>
-						/program	current program + status + ram
-						/settings	current settings + status + ram
-						/program.txt	current program file
-						/settings.txt	current settings file
-						/ram		free ram
-						/row_status	current row state (as defined in firmware)
-						/output_status	current output state (on/off)
-						/status.htm 	live status (slows down normal operation)
-						/status 	returns intputState ; rowState ; outputState (used by status.htm)
-						/all_on 	turns all on
-						/all_off	turns all off
-						/manual 	send post request with integers to control manually
-					</pre>
-
+					<h3>Basics</h3>
+					<p><strong>Note:</strong> It is very important to protect the Hauntbox from shorts that could damage the sensitive electronics. Never change wiring to inputs or outputs when it is plugged into a power supply.</p>
+					<ol>
+						<li>Wire your sensors to the inputs on the Hauntbox. They are along the top of the board labeled A through F.</li>
+						<li>Wire up the things you want to control to the outputs. They are along the bottom of the Hauntbox labeled 1 through 6.</li>
+						<li>Plug in your network cable to the CAT5 network jack on the left side of the Hauntbox.</li>
+						<li>Plug in your power supply and plug it into the power jack on the left side of the Hauntbox.</li>
+						<li>Fire up your favorite browser and browse to http://hauntbox.local (Note that some browsers do require the "http://").
+						<ul><li><em>An aside about bonjour.</em> If you have more than one hauntbox on the same network you <strong>must</strong> change the name to be unique on the network. This is easily done by popping the microSD card out of your Hauntbox and making a file called "bonjour.txt" on the card. Edit this with your favorite text editor (Notepad on Windows, TextEdit on Mac, nano on Linux) and make up a name less than 16 characters that only has letters and numbers. No special characters. Put the card back into your Hauntbox and reset. Now browse to "http://yourname.local"</li></ul></li>
+						<li>First take a look at the <strong>settings</strong> tab. Rename your sensors and outputs so you can easily see what you're controlling. Be sure to click "Save" when you're done.</li>
+						<li>Next go the the <strong>program</strong> tab. This is where the fun is. Each row is a sentence that you fill out. Press save and see the Hauntbox do your bidding.</li>
+						<li>Play and share!</li>
+					</ol>
+					
 					<h3>Your current settings</h3>
+					
 					<p>Copy and paste this into a text file for safekeeping or right click <a href="settings.txt">settings.txt</a> and save this file.</p>
 					
-					<pre class="settings">Settings string...........</pre>
+					<pre class="settings">Loading settings...</pre>
 
 					<h3>Your current program</h3>
 					<p>Copy and paste this into a text file for safekeeping or right click <a href="program.txt">program.txt</a> and save this file.</p>
-					<pre class="program">Program string...........</pre>
+					<pre class="program">Loading program...</pre>
+
+					<h3>Factory reset</h3>
+					<p>Pressing that big red button will erase your current settings and program. There's no going back, so use it only when you need to start fresh.</p>
+					<button type="button" class="factory_defaults btn btn-danger">Reset to factory defaults</button>
+					<br /><br />
+
+					<h3>Advanced URL schema for the intrepid hacker</h3>
+					<ul>
+						<li><a href="/program">/program</a> current program + status + ram</li>
+						<li><a href="/settings">/settings</a> current settings + status + ram</li>
+						<li><a href="/program.txt">/program.txt</a> current program file</li>
+						<li><a href="/settings.txt">/settings.txt</a> current settings file</li>
+						<li><a href="/ram">/ram</a> free ram</li>
+						<li><a href="/row_status">/row_status</a> current row state (as defined in firmware)</li>
+						<li><a href="/output_status">/output_status</a> current output state (on/off)</li>
+						<li><a href="/status.htm">/status.htm</a> live status (slows down normal operation)</li>
+						<li><a href="/status">/status</a> returns intputState ; rowState ; outputState (used by status.htm)</li>
+						<li><a href="/all_on">/all_on</a> turns all on</li>
+						<li><a href="/all_off">/all_off</a> turns all off</li>
+						<li><a href="/manual">/manual</a> send post request with integers to control manually	</li>
+					</ul>
+
 				</div>
 			</div><!--//end div.help -->
 		</div><!--//end display_container -->
