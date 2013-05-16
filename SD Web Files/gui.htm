@@ -778,13 +778,9 @@ $(function(){//shortcut for doc.ready
 			type: 'PUT',
 			data: post_data,
 			success: function(){
-				if(unsaved_changes){
-					unsaved_changes = false;
-					navigation_manager();
-				}else{
-					status_message(0);
-					saved_successfully(type);
-				}
+				unsaved_changes = false;
+				status_message(0);
+				saved_successfully(type);
 				reset_save_button();
 			},
 			error: function(){		//keep unsaved_changes = true
@@ -989,6 +985,7 @@ $(function(){//shortcut for doc.ready
 		switch	(status_code){					//this entire switch really just changes the message in the alert
 			case 0:
 				//0 = all good
+				return;
 				header = "All systems go.";
 				message = "Everything appears normal, sir/madam.";
 				button1 = "button1";
