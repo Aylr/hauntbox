@@ -1,0 +1,79 @@
+# Manufacturer Bare Metal Testing Procedure
+
+## Updated 5/31/13 15:16
+
+This is the procedure for testing Hauntbox boards from the bare metal off the assembly line. *This is not intended for normal users.*
+
+## Things you'll need:
+
+- an AVRISP mkII programmer ($35)
+- a hauntbox
+- a microUSB cable
+- a 12V power supply
+- a wired ethernet connection for the Hauntbox. **DHCP** must be running on your network or you need to set a [static IP][https://github.com/Aylr/theHB/wiki/_preview#static-ip-address-use-only-if-you-dont-have-dhcp-on-your-network].
+- a working installation of the Arduino IDE (from http://arduino.cc/en/Main/Software)
+- software libraries discussed below
+
+## Bootloader
+
+Using Arudino IDE 1.0.2
+
+1. Plug in AVRISP mkII to ICSP header port
+2. Tools > Board > Arudino Mega 2560 or Mega ADK
+3. Tools > Programmer > AVRISP mkII
+4. Tools > Burn Bootloader (This should take a minute or more)
+
+## Firmware
+
+### Required Arduino libraries
+
+- Ethernet library from Arduino (included in the IDE)
+- SD library (included in the IDE)
+- EthernetBonjour library https://github.com/neophob/EthernetBonjour
+- TinyWebServer https://github.com/ovidiucp/TinyWebServer
+- Flash (required by TinyWebServer) http://arduiniana.org/libraries/flash/
+
+Installation instructions are found here: http://arduino.cc/en/Guide/Libraries
+
+### Hauntbox Firmware & Installation
+
+Again, using Arduino IDE 1.0.2
+
+1. Plug in micro USB to Hauntbox and USB to computer
+2. Download the SD Web Files folder from our github at https://github.com/Aylr/theHB
+3. Put all the **contents of that folder** (not the folder itself) onto the root directory of an empty, formatted SD card
+4. Insert that SD card into your hauntbox (or arduino if your are bringing your own hardware)
+5. Download the file **Hauntbox_Firmware.ino**
+6. Open the file **Hauntbox_Firmware** with the Arduino IDE
+7. In the Arduino program: File > Upload. This compiles the firmware and updates your Hauntbox (or arduino).
+
+## Testing
+
+1. Plug the Hauntbox into your network with an ethernet cable. Pleas
+2. Power the Hauntbox with a 12V power supply via the black power jack
+3. You should see the following LEDs turn on:
+	- Power (red)
+	- Inputs 1-6 (green)
+	- Outputs A-F (green)
+	- Various network LEDs on the CAT5 jack and hauntbox (green and yellow)
+4. Open the Arudino > Tools > Serial Monitor. Set the baud rate to 115200. You should see the following:
+	- "Starting up Hauntbox. Free RAM: nnnn KB"
+	- "Setting up SD card..."
+	- "Setting up the Ethernet card..."
+	- "Web server starting..."
+	- "Ready to accept web requests at http://hauntbox.local or at http://xxx.xxx.xxx.xxx" (the IP address assigned by your network's DHCP) 
+5. At this point you should see all the input & output LEDs go off indicating a ready state.
+6. Open your browswer (on the same network) and go to http://hauntbox.local
+7. Wait approximately 30 seconds for the page to load. The first load is slow while the browser prepares the front end.
+8. Navigate to the **override** page.
+9. Turn all outputs ON. All output LEDs should turn on.
+10. Turn all outputs OFF. All output LEDs should turn OFF.
+
+### Static IP address (use only if you don't have DHCP on your network)
+
+If you do not have a network with DHCP, which is fairly uncommon, or if you want your hauntbox to have a static IP address do the following:
+
+1. Using a text editor (Notepad on Windows, TextEdit on Mac, nano on Linux) make a new text file called **ip.txt**. This file should have a static ip in the format of "192.168.1.1" on the first line and nothing else.
+2. Put the file **ip.txt** on the SD card of the hauntbox.
+3. Put the SD card back into the hauntbox
+4. Reset the hauntbox.

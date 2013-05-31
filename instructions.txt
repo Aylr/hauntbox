@@ -1,0 +1,62 @@
+# Using your Hauntbox.
+
+## Things you'll need.
+
+1. A 12V or 24V DC power supply.
+2. A formatted microSD card.
+3. A wired network connection.
+4. Some sensors and interesting things to hook up to the outputs.
+5. A sense of adventure
+
+## Initial set up
+
+<a href="http://www.flickr.com/photos/hauntbox/8748714580/" title="IO Diagrams by hauntbox, on Flickr"><img src="http://farm8.staticflickr.com/7289/8748714580_894bc39b7f_c.jpg" width="618" height="800" alt="IO Diagrams"></a>
+
+**Note: It is very important to protect the Hauntbox from shorts that could damage the sensitive electronics. Never change wiring to inputs or outputs when it is plugged into a power supply.**
+
+1. Wire your sensors to the inputs on the Hauntbox. They are along the top of the board labeled A through F.
+2. Wire up the things you want to control to the outputs. They are along the bottom of the Hauntbox labeled 1 through 6. Usually these will be wired from the 5V or +V to the OC (the switched ground).
+3. Plug in your network cable to the CAT5 network jack on the left side of the Hauntbox.
+4. Plug in your power supply and plug it into the power jack on the left side of the Hauntbox.
+5. Fire up your favorite browser and browse to http://hauntbox.local (Note that some browsers do require the "http://").
+	- An aside about bonjour. If you have more than one hauntbox on the same network you **must** change the name to be unique on the network. This is easily done by popping the microSD card out of your Hauntbox and making a file called "bonjour.txt" on the card. Edit this with your favorite text editor (Notepad on Windows, TextEdit on Mac, nano on Linux) and make up a name less than 16 characters that only has letters and numbers. No special characters. Put the card back into your Hauntbox and reset. Now browse to "http://yourname.local"
+6. First take a look at the **settings** tab. Rename your sensors and outputs so you can easily see what you're controlling. Be sure to click "Save" when you're done.
+7. Next go the the **program** tab. This is where the fun is. Each row is a sentence that you fill out. Press save and see the Hauntbox do your bidding.
+
+## Input & Output details
+
+### Each input has four terminals:
+
+1. **+V** This is 12V if you're using a 12V power supply or 24V if you use a 24V supply.
+2. **5V** This is 5V from the onboard power supply.
+3. **GND** Ground. Should your sensors need a dedicated ground.
+4. **[A-F] in** This is the actual input. Hook up the output of your sensor here. It is an analog pin that can accept up to 24V DC signals.
+	- It is important in the **settings** page to select the appropriate voltage to make sure the trigger thresholds are set properly.
+
+### Each output has four terminals:
+
+1. **+V** This is 12V if you're using a 12V power supply or 24V if you use a 24V supply.
+2. **5V** This is 5V from the onboard power supply.
+3. **GND** Ground. Should your output need a dedicated ground.
+4. **OC in** This is the actual switched output. It is called an "open collector" which simply means it is a switched ground that can accept a range of voltage. This is the secret sauce how you can use either a 5V, 12V or 24V device. It can handle up to 300mA, which is enough to power some solenoids, big relays, and many other things. It has solid state auto-resetting fuse to help protect your Hauntbox from mistakes.
+
+## Example wiring
+
+### Input: Motion Sensor hook up
+
+<a href="http://www.flickr.com/photos/hauntbox/8766063251/" title="motion sensor wiring by hauntbox, on Flickr"><img src="http://farm6.staticflickr.com/5337/8766063251_48c0f27d01.jpg" width="436" height="407" alt="motion sensor wiring"></a>
+
+1. Hook up **+5V** to your hauntbox input **+5V**.
+2. Hook up **gnd** to your Hauntbox input **gnd**.
+2. Hook up **out** to your Hauntbox input **[A-F] in**.
+
+### Output: Powertail hook up
+
+<a href="http://www.flickr.com/photos/hauntbox/8761210491/" title="powertail hook up by hauntbox, on Flickr"><img src="http://farm3.staticflickr.com/2836/8761210491_dd47c09bb7_c.jpg" width="800" height="650" alt="powertail hook up"></a>
+
+The powertail has 3 terminals, only two of which you need. (You can ignore 3: ground).
+
+1. Hook up **1: +in** to your hauntbox output **+5V**.
+2. Hook up **2: -in** to your Hauntbox output **OC**.
+3. Plug the powertail into a 120V outlet
+4. Plug in whatever you want to control to the powertail. Make sure the device is on so the powertail can do the switching.
