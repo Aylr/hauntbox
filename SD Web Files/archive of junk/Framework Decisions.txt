@@ -1,0 +1,25 @@
+# What framework do I like/need?
+
+## Bootstrap
+
+### Things I'd like
+- Base CSS
+	- buttons, maybe
+	- typography
+- Components
+	- navbar
+	- buttons
+	- alerts (use for errors and success)
+	- progress bars, maybe
+- Javascript Plugins
+	- modals (for alerts, or help?)
+	- tooltips (maybe for explanations of voltage, etc.)
+	- buttons w/ loading state (for ajax saving of data)
+- LESS
+	- only maybe useful for customizing CSS colors, etc.
+
+### Things I don't want
+- janky grey input styling and bulkiness
+
+## FontAwesome
+- for slick icons for buttons, really classes up the joint
