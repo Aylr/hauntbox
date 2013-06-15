@@ -21,13 +21,13 @@ bool random_mode = false;           // true if it should play random trigger sou
 bool SD_failed = true;              // true if SD card has failed, false if successful
 
 // ---------------------------------- Misc Variables ----------------------------------
-char* ambient_wav = "break.wav";     // ambient wave file name
-char* trigger_wav = "alarm.wav";    
-int OC_trigger_pin = 5;             // OC trigger pin
-int logic_trigger_pin = 4;          // Logic trigger pin
-int trigger_threshold = 200;        
-int trigger_LED_pin = 7;            // indicator LED when triggered
-int reset_LED_pin = 8;              // indicator board needs to be reset
+char* ambient_wav_filename = "abmient.wav";     // ambient wave file name
+char* trigger_wav_filename = "alarm.wav";
+int OC_trigger_pin = 5;                         // OC trigger pin
+int logic_trigger_pin = 4;                      // Logic trigger pin
+int trigger_threshold = 200;                    
+int trigger_LED_pin = 7;                        // indicator LED when triggered
+int reset_LED_pin = 8;                          // indicator board needs to be reset
 
 // ---------------------------------- Objects ----------------------------------
 SdReader card;    // This object holds the information for the card
@@ -127,13 +127,14 @@ bool does_file_exist(char *name) {   // Should only really run at startup or if 
   }
   if (!f.open(root, name)) {  // look in the root directory and open the file
     Serial.print(F("Couldn't open "));
-    Serial.print(name);
+    Serial.println(name);
     return false;
   }
   if (!wave.create(f)) {    // OK read the file and turn it into a wave object
     Serial.println(F("Not a valid WAV"));
     return false;
   }
+  return true;            // true if you made it this far without failing
 }
 
 // ---------------------------------- Sound Functions ----------------------------------
@@ -153,7 +154,9 @@ void playfile(char *name) {		// Plays w/ possiblity to be stopped
     wave.stop(); 				// stop it
   }
   if (!f.open(root, name)) {	// look in the root directory and open the file
-    Serial.print(F("Couldn't open ")); Serial.print(name); return;
+    Serial.print(F("Couldn't open "));
+    Serial.println(name);
+    return;
   }
   if (!wave.create(f)) {		// OK read the file and turn it into a wave object
     Serial.println(F("Not a valid WAV")); return;
@@ -169,7 +172,7 @@ void playbackground(char *name) {
       Serial.print(F("Trigger: "));
       Serial.println(analogRead(OC_trigger_pin));
       digitalWrite(trigger_LED_pin,HIGH);   	// turn on trigger indicator LED
-      playcomplete(trigger_wav);				// Play complete trigger wav
+      playcomplete(trigger_wav_filename);			// Play complete trigger wav
     }
   }
   // now its done playing
@@ -190,7 +193,7 @@ void setup(){
         SD_failure_alert();								// alert user
     }else{                                              // if the SD succeeded
         //sound file logic
-        ambient_mode = does_file_exist(ambient_wav);
+        ambient_mode = does_file_exist(ambient_wav_filename);
         Serial.print(F("ambient = "));
         Serial.println(ambient_mode);
 
@@ -203,9 +206,8 @@ void setup(){
 
 void loop(){
     if (!SD_failed){                                    // if the SD succeeded
-        ambient_mode = true;
         if (ambient_mode) {
-            playbackground(ambient_wav);                // play background ambient listening for triggers
+            playbackground(ambient_wav_filename);                // play background ambient listening for triggers
         }
         // if (triggered) {
         //     digitalWrite(LED, ON);
