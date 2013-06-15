@@ -21,7 +21,7 @@ bool random_mode = false;           // true if it should play random trigger sou
 bool SD_failed = true;              // true if SD card has failed, false if successful
 
 // ---------------------------------- Misc Variables ----------------------------------
-char* ambient_wav_filename = "abmient.wav";     // ambient wave file name
+char* ambient_wav_filename = "ambient.wav";     // ambient wave file name
 char* trigger_wav_filename = "alarm.wav";
 int OC_trigger_pin = 5;                         // OC trigger pin
 int logic_trigger_pin = 4;                      // Logic trigger pin
