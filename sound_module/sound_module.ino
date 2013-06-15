@@ -23,6 +23,8 @@ bool SD_failed = true;              // true if SD card has failed, false if succ
 // ---------------------------------- Misc Variables ----------------------------------
 char* ambient_wav_filename = "ambient.wav";     // ambient wave file name
 char* trigger_wav_filename = "alarm.wav";
+char* trigger_sounds[100] = {"1","2","3","4","5","6","7","8","9"};
+byte trigger_sound_count = 9;                   // keeps track of how many trigger sounds you have on the SD
 int OC_trigger_pin = 5;                         // OC trigger pin
 int logic_trigger_pin = 4;                      // Logic trigger pin
 int OC_trigger_threshold = 300;                 // OC trigger threshold that it must go below
@@ -190,7 +192,25 @@ void playbackground(char *name) {
 }
 
 void play_next_trigger(){
+  if (!SD_failed){                                                 // if files exist
+    if (random_mode){                                               // if in random mode
+      playcomplete(trigger_sounds[random(0,(trigger_sound_count - 1))]); // play a random sound
+    }else{
+      playcomplete(trigger_sounds[current_trigger_sound]);          // play the trigger sound
+      if (current_trigger_sound + 1 >= trigger_sound_count){       // if we've reached the end
+        current_trigger_sound = 0;                                  // back to the beginning
+      }else{
+        current_trigger_sound ++;
+      }
+    }
+  }
+}
 
+void helper(char* number){
+  char temp[10] = {};
+  strcat(temp,number);
+  strcat(temp,".wav");
+  playcomplete(temp);
 }
 
 // ---------------------------------- Main Functions ----------------------------------
@@ -210,6 +230,11 @@ void setup(){
         Serial.print(F("ambient = "));
         Serial.println(ambient_mode);
 
+        for (byte i=0;i<=10;i++){
+          Serial.println(i);
+          Serial.println(trigger_sounds[i]);
+          helper(trigger_sounds[i]);
+        }
         // if (trig*.wav exists)
         //     trigger_sounds[] = count of trig1.wav ... trign.wav
         // if (file random.txt exists)
@@ -229,7 +254,6 @@ void loop(){
         //             play trigger_sounds[random number <= trigger_sounds.length];
         //         }else{                                                              //if not in random_mode, play next sound in sequence
         //             play trigger_sounds[current_trigger_sound];
-    
         //             if (current_trigger_sound > trigger_sounds.length){
         //                 current_trigger_sound = 0;                                  // back to the beginning
         //             }else{
@@ -241,7 +265,8 @@ void loop(){
         // digitalWrite(LED,OFF)
     }else{                                              // if the SD failed
     	// setup_SD_card();								// try to setup SD card again
+     //  ambient_mode = does_file_exist(ambient_wav_filename);
     	// if (SD_failed)									// if it failed after another attempt
-	        // SD_failure_alert();							// alert user
+      SD_failure_alert();							// alert user
     }
 }
