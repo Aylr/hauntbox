@@ -25,7 +25,8 @@ char* ambient_wav_filename = "ambient.wav";     // ambient wave file name
 char* trigger_wav_filename = "alarm.wav";
 int OC_trigger_pin = 5;                         // OC trigger pin
 int logic_trigger_pin = 4;                      // Logic trigger pin
-int trigger_threshold = 200;                    
+int OC_trigger_threshold = 300;                 // OC trigger threshold that it must go below
+int log_trigger_threshold = 200;                // logic trigger thresh that it must go above
 int trigger_LED_pin = 7;                        // indicator LED when triggered
 int reset_LED_pin = 8;                          // indicator board needs to be reset
 
@@ -137,6 +138,17 @@ bool does_file_exist(char *name) {   // Should only really run at startup or if 
   return true;            // true if you made it this far without failing
 }
 
+bool trigger_check(){
+  if (analogRead(OC_trigger_pin) <= OC_trigger_threshold || analogRead(logic_trigger_pin) >= log_trigger_threshold) {
+    Serial.print(F("OC: "));
+    Serial.print(analogRead(OC_trigger_pin));
+    Serial.print(F(" log: "));
+    Serial.println(analogRead(logic_trigger_pin));
+    return true;
+  }
+  return false;
+}
+
 // ---------------------------------- Sound Functions ----------------------------------
 
 // Plays a full file from beginning to end with no pause.
@@ -168,17 +180,18 @@ void playfile(char *name) {		// Plays w/ possiblity to be stopped
 void playbackground(char *name) {
   playfile(name);					// call our helper to find and play this name
   while (wave.isplaying) {			// While the ambient background track is playing watch for triggers
-    if (analogRead(OC_trigger_pin) > trigger_threshold) {
-      Serial.print(F("Trigger: "));
-      Serial.println(analogRead(OC_trigger_pin));
-      digitalWrite(trigger_LED_pin,HIGH);   	// turn on trigger indicator LED
+    if (trigger_check()) {
+      digitalWrite(trigger_LED_pin,HIGH);   	// turn on trigger LED
       playcomplete(trigger_wav_filename);			// Play complete trigger wav
+      digitalWrite(trigger_LED_pin,LOW);      // turn off trigger LED
     }
   }
   // now its done playing
-  digitalWrite(trigger_LED_pin,LOW);    		// turn off trigger indicator LED
 }
 
+void play_next_trigger(){
+
+}
 
 // ---------------------------------- Main Functions ----------------------------------
 void setup(){
