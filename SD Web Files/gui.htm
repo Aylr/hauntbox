@@ -89,7 +89,12 @@
 		font-family: arial, sans-serif;
 		color: rgb(204,204,204);
 	}
-
+	.clear {
+		clear:both;
+	}
+	.pull-down {
+		margin-top: 10px;
+	}
 	div.settings input[type="text"] {
 		width: 8.5em;
 	}
@@ -212,8 +217,8 @@
 	div.alert {
 		position: absolute;
 		top: 20px;
-		left: 450px;
-		width: 320px;
+		left: 155px;
+		width: 650px;
 
 	}
 	div.manual_mode_warning h2 {
@@ -1122,7 +1127,6 @@ $(function(){//shortcut for doc.ready
 		}else{
 			$("div.program button.subtract_row").prop("disabled", true);	//disable +
 		}
-		$("div.program .button_container span.row_count").html("Rows: " + temp_count2);
 	};
 
 	$("div.program .button_container button.add_row").click(function(){		//adds a row to the program page
@@ -1187,13 +1191,16 @@ $(function(){//shortcut for doc.ready
 				</div>
 				
 				<div class="button_container">
-					<button class="btn btn-large add_row" type="button"> + </button>
-					<button class="btn btn-large subtract_row" type="button"> - </button>
-
-					<span class="row_count">Rows: </span>
-					<button class="btn btn-large btn-primary save_program" name="save" type="button">Save Program</button>
-					<button class="btn btn-large" id="restore_program" name="restore" type="button">Restore Program</button>
-					<span class="status_check"></span>
+					<div>
+						<button class="btn btn-large add_row" title="Add Row" type="button"> + </button>
+						<button class="btn btn-large subtract_row" title="Remove Row" type="button"> - </button>
+					</div>
+					<hr>
+					<div class="pull-down">
+						<button class="btn btn-large btn-primary save_program" name="save" type="button">Save Program</button>
+						<button class="btn btn-large" id="restore_program" name="restore" type="button">Restore Program</button>
+						<span class="status_check"></span>
+					</div>
 				</div>
 				<div id="status_program"></div>
 			</div><!-- //end program -->
@@ -1241,6 +1248,7 @@ $(function(){//shortcut for doc.ready
 					</div>
 				</div>
 				<div class="button_container">
+					<hr>
 					<button class="btn btn-large btn-primary save_settings" name="save" type="button">Save Settings</button>
 					<button class="btn btn-large" id="restore_settings" name="restore" type="button">Restore Settings</button>
 					<span class="status_check"></span>
