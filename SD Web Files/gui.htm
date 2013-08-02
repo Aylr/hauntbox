@@ -137,6 +137,15 @@
 	div.outputs_container, div.button_container {
 		margin-top: 2em;
 	}
+	.status_check {
+		font-size: 200%;
+		border-style: solid;
+		border-width: 1px;
+		border-radius: 20px;
+		padding: 4px 10px;
+		position: relative;
+		top:5px;
+	}
 	.sentence_headings {
 		width: 1200px;
 	}
@@ -703,17 +712,6 @@ $(function(){//shortcut for doc.ready
 		}
 	}//end unsaved_modal()
 	
-	function saved_successfully(type){
-		var modal = $("#successful_save_modal");							//select the modal
-		type = type.charAt(0).toUpperCase() + type.slice(1);				//capitalize first letter (program --> Program)
-		modal.children().first().children("h3").html(type + " saved");		//change the modal h3 header
-		modal.children().last().children("p").html(type + " saved");		//change the modal body
-		modal.modal('show');												//show the modal
-		timeout = setTimeout(function(){									//do stuff in... 2 seconds
-			modal.modal('hide');										//hide the modal
-		},2000);														//2 seconds
-	}
-	
 	function reset_save_button(){
 		$(".save_program").html("Save Program");							//reset the Save button
 	}
@@ -777,7 +775,6 @@ $(function(){//shortcut for doc.ready
 			success: function(){
 				unsaved_changes = false;
 				status_message(0);
-				saved_successfully(type);
 				reset_save_button();
 			},
 			error: function(){		//keep unsaved_changes = true
@@ -977,83 +974,71 @@ $(function(){//shortcut for doc.ready
 		if (isNaN(status_code)) {
 			status_code = null;
 		}
-		var header = "", message = "", button1 = "", button2 = "", type = "alert-info";		//initialize defaults
+		var header = "", message = "", status = "", type = "alert-info", show_sticky = true;		//initialize defaults
 		
 		switch	(status_code){					//this entire switch really just changes the message in the alert
 			case 0:
 				//0 = all good
-				return;							//*****^^^^____-----____ temp. disable annoying status (0)
-				header = "All systems go.";
-				message = "Everything appears normal, sir/madam.";
-				button1 = "button1";
-				button2 = "button2";
+				header = "";
+				message = "";
+				status = "&#x2713;";
 				type = "alert-success";
-				setTimeout(function(){
-					$(".alert").fadeOut();
-				},2000);
+				show_sticky = false;
 				break;
 			case 1:
 				//1 = program doesn't make sense --> reload or use defaults
 				header = "Error 1";
-				message = "1 = program doesn't make sense --> reload or use defaults";
-				button1 = "button1";
-				button2 = "button2";
+				message = "Program doesn\'t make sense --> reload or use defaults";
+				status = "&#x2717;";
 				type = "alert-error";
 				break;
 			case 2:
 				//2 = no SD card --> insert valid one and reset Arduino
 				header = "Error 2: No valid SD card";
 				message = "Please insert a valid SD card and reset Arduino";
-				button1 = "button1";
-				button2 = "button2";
+				status = "&#x2717;";
 				type = "alert-error";
 				break;
 			case 3:
 				//3 = file opening problem --> NOT SURE WHAT TO DO
 				header = "Error 3";
-				message = "3 = file opening problem --> NOT SURE WHAT TO DO";
-				button1 = "button1";
-				button2 = "button2";
+				message = "File opening problem --> NOT SURE WHAT TO DO";
+				status = "&#x2717;";
 				type = "alert-error";
 				break;
 			case 4:
 				//4 = corruption or read/write problem --> NOT SURE WHAT TO DO
 				header = "Error 4";
 				message = "4 = corruption or read/write problem --> NOT SURE WHAT TO DO";
-				button1 = "button1";
-				button2 = "button2";
+				status = "&#x2717;";
 				type = "alert-error";
 				break;
 			case 5:
 				//5 = Factory Defaults Loaded
 				header = "Hauntbox reset to factory defaults";
 				message = "Factory defaults loaded";
-				button1 = "button1";
-				button2 = "button2";
+				status = "&#x2717;";
 				type = "alert-info";
 				break;
 			case 6:
 				//6 = Factory Defaults Failed
 				header = "Reset Failed";
 				message = "Factory defaults failed to load. --> NOT SURE WHAT TO DO";
-				button1 = "button1";
-				button2 = "button2";
+				status = "&#x2717;";
 				type = "alert-error";
 				break;
 			case 7:
 				//7 = Save failed
 				header = "Save failed";
-				message = "Saving the file failed. --> NOT SURE WHAT TO DO";
-				button1 = "button1";
-				button2 = "button2";
+				message = "Saving failed. --> NOT SURE WHAT TO DO";
+				status = "&#x2717;";
 				type = "alert-error";
 				break;
 			case 8:
 				//8 = Loading program/settings failed
 				header = "Loading program.txt or settings.txt failed";
 				message = "Please check that your SD card &amp; network are working, reset the hauntbox power and refresh this page in 30 seconds.";
-				button1 = "button1";
-				button2 = "button2";
+				status = "&#x2717;";
 				type = "alert-error";
 				break;
 		
@@ -1061,16 +1046,20 @@ $(function(){//shortcut for doc.ready
 				//if no error code or garbled --> NO CLUE WHAT SHOULD HAPPEN HERE
 				header = "Unknown Error";
 				message = "if no error code or garbled --> NO CLUE WHAT SHOULD HAPPEN HERE";
-				button1 = "button1";
-				button2 = "button2";
+				status = "&#x2717;";
 				type = "alert-error";
 				break;
 		}//end case
-
-		var alert = $("div.alert");
-		alert.hide();
-		alert.attr("class","alert " + type).children("h4").html(header).next().html(message);
-		alert.fadeIn();
+		$(".status_check").attr("class", "status_check " + type).html(status).fadeIn("fast");
+		setTimeout(function(){
+			$(".status_check").fadeOut("slow");
+		}, 3000);
+		if (show_sticky) {
+			var alert = $("div.alert");
+			alert.hide();
+			alert.attr("class","alert " + type).children("h4").html(header).next().html(message);
+			alert.fadeIn();
+		}
 	}//end status_message()
 	
 	function stop_auto(){				//this function is called whenever you want to stop auto incrementing
@@ -1132,7 +1121,7 @@ $(function(){//shortcut for doc.ready
 		}else{
 			$("div.program button.subtract_row").prop("disabled", true);	//disable +
 		}
-		$("div.program .button_container span").html("Rows: " + temp_count2);
+		$("div.program .button_container span.row_count").html("Rows: " + temp_count2);
 	};
 
 	$("div.program .button_container button.add_row").click(function(){		//adds a row to the program page
@@ -1203,6 +1192,7 @@ $(function(){//shortcut for doc.ready
 					<span class="row_count">Rows: </span>
 					<button class="btn btn-large btn-primary save_program" name="save" type="button">Save Program</button>
 					<button class="btn btn-large" id="restore_program" name="restore" type="button">Restore Program</button>
+					<span class="status_check"></span>
 				</div>
 				<div id="status_program"></div>
 			</div><!-- //end program -->
@@ -1252,6 +1242,7 @@ $(function(){//shortcut for doc.ready
 				<div class="button_container">
 					<button class="btn btn-large btn-primary save_settings" name="save" type="button">Save Settings</button>
 					<button class="btn btn-large" id="restore_settings" name="restore" type="button">Restore Settings</button>
+					<span class="status_check"></span>
 				</div>
 				<div id="status_settings"></div>
 			</div><!--//end div.settings -->
