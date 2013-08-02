@@ -971,11 +971,12 @@ $(function(){//shortcut for doc.ready
 		//switch 0,1,2,3,4,5,...
 		//plug in status codes here and trigger an event if needed and a BOOTSTRAP alert if needed
 		status_code = parseInt(status_code);
+		// If there is no status, just finish up gracefully
 		if (isNaN(status_code)) {
-			status_code = null;
+			return;
 		}
+
 		var header = "", message = "", status = "", type = "alert-info", show_sticky = true;		//initialize defaults
-		
 		switch	(status_code){					//this entire switch really just changes the message in the alert
 			case 0:
 				//0 = all good
