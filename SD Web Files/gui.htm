@@ -226,7 +226,7 @@
 	}
 	table.override_table td {
 		padding: 5px;
-		text-align: right;
+		text-align: left;
 		font-size: 120%;
 	}
 </style>
@@ -439,7 +439,7 @@ $(function(){//shortcut for doc.ready
 	function set_override_output_names(){			//sets real names of outputs on the override page
 		var i = 0;
 		$("div.override td.override_output_name").each(function(){
-			$(this).html(local_output_names[i] + ": " + i);
+			$(this).html(i + ": " + local_output_names[i]);
 			i++;
 		});
 	}//end set_override_output_names
@@ -447,7 +447,7 @@ $(function(){//shortcut for doc.ready
 	function set_override_input_names(){			//sets real names of inputs on the override page
 		var i = 0;
 		$("div.override td.override_input_name").each(function(){
-			$(this).html(local_input_names[i] + ": " + i);
+			$(this).html(i + ": " + local_input_names[i]);
 			i++;
 		});
 	}//end set_override_input_names
@@ -999,29 +999,29 @@ $(function(){//shortcut for doc.ready
 				break;
 			case 1:
 				//1 = program doesn't make sense --> reload or use defaults
-				header = "Error 1";
+				header = "Program Error";
 				message = "Program doesn\'t make sense --> reload or use defaults";
 				status = "&#x2717;";
 				type = "alert-error";
 				break;
 			case 2:
 				//2 = no SD card --> insert valid one and reset Arduino
-				header = "Error 2: No valid SD card";
-				message = "Please insert a valid SD card and reset Arduino";
+				header = "No valid SD card";
+				message = "Please insert a valid SD card and reset Hauntbox";
 				status = "&#x2717;";
 				type = "alert-error";
 				break;
 			case 3:
 				//3 = file opening problem --> NOT SURE WHAT TO DO
-				header = "Error 3";
-				message = "File opening problem --> NOT SURE WHAT TO DO";
+				header = "File Problem";
+				message = "File opening problem. Try re-flashing Hauntbox and re-copying source web files";
 				status = "&#x2717;";
 				type = "alert-error";
 				break;
 			case 4:
 				//4 = corruption or read/write problem --> NOT SURE WHAT TO DO
-				header = "Error 4";
-				message = "4 = corruption or read/write problem --> NOT SURE WHAT TO DO";
+				header = "File Read/Write Problem";
+				message = "File Read/Write problem. Try re-flashing Hauntbox and re-copying source web files";
 				status = "&#x2717;";
 				type = "alert-error";
 				break;
@@ -1035,28 +1035,28 @@ $(function(){//shortcut for doc.ready
 			case 6:
 				//6 = Factory Defaults Failed
 				header = "Reset Failed";
-				message = "Factory defaults failed to load. --> NOT SURE WHAT TO DO";
+				message = "Factory defaults failed to load. Try re-copying the source web files";
 				status = "&#x2717;";
 				type = "alert-error";
 				break;
 			case 7:
 				//7 = Save failed
 				header = "Save failed";
-				message = "Saving failed. --> NOT SURE WHAT TO DO";
+				message = "Saving failed. Is the Hauntbox on and connected to the network? Try resetting the Hauntbox and refresh this page in 30 seconds.";
 				status = "&#x2717;";
 				type = "alert-error";
 				break;
 			case 8:
 				//8 = Loading program/settings failed
 				header = "Loading program.txt or settings.txt failed";
-				message = "Please check that your SD card &amp; network are working, reset the hauntbox power and refresh this page in 30 seconds.";
+				message = "Please check that your SD card &amp; network are working, reset the Hauntbox power and refresh this page in 30 seconds.";
 				status = "&#x2717;";
 				type = "alert-error";
 				break;
 			default:
 				//if no error code or garbled --> NO CLUE WHAT SHOULD HAPPEN HERE
 				header = "Unknown Error";
-				message = "if no error code or garbled --> NO CLUE WHAT SHOULD HAPPEN HERE";
+				message = "Something has gone wrong that we haven\'t anticipated. I recommend emailing us.";
 				status = "&#x2717;";
 				type = "alert-error";
 				break;
@@ -1240,14 +1240,16 @@ $(function(){//shortcut for doc.ready
 							<option>12V</option>
 							<option>24V</option>
 						</select>:
-						<input type="text" class="input_name" name="input1" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="highlow1" value="1" checked /> High <input type="radio" class="highlow" name="highlow1" value="0"> Low.&nbsp;
+						<input type="text" class="input_name" name="input1" maxlength="16" /> is considered on when its signal goes 
+						<input type="radio" class="highlow" name="highlow1" value="1" checked /> High 
+						<input type="radio" class="highlow" name="highlow1" value="0"> Low.&nbsp;
 							Wait
-							<div class="wait">
-								<span class="up">+</span>
-								<span class="down">-</span>
-							</div>
-							<input type="text" class="retrigger" maxlength="9" value="0" /> seconds before input retrigger.
+						<div class="wait">
+							<span class="up">+</span>
+							<span class="down">-</span>
 						</div>
+						<input type="text" class="retrigger" maxlength="9" value="0" /> seconds before input retrigger.
+					</div>
 				</div>
 				
 
@@ -1258,7 +1260,9 @@ $(function(){//shortcut for doc.ready
 					</div>
 					<div class="sentence">
 						<span class="output_title">Output 1</span>:
-						<input type="text" class="output_name" name="output1" maxlength="16" /> is considered on when its signal goes <input type="radio" class="highlow" name="output_highlow1" value="1" checked />High<input type="radio" class="highlow" name="output_highlow1" value="0" />Low.
+						<input type="text" class="output_name" name="output1" maxlength="16" /> is considered on when its signal goes 
+						<input type="radio" class="highlow" name="output_highlow1" value="1" checked /> High 
+						<input type="radio" class="highlow" name="output_highlow1" value="0" /> Low.
 					</div>
 				</div>
 				<div class="button_container">
