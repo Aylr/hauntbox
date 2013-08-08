@@ -3,13 +3,10 @@
 <head>
 	<!--<meta name="viewport" content="width=device-width, initial-scale=1.0">-->
     <title>Hauntbox</title>
-<link rel="stylesheet" href="bs_full.css" type="text/css" media="screen" \>
-<!--<link rel="shortcut icon" type="image/x-icon" href="favicon.ico">-->
-<script src="jqry171.js"></script>
+	<link rel="stylesheet" href="bs_full.css" type="text/css" media="screen" \>
+	<link rel="shortcut icon" type="image/ico" href="/favicon.ico">
+	<script src="jqry171.js"></script>
 
-<!--<link href='http://fonts.googleapis.com/css?family=Chango' rel='stylesheet' type='text/css'>
-<link href='http://fonts.googleapis.com/css?family=Reenie+Beanie' rel='stylesheet' type='text/css'>
--->
 <style type="text/css">
 	/*	dark grey background: rgb(34,34,34);*/
 	@font-face {
@@ -79,7 +76,6 @@
 		font-weight: normal;
 		text-transform: uppercase;
 		margin-right: 12px;
-		margin-left:21px; /* lines up with everything left except checkboxes */
 		float: left;
 	}
 	.subheader p{
@@ -221,12 +217,17 @@
 		width: 650px;
 
 	}
-	div.manual_mode_warning h2 {
+	div.manual_mode_warning {
+		font-family: chango;
 		position: absolute;
 		top: 30px;
-		left: 30px;
 		font-size: 2em;
 		color: rgb(249,167,43);
+	}
+	table.override_table td {
+		padding: 5px;
+		text-align: right;
+		font-size: 120%;
 	}
 </style>
 
@@ -242,6 +243,7 @@ $(function(){//shortcut for doc.ready
 	var increment_hold_delay = 1000;		//the delay in milliseconds (timeout) before auto ++ing
 	var interval = null, timeout = null;	//vars for auto incrementing and auto delay
 	var unsaved_changes = false;			//keep track if user has unsaved changes
+	var status_timer;						//timer for hiding status messages
 	var current_page = "program";			//keeps track of current page
 	var next_page = null;					//keeps track of next page
 	var ABC = ["A","B","C","D","E","F"]		//used when naming the dynamically generated rows
@@ -426,18 +428,18 @@ $(function(){//shortcut for doc.ready
 
 	function load_mode(){
 		$.ajax({						//get current mode (auto/manual) and update buttons, etc
-				url: '/mode',				// /mode returns a M0 (manual) or 1 (automatic)
-				type: 'GET',
-				success: function(data){
-					update_mode(data);
-				}
-			});
+			url: '/mode',				// /mode returns a M0 (manual) or 1 (automatic)
+			type: 'GET',
+			success: function(data) {
+				update_mode(data);
+			}
+		});
 	}//end load_mode()
 
 	function set_override_output_names(){			//sets real names of outputs on the override page
 		var i = 0;
 		$("div.override td.override_output_name").each(function(){
-			$(this).html(local_output_names[i]);
+			$(this).html(local_output_names[i] + ": " + i);
 			i++;
 		});
 	}//end set_override_output_names
@@ -445,7 +447,7 @@ $(function(){//shortcut for doc.ready
 	function set_override_input_names(){			//sets real names of inputs on the override page
 		var i = 0;
 		$("div.override td.override_input_name").each(function(){
-			$(this).html(local_input_names[i]);
+			$(this).html(local_input_names[i] + ": " + i);
 			i++;
 		});
 	}//end set_override_input_names
@@ -652,10 +654,14 @@ $(function(){//shortcut for doc.ready
 	$("div.override_outputs button").click(function(){	//override controls
 		var tempval = $(this).attr("value");
 
-		if (tempval == "all_on"){				//if all on
-			$.get("all_on");					//go to url "/all_on"
+		if (tempval == "all_on"){											//if all on
+			$.get("all_on");												//go to url "/all_on"
+			$(".override_outputs").find(".active").removeClass("active");
+			$(".override_outputs button:first-child").addClass("active");	// Set all buttons ON
 		}else if (tempval == "all_off"){		//if all off
 			$.get("all_off");					//get url "/all_off"
+			$(".override_outputs").find(".active").removeClass("active");
+			$(".override_outputs button:not(:first-child)").addClass("active");	// Set all buttons ON
 		}else{
 			$.post("manual", { a: tempval });	//otherwise post the output# and on/off
 												//the first integer is the output#, the second 1 = on, 0 = off
@@ -980,7 +986,7 @@ $(function(){//shortcut for doc.ready
 		if (isNaN(status_code)) {
 			return;
 		}
-
+		
 		var header = "", message = "", status = "", type = "alert-info", show_sticky = true;		//initialize defaults
 		switch	(status_code){					//this entire switch really just changes the message in the alert
 			case 0:
@@ -1047,7 +1053,6 @@ $(function(){//shortcut for doc.ready
 				status = "&#x2717;";
 				type = "alert-error";
 				break;
-		
 			default:
 				//if no error code or garbled --> NO CLUE WHAT SHOULD HAPPEN HERE
 				header = "Unknown Error";
@@ -1062,9 +1067,13 @@ $(function(){//shortcut for doc.ready
 		}, 3000);
 		if (show_sticky) {
 			var alert = $("div.alert");
+			clearTimeout(status_timer);
 			alert.hide();
 			alert.attr("class","alert " + type).children("h4").html(header).next().html(message);
 			alert.fadeIn();
+			status_timer = setTimeout(function(){
+				alert.fadeOut();
+			}, 10000);
 		}
 	}//end status_message()
 	
@@ -1098,15 +1107,19 @@ $(function(){//shortcut for doc.ready
 
 	function update_mode(data){
 		if (data[0] != "M" || data.length > 2) return;				//if the incoming data string does not start with "M", get out of the function. Data should look like "M0" or "M1"
-
+		var button;
 		if (data[1] == 1){		//automatic mode
 			$("div.manual_mode_warning").fadeOut();								//hide warning
 			automatic_mode = 1;
-			$("div.manual_override_mode button[value='1']").button('toggle');	//toggle radio button
-		}else if (data[1] == 0) {				//manual mode
+			button = $("div.manual_override_mode button[value='1']");
+			button.parent().find("button[value='0']").removeClass('active');    //Remove the active toggle
+			button.addClass('active');	//toggle radio button
+		} else if (data[1] == 0) {				//manual mode
 			$("div.manual_mode_warning").fadeIn();								//show warning
 			automatic_mode = 0;
-			$("div.manual_override_mode button[value='0']").button('toggle');	//toggle radio button
+			button = $("div.manual_override_mode button[value='0']");
+			button.parent().find("button[value='1']").removeClass('active');    //Remove the active toggle
+			button.addClass('active');	//toggle radio button
 		}
 	}
 
@@ -1164,6 +1177,7 @@ $(function(){//shortcut for doc.ready
 			</ul>
 			<div class="manual_mode_warning">
 				<h2>Warning: Now in Manual mode!</h2>
+				<div>(sensors are deactivated)</div>
 			</div>
 			<p class="logo"><img src="hblogo.png" width="150" height="87" /></p>
 			<div class="alert">
@@ -1264,70 +1278,125 @@ $(function(){//shortcut for doc.ready
 
 				<div class="container">
 					<div class="row">
+						<h3>Specify Control Mode</h3>
+						<div class="btn-group manual_override_mode" data-toggle="buttons-radio">
+							<button type="button" class="btn btn-large active" value="1">Automatic (normal)</button>
+							<button type="button" class="btn btn-large" value="0">Manual (disables inputs)</button>
+						</div>
+						<p>When you are in <strong>manual mode</strong> the Hauntbox will ignore physical sensors and only pay attention to the trigger buttons below.<p>
+					</div>
+					<div class="row">
 						<div class="override_triggers span4">
 							<h3>Inputs</h3>
-							<div class="btn-group manual_override_mode" data-toggle="buttons-radio">
-								<button type="button" class="btn btn-large" value="1">Automatic (normal)</button>
-								<button type="button" class="btn btn-large" value="0">Manual (disables inputs)</button>
-							</div>
-							<p>When you are in <strong>manual mode</strong> the Hauntbox will ignore physical sensors and only pay attention to the trigger buttons below.<p>
-							<table>
-								<!--<tr><th>Input</th><th>Control</th></tr>-->
-								<tr><td class="override_input_name">1</td><td><div class="btn-group">
-										<button type="button" class="btn btn-large" value="1">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
-									</div></td></tr>
-								<tr><td class="override_input_name">2</td><td><div class="btn-group">
-										<button type="button" class="btn btn-large" value="2">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
-									</div></td></tr>
-								<tr><td class="override_input_name">3</td><td><div class="btn-group">
-										<button type="button" class="btn btn-large" value="3">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
-									</div></td></tr>
-								<tr><td class="override_input_name">4</td><td><div class="btn-group">
-										<button type="button" class="btn btn-large" value="4">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
-									</div></td></tr>
-								<tr><td class="override_input_name">5</td><td><div class="btn-group">
-										<button type="button" class="btn btn-large" value="5">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
-									</div></td></tr>
-								<tr><td class="override_input_name">6</td><td><div class="btn-group">
-										<button type="button" class="btn btn-large" value="6">&nbsp;&nbsp;&nbsp; Trigger &nbsp;&nbsp;&nbsp;</button>
-									</div></td></tr>
-								<tr><td colspan="3"><div class="btn-group">
-										<button type="button" class="btn btn-large" value="all">&nbsp;&nbsp;&nbsp; Trigger ALL &nbsp;&nbsp;&nbsp;</button>
-									</div></td></tr>
+							<table class="override_table">
+								<tr>
+									<td colspan="2">
+										<button type="button" class="btn btn-large pull-right" value="all"> Trigger ALL </button>
+									</td>
+								</tr>
+								<tr>
+									<td class="override_input_name">1</td>
+									<td>
+										<button type="button" class="btn btn-large" value="1"> Trigger </button>
+									</td>
+								</tr>
+								<tr>
+									<td class="override_input_name">2</td>
+									<td>
+										<button type="button" class="btn btn-large" value="2"> Trigger </button>
+									</td>
+								</tr>
+								<tr>
+									<td class="override_input_name">3</td>
+									<td>
+										<button type="button" class="btn btn-large" value="3"> Trigger </button>
+									</td>
+								</tr>
+								<tr>
+									<td class="override_input_name">4</td>
+									<td>
+										<button type="button" class="btn btn-large" value="4"> Trigger </button>
+									</td>
+								</tr>
+								<tr>
+									<td class="override_input_name">5</td>
+									<td>
+										<button type="button" class="btn btn-large" value="5"> Trigger </button>
+									</td>
+								</tr>
+								<tr>
+									<td class="override_input_name">6</td>
+									<td>
+										<button type="button" class="btn btn-large" value="6"> Trigger </button>
+									</td>
+								</tr>
 							</table>
 						</div>
 						<div class="override_outputs span4">
 							<h3>Outputs</h3>
-							<table>
-								<!--<tr><th>Output</th><th>Control</th></tr>-->
-								<tr><td class="override_output_name">1</td><td><div class="btn-group">
-										<button type="button" class="btn btn-large" value="11">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
-										<button type="button" class="btn btn-large" value="10">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
-									</div></td></tr>
-								<tr><td class="override_output_name">2</td><td><div class="btn-group">
-										<button type="button" class="btn btn-large" value="21">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
-										<button type="button" class="btn btn-large" value="20">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
-									</div></td></tr>
-								<tr><td class="override_output_name">3</td><td><div class="btn-group">
-										<button type="button" class="btn btn-large" value="31">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
-										<button type="button" class="btn btn-large" value="30">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
-									</div></td></tr>
-								<tr><td class="override_output_name">4</td><td><div class="btn-group">
-										<button type="button" class="btn btn-large" value="41">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
-										<button type="button" class="btn btn-large" value="40">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
-									</div></td></tr>
-								<tr><td class="override_output_name">5</td><td><div class="btn-group">
-										<button type="button" class="btn btn-large" value="51">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
-										<button type="button" class="btn btn-large" value="50">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
-									</div></td></tr>
-								<tr><td class="override_output_name">6</td><td><div class="btn-group">
-										<button type="button" class="btn btn-large" value="61">&nbsp;&nbsp;&nbsp; ON &nbsp;&nbsp;&nbsp;</button>
-										<button type="button" class="btn btn-large" value="60">&nbsp;&nbsp;&nbsp; OFF &nbsp;&nbsp;&nbsp;</button>
-									</div></td></tr>
-								<tr><td colspan="3"><div class="btn-group">
-										<button type="button" class="btn btn-large" value="all_on">&nbsp;&nbsp;&nbsp; ALL ON &nbsp;&nbsp;&nbsp;</button>
-										<button type="button" class="btn btn-large" value="all_off">&nbsp;&nbsp;&nbsp; ALL OFF &nbsp;&nbsp;&nbsp;</button>
-									</div></td></tr>
+							<table class="override_table">
+								<tr>
+									<td colspan="3">
+										<div class="btn-group pull-right" data-toggle="buttons-radio">
+											<button type="button" class="btn btn-large" value="all_on"> ALL ON </button>
+											<button type="button" class="btn btn-large" value="all_off"> ALL OFF </button>
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td class="override_output_name">1</td>
+									<td>
+										<div class="btn-group" data-toggle="buttons-radio">
+											<button type="button" class="btn btn-large" value="11"> ON </button>
+											<button type="button" class="btn btn-large" value="10"> OFF </button>
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td class="override_output_name">2</td>
+									<td>
+										<div class="btn-group" data-toggle="buttons-radio">
+											<button type="button" class="btn btn-large" value="21"> ON </button>
+											<button type="button" class="btn btn-large" value="20"> OFF </button>
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td class="override_output_name">3</td>
+									<td>
+										<div class="btn-group" data-toggle="buttons-radio">
+											<button type="button" class="btn btn-large" value="31"> ON </button>
+											<button type="button" class="btn btn-large" value="30"> OFF </button>
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td class="override_output_name">4</td>
+									<td>
+										<div class="btn-group" data-toggle="buttons-radio">
+											<button type="button" class="btn btn-large" value="41"> ON </button>
+											<button type="button" class="btn btn-large" value="40"> OFF </button>
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td class="override_output_name">5</td>
+									<td>
+										<div class="btn-group" data-toggle="buttons-radio">
+											<button type="button" class="btn btn-large" value="51"> ON </button>
+											<button type="button" class="btn btn-large" value="50"> OFF </button>
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td class="override_output_name">6</td>
+									<td>
+										<div class="btn-group" data-toggle="buttons-radio">
+											<button type="button" class="btn btn-large" value="61"> ON </button>
+											<button type="button" class="btn btn-large" value="60"> OFF </button>
+										</div>
+									</td>
+								</tr>
 							</table>
 						</div>
 					</div>
