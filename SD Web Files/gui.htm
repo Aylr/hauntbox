@@ -809,7 +809,7 @@ $(function(){//shortcut for doc.ready
 			error: function(){
 				failed();
 			}
-		})
+		});
 		$.ajax({
 			url: '/upload/settings.txt',		//uploads settings file
 			type: 'PUT',
@@ -821,14 +821,27 @@ $(function(){//shortcut for doc.ready
 			error: function(){
 				failed();
 			}
-		})
+		});
+		$.ajax({
+			url: '/upload/bonjour.txt',		//uploads settings file
+			type: 'PUT',
+			data: "hauntbox",
+			success: function(){
+				ajax_status += 1;
+				succeeded(ajax_status);
+			},
+			error: function(){
+				failed();
+			}
+		});
 		
 		function failed(){
 			status_message(6);
 		}
 		function succeeded(status){	//only display success alert if both .ajax succeeded
-			if (status == 2){
+			if (status == 3){
 				status_message(5);
+				$("body").animate({scrollTop:"0"});
 			}
 		}
 	}
@@ -1028,7 +1041,7 @@ $(function(){//shortcut for doc.ready
 			case 5:
 				//5 = Factory Defaults Loaded
 				header = "Hauntbox reset to factory defaults";
-				message = "Factory defaults loaded";
+				message = "Factory defaults loaded. Please restart your hauntbox for changes to take full effect";
 				status = "&#x2717;";
 				type = "alert-info";
 				break;
@@ -1449,6 +1462,7 @@ $(function(){//shortcut for doc.ready
 
 					<h3>Factory reset</h3>
 					<p>Pressing that big red button will erase your current settings and program. There's no going back, so use it only when you need to start fresh.</p>
+					<p><b>You will need to restart your hauntbox for full changes to take effect.</b></p>
 					<button type="button" class="factory_defaults btn btn-danger">Reset to factory defaults</button>
 					<br /><br />
 
@@ -1458,6 +1472,7 @@ $(function(){//shortcut for doc.ready
 						<li><a href="/settings">/settings</a> current settings + status + ram</li>
 						<li><a href="/program.txt">/program.txt</a> current program file</li>
 						<li><a href="/settings.txt">/settings.txt</a> current settings file</li>
+						<li><a href="/bonjour.txt">/bonjour.txt</a> current bonjour file</li>
 						<li><a href="/ram">/ram</a> free ram</li>
 						<li><a href="/row_status">/row_status</a> current row state (as defined in firmware)</li>
 						<li><a href="/output_status">/output_status</a> current output state (on/off)</li>
