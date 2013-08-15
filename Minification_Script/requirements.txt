@@ -1,0 +1,5 @@
+beautifulsoup4
+yuicompressor
+slimit
+cssmin
+html5lib

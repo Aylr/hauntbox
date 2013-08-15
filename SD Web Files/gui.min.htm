@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+	<!--<meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+    <title>Hauntbox</title>
+	<link href="bs_full.css" media="screen" rel="stylesheet" type="text/css"/>
+	<link href="/favicon.ico" rel="shortcut icon" type="image/ico"/>
+	<script src="jqry171.js"></script>
+
+<style type="text/css">@font-face{font-family:'Reenie Beanie';font-style:normal;font-weight:normal;src:local('Reenie Beanie'),local('ReenieBeanie'),url('fontrb.ttf') format('truetype')}@font-face{font-family:'Chango';font-style:normal;font-weight:400;src:local('Chango Regular'),local('Chango-Regular'),url('fontch.ttf') format('truetype')}body{background:url(navbg.gif);background-repeat:repeat-x}.body_container{padding-bottom:25px}.navbar{margin-top:107px;margin-left:12px}.navbar .nav>li>a{padding-right:15px;font-family:Chango;text-transform:lowercase;color:#58595b}.navbar li.active a{color:#d6de23}.navbar .logo{position:absolute;top:45px;left:900px}input[name="enable_disable"]{margin:0 2px 0 0}.sentence_headings,div.help .container{margin-left:23px}.inner_sentence{display:inline}#display_container{margin-top:155px;width:1200px}.subheader{clear:both;width:100%;padding:22px 0 24px 0;color:#fff;margin-bottom:22px}h2{font-family:Chango;font-size:30px;font-weight:normal;text-transform:uppercase;margin-right:12px;float:left}.subheader p{font-size:8pt;line-height:15px;padding-top:4px;font-family:arial,sans-serif;color:#ccc}.clear{clear:both}.pull-down{margin-top:10px}div.settings input[type="text"]{width:8.5em}div.alert,div.manual_mode_warning{display:none}input,div.settings input.retrigger{width:2.5em;text-align:right}.settings select,.sensor_state,.output_state{width:4.4em}label{font-weight:normal}div.duration_container{display:inline-block}div.wait,div.duration{display:inline-block;position:relative;top:8px}div.wait span,div.duration span{display:block;border:1px solid #aaa;background:#f7f7f7;font-size:1em;text-align:center;text-decoration:none;color:#000;width:20px;height:20px;border-radius:10px;-moz-border-radius:10px;margin:0 0 -1px 0;cursor:pointer;-webkit-user-select:none}div.wait span:first-child,div.duration span:first-child{position:relative;top:-5px}div.outputs_container,div.button_container{margin-top:2em}.status_check{font-size:200%;border-style:solid;border-width:1px;border-radius:20px;padding:4px 10px;position:relative;top:5px}.sentence_headings{width:1200px}.sentence_headings h3{color:#222;font-family:Chango;font-size:10pt;text-transform:uppercase;border-bottom:2px solid #c8c8c8;float:left;margin-right:10px}.sentence_headings .input{width:259px}.sentence_headings .delay{width:310px}.sentence_headings .output{width:175px}.sentence_headings .duration{width:340px}.sentence_headings .voltage{width:105px}.sentence_headings .io_name{width:125px}div.outputs_container .io_name{margin-left:50px}.sentence_headings .high_or_low{width:380px}.sentence_headings .retrigger{width:360px}div.sentence_container{padding-left:10px}div.sentence_container,.sentence{clear:both;color:#58595b;font-family:'Reenie Beanie';font-size:26px}div.settings div.sentence{color:#58595b;font-family:'Reenie Beanie';font-size:22px}div.sentence{height:60px;padding:2px 0 0 0}span.input,span.output,span.duration,span.delay{display:inline-block;margin:0 10px 0 0;padding:0 5px 5px 5px;border-bottom:1px solid #e1e1e1}div.alert{position:absolute;top:20px;left:155px;width:650px}div.manual_mode_warning{font-family:chango;position:absolute;top:30px;font-size:2em;color:#f9a72b}table.override_table td{padding:5px;text-align:left;font-size:120%}</style>
+
+<script id="script_parse" type="text/javascript">$(function(){var a=6;var b=a;var c=20;var d=1;var e=50;var f=1000;var g=null,h=null;var i=false;var j;var k="program";var l=null;var m=["A","B","C","D","E","F"];var n=true;var o={};var p=103;var q=246;var r=492;var s="1,1;1,2;1,1;0,0;1,2;1,1;2,2;1000,1000;";var t="1,1,1,1,1,1,1,1,1,1,1,1;garage,my room,hall,cemetery,cornfield,swamp;UV,light,strobe,sound,air horn,zombie;"+p+","+p+","+p+","+p+","+p+","+p+";100,100,100,100,100,100;";var u=local_output_names=new Array();function v(){if(navigator.userAgent.match(/Android/i)||navigator.userAgent.match(/webOS/i)||navigator.userAgent.match(/iPhone/i)||navigator.userAgent.match(/iPad/i)||navigator.userAgent.match(/iPod/i)||navigator.userAgent.match(/BlackBerry/i)||navigator.userAgent.match(/Windows Phone/i))return true;else return false;}$("#unsaved_modal").modal('hide');$("div.alert").hide();$("div.manual_mode_warning").hide();$("#display_container").children().hide();for(i=1;i<a;i++)$($("#program_row").html()).appendTo(".sentence_container");for(i=1;i<6;i++){$("div.settings .inputs_container .sentence").first().clone({deepWithDataAndEvents:true}).appendTo("div.settings .inputs_container").children("span").html("Input "+m[i]).parent().children("input[type=radio]").attr("name","highlow"+(i+1));$("div.settings .outputs_container .sentence").first().clone({deepWithDataAndEvents:true}).appendTo("div.settings .outputs_container").children("span").html("Output "+(i+1)).parent().children("input[type=radio]").attr("name","output_highlow"+(i+1));}$("div.program").show();function w(){$.ajax({url:'/program',type:'GET',success:function(b){a(b);d(b);},error:function(b){a(s);Q(8);}});function a(a){var c=input_array=input_onoff=on_delay=output_array=output_onoff=duration_type=duration=new Array();var d=a.split(";");c=d[0].split(",");input_array=d[1].split(",");input_onoff=d[2].split(",");on_delay=d[3].split(",");output_array=d[4].split(",");output_onoff=d[5].split(",");duration_type=d[6].split(",");duration=d[7].split(",");L(c);L(input_array);L(input_onoff);L(on_delay);L(output_array);L(output_onoff);L(duration_type);L(duration);b=input_array.length;if(U()<b)while(U()<b)$($("#program_row").html()).appendTo(".sentence_container");else if(U()>b)while(U()>b)$("div.program .sentence").last().remove();V(b);O("input[name='enable_disable']",c);O("select.sensor",input_array);O("select.sensor_state",input_onoff);O("input.wait_time",on_delay);O("select.output",output_array);O("select.output_state",output_onoff);O("select.duration_type",duration_type);O("input.output_duration",duration);}$.ajax({url:'/settings',type:'GET',success:function(a){c(a);d(a);},error:function(a){c(t);d(t);Q(8);}});function c(a){var b=output_names=io_definitions=input_voltage_thresholds=retrigger_delays=new Array();var c=a.split(";");if(c[c.length-1].length==0)c.splice(c.length-1,1);;io_definitions=c[0].split(",");b=c[1].split(",");output_names=c[2].split(",");input_voltage_thresholds=c[3].split(",");retrigger_delays=c[4].split(",");L(io_definitions);L(input_voltage_thresholds);L(retrigger_delays);u=b;local_output_names=output_names;N("select.sensor",b);N("select.output",output_names);o.input_names=b;o.output_names=output_names;O("input.highlow",M(io_definitions));O(".input_name",b);O("div.settings .output_name",output_names);O("div.settings .threshold",input_voltage_thresholds);O("div.settings input.retrigger",retrigger_delays);}function d(a){a=a.split(";");K(a[a.length-3]);Q(parseInt(a[a.length-4]));T(a[a.length-2]);}};function x(){$.ajax({url:'/mode',type:'GET',success:function(a){T(a);}});}function y(){var a=0;$("div.override td.override_output_name").each(function(){$(this).html(a+": "+local_output_names[a]);a++;});}function z(){var a=0;$("div.override td.override_input_name").each(function(){$(this).html(a+": "+u[a]);a++;});}P();w();$(".navbar .nav a").click(function(a){l=$(this);if(i)B();else A();a.preventDefault();});function A(){if(!l)l=$(".navbar .nav a.program");var a=l.attr("class");if(a=="settings")w();else if(a=="program")w();else if(a=="help"){$.ajax({url:'/settings.txt',type:'GET',beforeSend:function(){},success:function(a){$("div.help pre.settings").html(a);},statusCode:{404:function(){$("div.help pre.settings").html("File not found");Q(99);}},error:function(){$("div.help pre.settings").html("Please try again.");}});$.ajax({url:'/program.txt',type:'GET',beforeSend:function(){},success:function(a){$("div.help pre.program").html(a);},error:function(){$("div.help pre.program").html("Please try again.");}});}else if(a=="override"){x();y();z();}D(l);}$("#unsaved_modal .save").click(function(){$(this).button('loading');var a=$("#unsaved_modal h3");var b=$("#unsaved_modal p");a.html("Saving");b.html("Please wait while saving...");E(k);$(this).button('reset');$("#unsaved_modal").modal("hide");a.html("Unsaved Changes");b.html("Would you like to save your changes?");w();D(l);});$("#unsaved_modal .discard").click(function(){i=false;$("#unsaved_modal").modal('hide');D(l);});$("#restore_settings, #restore_program").click(function(){w();});$("body").on("change","input, select",function(a){if(i==false)i=true;});$("body").on("change","input.wait_time",function(){$(this).val(S($(this).val()));});$(".save_program").click(function(){$(this).html("Saving...");E("program");});$(".save_settings").click(function(){E("settings");});if(v()){$("body").on("touchstart",".wait .up, .duration .up",function(a){H($(this).parent().next(),"+");a.preventDefault();});$("body").on("touchstart",".wait .down, .duration .down",function(a){H($(this).parent().next(),"-");a.preventDefault();});$("body").on("touchend",".wait .up, .wait .down, .duration .up, .duration .down",function(a){R();a.preventDefault();});}else{$("body").on("mousedown",".wait .up, .duration .up",function(){H($(this).parent().next(),"+");});$("body").on("mousedown",".wait .down, .duration .down",function(){H($(this).parent().next(),"-");});$("body").on("mouseup",".wait .up,.wait .down,.duration .up,.duration .down",function(){R();});$("body").on("mouseleave",".wait .up,.wait .down,.duration .up,.duration .down",function(){R();});}$("body").on("change","input.output_duration",function(){var a=1;var b=S($(this).val());if(b!=0)a=b;$(this).val(a);});$("body").on("change","select.duration_type",function(){temp=$(this).val();if(temp=="1"||temp=="0"){$(this).next(".duration_container").fadeOut(250);$(this).children('option[value="2"]').html("for...");}else if(temp=="2"){$(this).next(".duration_container").fadeIn(250);$(this).children('option[value="2"]').html("for");}});$(".input_name, .output_name").alphanumeric({allow:" -.!@"});$("input.retrigger").change(function(){var a=1;var b=S($(this).val());if(b!=0)a=b;$(this).val(a);});$("a.brand").click(function(){$("div.alert").toggle();});$("div.alert .close").click(function(a){$(this).parent().fadeOut();a.preventDefault();});$("div.help .factory_defaults").click(function(){G();});$("div.override_outputs button").click(function(){var a=$(this).attr("value");if(a=="all_on"){$.get("all_on");$(".override_outputs").find(".active").removeClass("active");$(".override_outputs button:first-child").addClass("active");}else if(a=="all_off"){$.get("all_off");$(".override_outputs").find(".active").removeClass("active");$(".override_outputs button:not(:first-child)").addClass("active");}else $.post("manual",{a:a});});$("div.override_triggers td button").click(function(){var a=$(this).attr("value");if(a=="all")$.get("trigger_all");else $.post("trigger",{a:a});});$("div.manual_override_mode button").click(function(){var a=$(this).val();if(a==1)$.ajax({url:"automatic_on",type:'GET',success:function(){$("div.manual_mode_warning").fadeOut();n=true;},error:function(){$("div.manual_mode_warning").fadeOut();}});else $.ajax({url:"automatic_off",type:'GET',success:function(){$("div.manual_mode_warning").fadeIn();n=false;},error:function(){$("div.manual_mode_warning").fadeIn();}});});function B(){if(i)$('#unsaved_modal').modal({keyboard:true,show:true});}function C(){$(".save_program").html("Save Program");}function D(a){if(a.parent().attr("class")!="active"){$("#display_container").children().hide();$("."+a.attr("class")).show();$(a).parent().attr("class","active").siblings().attr("class","");k=a.attr("class");}}function E(a){var b=null;var c=a+".txt";if(a=="program")b=["div.program input[name='enable_disable']","div.program select.sensor","div.program select.sensor_state","div.program input.wait_time","div.program select.output","div.program select.output_state","div.program select.duration_type","div.program input.output_duration"];else if(a=="settings")b=["div.settings input[type='radio']:checked","div.settings input.input_name","div.settings input.output_name","div.settings select.threshold","div.settings input.retrigger"];F(b,c,a);}function F(a,b,c){var d="";var e=0;for(var f=0,g=a.length;f<g;f++)$(a[f]).each(function(){e++;if(a[f]=="div.program input.wait_time"||a[f]=="div.program input.output_duration"||a[f]=="div.settings input.retrigger")d+=($(this).val()*1000);else d+=$(this).val();if(e==$(a[f]).length){d+=";";e=0;}else d+=",";;});;$.ajax({url:'/upload/'+b,type:'PUT',data:d,success:function(){i=false;Q(0);C();},error:function(){C();Q(7);}});};function G(){var a=0;$.ajax({url:'/upload/program.txt',type:'PUT',data:s,success:function(){a+=1;c(a);},error:function(){b();}});$.ajax({url:'/upload/settings.txt',type:'PUT',data:t,success:function(){a+=1;c(a);},error:function(){b();}});$.ajax({url:'/upload/bonjour.txt',type:'PUT',data:"hauntbox",success:function(){a+=1;c(a);},error:function(){b();}});function b(){Q(6);}function c(a){if(a==3){Q(5);$("body").animate({scrollTop:"0"});}}}function H(a,b){i=true;R();var c=S(a.val());if(b=="+"){a.val(I(c));h=setTimeout(function(){g=setInterval(function(){c=S(a.val());a.val(I(c));},e);},f);}else if(b=="-"){a.val(J(c));h=setTimeout(function(){g=setInterval(function(){c=S(a.val());a.val(J(c));},e);},f);}}function I(a){var b;if(a<4294967.0)b=a+1;else{b=4294967.0;R();};return b;};function J(a){var b;if(a<=0){b=0;R();}else{var c=S(a-1);b=c>=0?c:0;};return b;};function K(a){$(".navbar p.pull-right").fadeOut().html("Free RAM: "+a).fadeIn();}function L(a){for(i in a)a[i]=parseInt(a[i]);}function M(a){var b=new Array();for(i in a)b.splice(b.length,0,a[i],1-a[i]);return b;};function N(a,b){var c=0;var d=[];if(a=="select.sensor")d=["","A: ","B: ","C: ","D: ","E: ","F: "];else if(a=="select.output")d=["","1: ","2: ","3: ","4: ","5: ","6: "];b.unshift("-");$(a).each(function(){$(this).children().each(function(){$(this).html(d[c]+b[c]);c++;});c=0;});b.shift();};function O(a,b){j=0;$(a).each(function(){for(i in b){if(j==i){if($(a).attr("type")!="radio")if(a=="input.wait_time"||a=="input.output_duration"||a=="div.settings input.retrigger")$(this).val(S(b[i]/1000));else $(this).val(b[i]);if($(a).attr("type")=="checkbox")if(b[i]==1)$(this).attr("checked",true).val(1).trigger("change").trigger("reset_warnings");else $(this).attr("checked",false).val(0).trigger("change").trigger("reset_warnings");if($(a).attr("type")=="radio"&&b[i]==1)$(this).attr("checked","checked");if(a=="select.duration_type"){temp_selected=$(this).next();if(b[i]==2){temp_selected.show();$(this).children().last().html("for");}else temp_selected.hide();};};};j++;});};function P(){$("select.threshold").each(function(){$(this).children().first().val(p).next().val(q).next().val(r);});}function Q(a){a=parseInt(a);if(isNaN(a))return;var b="",c="",d="",e="alert-info",f=true;switch(a){case 0:b="";c="";d="&#x2713;";e="alert-success";f=false;break;case 1:b="Program Error";c="Program doesn\'t make sense --> reload or use defaults";d="&#x2717;";e="alert-error";break;case 2:b="No valid SD card";c="Please insert a valid SD card and reset Hauntbox";d="&#x2717;";e="alert-error";break;case 3:b="File Problem";c="File opening problem. Try re-flashing Hauntbox and re-copying source web files";d="&#x2717;";e="alert-error";break;case 4:b="File Read/Write Problem";c="File Read/Write problem. Try re-flashing Hauntbox and re-copying source web files";d="&#x2717;";e="alert-error";break;case 5:b="Hauntbox reset to factory defaults";c="Factory defaults loaded. Please restart your hauntbox for changes to take full effect";d="&#x2717;";e="alert-info";break;case 6:b="Reset Failed";c="Factory defaults failed to load. Try re-copying the source web files";d="&#x2717;";e="alert-error";break;case 7:b="Save failed";c="Saving failed. Is the Hauntbox on and connected to the network? Try resetting the Hauntbox and refresh this page in 30 seconds.";d="&#x2717;";e="alert-error";break;case 8:b="Loading program.txt or settings.txt failed";c="Please check that your SD card &amp; network are working, reset the Hauntbox power and refresh this page in 30 seconds.";d="&#x2717;";e="alert-error";break;default:b="Unknown Error";c="Something has gone wrong that we haven\'t anticipated. I recommend emailing us.";d="&#x2717;";e="alert-error";break;}$(".status_check").attr("class","status_check "+e).html(d).fadeIn("fast");setTimeout(function(){$(".status_check").fadeOut("slow");},3000);if(f){var g=$("div.alert");clearTimeout(j);g.hide();g.attr("class","alert "+e).children("h4").html(b).next().html(c);g.fadeIn();j=setTimeout(function(){g.fadeOut();},10000);}}function R(){clearInterval(g);clearTimeout(h);};function S(a){var b=parseFloat(a);if(isNaN(b)){console.log("ERROR: num = "+a+"  	parseFloat(num) = "+b+"   ==> NaN");return "0";}else{if(b>4294967.0)b=4294967.0;return Math.round(b*10)/10;};};$("body").on("change","input[name='enable_disable']",function(a){if($(this).attr("checked")=="checked")$(this).attr("checked",true).val(1).next().fadeTo(100,1).find("input, select").prop("disabled",false);else $(this).attr("checked",false).val(0).next().fadeTo(100,.3).find("input, select").prop("disabled",true);}).on("reset_warnings",function(){i=false;});function T(a){if(a[0]!="M"||a.length>2)return;var b;if(a[1]==1){$("div.manual_mode_warning").fadeOut();n=1;b=$("div.manual_override_mode button[value='1']");b.parent().find("button[value='0']").removeClass('active');b.addClass('active');}else if(a[1]==0){$("div.manual_mode_warning").fadeIn();n=0;b=$("div.manual_override_mode button[value='0']");b.parent().find("button[value='1']").removeClass('active');b.addClass('active');}}function U(){var a=$("div.program div.sentence_container").children().size();return a;};function V(a){if(a<c)$("div.program button.add_row").prop("disabled",false);else $("div.program button.add_row").prop("disabled",true);if(a>d)$("div.program button.subtract_row").prop("disabled",false);else $("div.program button.subtract_row").prop("disabled",true);};$("div.program .button_container button.add_row").click(function(){var a=U();if(a<c)$($("#program_row").html()).appendTo(".sentence_container");V(a+1);N("select.sensor",o.input_names);N("select.output",o.output_names);i=true;});$("div.program .button_container button.subtract_row").click(function(){var a=U();if(a>d)$("div.program .sentence").last().remove();V(a-1);i=true;});});</script>
+</head>
+
+<body>
+<div class="container body_container">	
+<div class="navbar">
+<ul class="nav">
+<li><a class="settings" href="#">Setup</a></li>
+<li class="active"><a class="program" href="#">Program</a></li>
+<li><a class="override" href="#">Override</a></li>
+<li><a class="help" href="#">Help</a></li>
+</ul>
+<div class="manual_mode_warning">
+<h2>Warning: Now in Manual mode!</h2>
+<div>(sensors are deactivated)</div>
+</div>
+<p class="logo"><img height="87" src="hblogo.png" width="150"/></p>
+<div class="alert">
+<a class="close">×</a>
+<h4 class="alert-heading">Alert</h4>
+<p>Alert Info</p>
+</div>
+<!--<p class="nav pull-right">Free RAM: ?</p>-->
+</div>
+
+<div id="display_container">
+<div class="program">
+<div class="subheader">
+<h2>Program</h2>
+<p>This is where the magic happens.<br/>Complete the sentences to control your Hauntbox.</p>
+</div>
+<div class="sentence_headings">
+<h3 class="input">Input</h3>
+<h3 class="delay">Delay</h3>
+<h3 class="output">Output</h3>
+<h3 class="duration">Duration</h3>
+</div>
+<div class="sentence_container">
+<!-- Template for Program Rows -->
+</div>
+
+<div class="button_container">
+<div>
+<button class="btn btn-large add_row" title="Add Row" type="button"> + </button>
+<button class="btn btn-large subtract_row" title="Remove Row" type="button"> - </button>
+</div>
+<hr/>
+<div class="pull-down">
+<button class="btn btn-large btn-primary save_program" name="save" type="button">Save Program</button>
+<button class="btn btn-large" id="restore_program" name="restore" type="button">Restore Program</button>
+<span class="status_check"></span>
+</div>
+</div>
+<div id="status_program"></div>
+</div><!-- //end program -->
+
+<div class="settings">
+<div class="subheader">
+<h2>Setup</h2>
+<p>These are the guts of the HauntBox. You can rename your inputs &amp; outputs.<br/>Also set whether digital HIGH or LOW will trigger the input, and set the minimum time between triggers.</p>
+</div>
+
+<div class="inputs_container">
+<!--<h3>Inputs</h3>-->
+<div class="sentence_headings">
+<h3 class="voltage">Voltage</h3>
+<h3 class="io_name">Name</h3>
+<h3 class="high_or_low">High or Low</h3>
+<h3 class="retrigger">Retrigger Time</h3>
+</div>
+<div class="sentence">
+<span class="input_title">Input A</span>
+<select class="threshold">
+<option>5V</option>
+<option>12V</option>
+<option>24V</option>
+</select>:
+<input class="input_name" maxlength="16" name="input1" type="text"/> is considered on when its signal goes 
+<input checked="" class="highlow" name="highlow1" type="radio" value="1"/> High 
+<input class="highlow" name="highlow1" type="radio" value="0"/> Low. 
+Wait
+<div class="wait">
+<span class="up">+</span>
+<span class="down">-</span>
+</div>
+<input class="retrigger" maxlength="9" type="text" value="0"/> seconds before input retrigger.
+</div>
+</div>
+
+
+<div class="outputs_container">
+<div class="sentence_headings">
+<h3 class="io_name">Name</h3>
+<h3 class="high_or_low">High or Low</h3>
+</div>
+<div class="sentence">
+<span class="output_title">Output 1</span>:
+<input class="output_name" maxlength="16" name="output1" type="text"/> is considered on when its signal goes 
+<input checked="" class="highlow" name="output_highlow1" type="radio" value="1"/> High 
+<input class="highlow" name="output_highlow1" type="radio" value="0"/> Low.
+</div>
+</div>
+<div class="button_container">
+<hr/>
+<button class="btn btn-large btn-primary save_settings" name="save" type="button">Save Settings</button>
+<button class="btn btn-large" id="restore_settings" name="restore" type="button">Restore Settings</button>
+<span class="status_check"></span>
+</div>
+<div id="status_settings"></div>
+</div><!--//end div.settings -->
+
+<div class="override">
+<div class="subheader">
+<h2>Override</h2>
+<p>Want to take over?<br/>Go ahead, push some buttons.</p>
+</div>
+
+<div class="container">
+<div class="row">
+<h3>Specify Control Mode</h3>
+<div class="btn-group manual_override_mode" data-toggle="buttons-radio">
+<button class="btn btn-large active" type="button" value="1">Automatic (normal)</button>
+<button class="btn btn-large" type="button" value="0">Manual (disables inputs)</button>
+</div>
+<p>When you are in <strong>manual mode</strong> the Hauntbox will ignore physical sensors and only pay attention to the trigger buttons below.</p><p>
+</p></div>
+<div class="row">
+<div class="override_triggers span4">
+<h3>Inputs</h3>
+<table class="override_table">
+<tbody><tr>
+<td colspan="2">
+<button class="btn btn-large pull-right" type="button" value="all"> Trigger ALL </button>
+</td>
+</tr>
+<tr>
+<td class="override_input_name">1</td>
+<td>
+<button class="btn btn-large" type="button" value="1"> Trigger </button>
+</td>
+</tr>
+<tr>
+<td class="override_input_name">2</td>
+<td>
+<button class="btn btn-large" type="button" value="2"> Trigger </button>
+</td>
+</tr>
+<tr>
+<td class="override_input_name">3</td>
+<td>
+<button class="btn btn-large" type="button" value="3"> Trigger </button>
+</td>
+</tr>
+<tr>
+<td class="override_input_name">4</td>
+<td>
+<button class="btn btn-large" type="button" value="4"> Trigger </button>
+</td>
+</tr>
+<tr>
+<td class="override_input_name">5</td>
+<td>
+<button class="btn btn-large" type="button" value="5"> Trigger </button>
+</td>
+</tr>
+<tr>
+<td class="override_input_name">6</td>
+<td>
+<button class="btn btn-large" type="button" value="6"> Trigger </button>
+</td>
+</tr>
+</tbody></table>
+</div>
+<div class="override_outputs span4">
+<h3>Outputs</h3>
+<table class="override_table">
+<tbody><tr>
+<td colspan="3">
+<div class="btn-group pull-right" data-toggle="buttons-radio">
+<button class="btn btn-large" type="button" value="all_on"> ALL ON </button>
+<button class="btn btn-large" type="button" value="all_off"> ALL OFF </button>
+</div>
+</td>
+</tr>
+<tr>
+<td class="override_output_name">1</td>
+<td>
+<div class="btn-group" data-toggle="buttons-radio">
+<button class="btn btn-large" type="button" value="11"> ON </button>
+<button class="btn btn-large" type="button" value="10"> OFF </button>
+</div>
+</td>
+</tr>
+<tr>
+<td class="override_output_name">2</td>
+<td>
+<div class="btn-group" data-toggle="buttons-radio">
+<button class="btn btn-large" type="button" value="21"> ON </button>
+<button class="btn btn-large" type="button" value="20"> OFF </button>
+</div>
+</td>
+</tr>
+<tr>
+<td class="override_output_name">3</td>
+<td>
+<div class="btn-group" data-toggle="buttons-radio">
+<button class="btn btn-large" type="button" value="31"> ON </button>
+<button class="btn btn-large" type="button" value="30"> OFF </button>
+</div>
+</td>
+</tr>
+<tr>
+<td class="override_output_name">4</td>
+<td>
+<div class="btn-group" data-toggle="buttons-radio">
+<button class="btn btn-large" type="button" value="41"> ON </button>
+<button class="btn btn-large" type="button" value="40"> OFF </button>
+</div>
+</td>
+</tr>
+<tr>
+<td class="override_output_name">5</td>
+<td>
+<div class="btn-group" data-toggle="buttons-radio">
+<button class="btn btn-large" type="button" value="51"> ON </button>
+<button class="btn btn-large" type="button" value="50"> OFF </button>
+</div>
+</td>
+</tr>
+<tr>
+<td class="override_output_name">6</td>
+<td>
+<div class="btn-group" data-toggle="buttons-radio">
+<button class="btn btn-large" type="button" value="61"> ON </button>
+<button class="btn btn-large" type="button" value="60"> OFF </button>
+</div>
+</td>
+</tr>
+</tbody></table>
+</div>
+</div>
+</div>
+</div><!--//end div.override -->
+
+<div class="help">
+<div class="subheader">
+<h2>Help</h2>
+<p>Stumped?<br/>Find some answers.</p>
+</div>
+<div class="container">
+<h3>Where to find help</h3>
+<ul>
+<li>Please visit <a href="http://hauntbox.net/">hauntbox.net</a> for our store.</li>
+<li>Please add to our <a href="https://github.com/Aylr/theHB/wiki">wiki</a> where you can find the latest instrucions, tips and tricks.</li>
+<li>You can find, hack, and contribute to all our source code at <a href="https://github.com/Aylr/theHB/">github</a>.</li>
+<li>Please do your duty and <a href="https://github.com/Aylr/theHB/issues/new">report all bugs</a></li>
+<li>We are <a href="http://twitter.com/hauntbox">@hauntbox</a> on twitter. <a href="https://twitter.com/intent/tweet?screen_name=hauntbox">Tweet to us.</a></li>
+<li>Our original kickstarter page.</li>
+</ul>
+
+<h3>Basics</h3>
+<p><strong>Note:</strong> It is very important to protect the Hauntbox from shorts that could damage the sensitive electronics. Never change wiring to inputs or outputs when it is plugged into a power supply.</p>
+<ol>
+<li>Wire your sensors to the inputs on the Hauntbox. They are along the top of the board labeled A through F.</li>
+<li>Wire up the things you want to control to the outputs. They are along the bottom of the Hauntbox labeled 1 through 6.</li>
+<li>Plug in your network cable to the CAT5 network jack on the left side of the Hauntbox.</li>
+<li>Plug in your power supply and plug it into the power jack on the left side of the Hauntbox.</li>
+<li>Fire up your favorite browser and browse to http://hauntbox.local (Note that some browsers do require the "http://").
+<ul><li><em>An aside about bonjour.</em> If you have more than one hauntbox on the same network you <strong>must</strong> change the name to be unique on the network. This is easily done by popping the microSD card out of your Hauntbox and making a file called "bonjour.txt" on the card. Edit this with your favorite text editor (Notepad on Windows, TextEdit on Mac, nano on Linux) and make up a name less than 16 characters that only has letters and numbers. No special characters. Put the card back into your Hauntbox and reset. Now browse to "http://yourname.local"</li></ul></li>
+<li>First take a look at the <strong>settings</strong> tab. Rename your sensors and outputs so you can easily see what you're controlling. Be sure to click "Save" when you're done.</li>
+<li>Next go the the <strong>program</strong> tab. This is where the fun is. Each row is a sentence that you fill out. Press save and see the Hauntbox do your bidding.</li>
+<li>Play and share!</li>
+</ol>
+
+<h3>Your current settings</h3>
+
+<p>Copy and paste this into a text file for safekeeping or right click <a href="settings.txt">settings.txt</a> and save this file.</p>
+
+<pre class="settings">Loading settings...</pre>
+
+<h3>Your current program</h3>
+<p>Copy and paste this into a text file for safekeeping or right click <a href="program.txt">program.txt</a> and save this file.</p>
+<pre class="program">Loading program...</pre>
+
+<h3>Factory reset</h3>
+<p>Pressing that big red button will erase your current settings and program. There's no going back, so use it only when you need to start fresh.</p>
+<p><b>You will need to restart your hauntbox for full changes to take effect.</b></p>
+<button class="factory_defaults btn btn-danger" type="button">Reset to factory defaults</button>
+<br/><br/>
+
+<h3>Advanced URL schema for the intrepid hacker</h3>
+<ul>
+<li><a href="/program">/program</a> current program + status + ram</li>
+<li><a href="/settings">/settings</a> current settings + status + ram</li>
+<li><a href="/program.txt">/program.txt</a> current program file</li>
+<li><a href="/settings.txt">/settings.txt</a> current settings file</li>
+<li><a href="/bonjour.txt">/bonjour.txt</a> current bonjour file</li>
+<li><a href="/ram">/ram</a> free ram</li>
+<li><a href="/row_status">/row_status</a> current row state (as defined in firmware)</li>
+<li><a href="/output_status">/output_status</a> current output state (on/off)</li>
+<li><a href="/status.htm">/status.htm</a> live status (slows down normal operation)</li>
+<li><a href="/status">/status</a> returns intputState ; rowState ; outputState (used by status.htm)</li>
+<li><a href="/all_on">/all_on</a> turns all on</li>
+<li><a href="/all_off">/all_off</a> turns all off</li>
+<li><a href="/manual">/manual</a> send post request with integers to control manually	</li>
+</ul>
+
+</div>
+</div><!--//end div.help -->
+</div><!--//end display_container -->
+
+<div class="modal hide" id="unsaved_modal">
+<div class="modal-header">
+<a class="close" data-dismiss="modal">×</a>
+<h3>Unsaved Changes</h3>
+</div>
+<div class="modal-body">
+<p>Would you like to save your changes?</p>
+</div>
+<div class="modal-footer">
+<button class="discard btn" type="button">Discard changes</button>
+<button class="save btn btn-primary" data-loading-text="Saving..." type="button">Yes! Save changes</button>
+</div>
+</div>
+
+<div class="modal hide" id="successful_save_modal">
+<div class="modal-header">
+<a class="close" data-dismiss="modal">×</a>
+<h3>Saved</h3>
+</div>
+<div class="modal-body">
+<p>Program saved successfully.</p>
+</div>
+</div>
+</div><!--//end .container -->
+<script charset="utf-8" src="bs_full.js" type="text/javascript"></script>
+<script charset="utf-8" src="frmrstmn.js" type="text/javascript"></script>
+<script charset="utf-8" src="alphnmin.js" type="text/javascript"></script>
+<script id="program_row" type="text/template">
+<div class="sentence">
+<input type="checkbox" name="enable_disable" checked="checked" value="1">
+<div class="inner_sentence">
+<span class="input">
+When
+<select class="sensor" name="sensor">
+<option value="0">-</option>
+<option value="1">input A</option>
+<option value="2">input B</option>
+<option value="3">input C</option>
+<option value="4">input D</option>
+<option value="5">input E</option>
+<option value="6">input F</option>
+</select>
+is
+<select class="sensor_state" name="sensor_state">
+<option value="1">on</option>
+<option value="0">off</option>
+</select>
+</span><span class="delay">
+Wait
+<div class="wait">
+<span class="up">+</span>
+<span class="down">-</span>
+</div>
+<input type="text" class="wait_time" name="wait_time" maxlength="9" value="0">
+second(s) then turn
+</span><span class="output">
+<select class="output" name="output">
+<option value="0">-</option>
+<option value="1">output 1</option>
+<option value="2">output 2</option>
+<option value="3">output 3</option>
+<option value="4">output 4</option>
+<option value="5">output 5</option>
+<option value="6">output 6</option>
+</select>
+<select class="output_state" name="output_state">
+<option value="1">on</option>
+<option value="0">off</option>
+<option value="2">toggled</option>
+</select>
+</span><span class="duration">
+<select class="duration_type">
+<option value="0">until further notice.</option>
+<option value="1">while input is triggered.</option>
+<option value="2">for...</option>
+</select>
+<div class="duration_container" style="display: none;">
+<div class="duration">
+<span class="up">+</span>
+<span class="down">-</span>
+</div>
+<input type="text" class="output_duration" name="output_duration" maxlength="9" value="0">
+second(s).
+</div>
+</span>
+<span class="row_status"></span>
+</div>
+</div>
+</script>
+
+
+</body></html>
