@@ -1,0 +1,1 @@
+This is the modified version of Adafruit's amazing WaveHC library. Put the folder "WaveHC" into your Arduino IDE libraries folder.

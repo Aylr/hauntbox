@@ -1,1 +1,1 @@
-test.txt
+These are uninteresting example sounds for sound module testing. Put these 2 wav files on a blank SD card.
