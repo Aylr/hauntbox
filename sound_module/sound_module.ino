@@ -13,6 +13,8 @@
 #include "WaveUtil.h"
 #include "WaveHC.h"
 
+#define MAX_SOUNDS 25
+
 
 // ---------------------------------- Mode Variables ----------------------------------
 bool ambient_mode = false;          // true if ambient sound should play
@@ -21,10 +23,11 @@ bool random_mode = false;           // true if it should play random trigger sou
 bool SD_failed = true;              // true if SD card has failed, false if successful
 
 // ---------------------------------- Misc Variables ----------------------------------
-char* ambient_wav_filename = "ambient.wav";     // ambient wave file name
-char* trigger_wav_filename = "alarm.wav";
-char* trigger_sounds[100] = {"1","2","3","4","5","6","7","8","9"};
-byte trigger_sound_count = 9;                   // keeps track of how many trigger sounds you have on the SD
+char* ambient_wav_filename = "AMBIENT.WAV";     // ambient wave file name
+char* trigger_wav_filename = "ALARM.WAV";
+char* random_mode_filename = "RANDOM.TXT";
+char* trigger_sounds[MAX_SOUNDS] = {"0","1","2","3","4","5","6","7","8","9","10"};
+byte trigger_sound_count = 11;                  // keeps track of how many trigger sounds you have on the SD
 int OC_trigger_pin = 5;                         // OC trigger pin
 int logic_trigger_pin = 4;                      // Logic trigger pin
 int OC_trigger_threshold = 300;                 // OC trigger threshold that it must go below
@@ -36,7 +39,8 @@ int reset_LED_pin = 8;                          // indicator board needs to be r
 SdReader card;    // This object holds the information for the card
 FatVolume vol;    // This holds the information for the partition on the card
 FatReader root;   // This holds the information for the filesystem on the card
-FatReader f;      // This holds the information for the file we're play
+FatReader f;      // This holds the information for the file we're playing
+dir_t dirBuf;     // buffer for directory reads
 WaveHC wave;      // This is the only wave (audio) object, since we will only play one at a time
 
 
@@ -57,9 +61,9 @@ int freeRam(void){          // return the number of bytes currently free in RAM,
 
 void sdErrorCheck(void){
   if (!card.errorCode()) return;
-  Serial.print(F("\n\rSD I/O error: "));
+  Serial.print(F("\r\nSD I/O error: 0x"));
   Serial.print(card.errorCode(), HEX);
-  Serial.print(F(", "));
+  Serial.print(F(", 0x"));
   Serial.println(card.errorData(), HEX);
   SD_failed = true;
 }
@@ -85,6 +89,7 @@ bool setup_SD_card(){
         Serial.println(F("SD init failed!"));  	// Something went wrong, lets print out why
         sdErrorCheck();
         SD_failed = true;							// set global mode variable
+        return false;
     }
 
     card.partialBlockRead(true);					// enable optimize read - some cards may timeout. Disable if you're having problems
@@ -121,8 +126,111 @@ bool setup_SD_card(){
 
 void SD_failure_alert(){
 	// flash leds or something
+  digitalWrite(reset_LED_pin,HIGH);
     Serial.println(F("SD failed."));
+    digitalWrite(reset_LED_pin,LOW);
 }
+
+
+// print dir_t name field. The output is 8.3 format, so like SOUND.WAV or FILENAME.DAT
+// void printEntryName(dir_t &dir)
+// {
+//   for (uint8_t i = 0; i < 11; i++) {     // 8.3 format has 8+3 = 11 letters in it
+//     if (dir.name[i] == ' ')
+//         continue;         // dont print any spaces in the name
+//     if (i == 8) 
+//         Serial.print('.');           // after the 8th letter, place a dot
+//     Serial.print(dir.name[i]);      // print the n'th digit
+//   }
+//   if (DIR_IS_SUBDIR(dir)) 
+//     Serial.print('/');       // directories get a / at the end
+// }
+
+
+// Like strcmp but compare sequences of digits numerically -- natural sort
+int strcmpbynum(const char *s1, const char *s2) {
+  for (;;) {
+    if (*s2 == '\0')
+      return *s1 != '\0';
+    else if (*s1 == '\0')
+      return 1;
+    else if (!(isdigit(*s1) && isdigit(*s2))) {
+      if (*s1 != *s2)
+        return (int)*s1 - (int)*s2;
+      else
+        (++s1, ++s2);
+    } else {
+      char *lim1, *lim2;
+      unsigned long n1 = strtoul(s1, &lim1, 10);
+      unsigned long n2 = strtoul(s2, &lim2, 10);
+      if (n1 > n2)
+        return 1;
+      else if (n1 < n2)
+        return -1;
+      s1 = lim1;
+      s2 = lim2;
+    }
+  }
+}
+
+
+// String compare function for qsort
+int compare(void const *a, void const *b)
+{
+  char const *aa = (char const *)a;
+  char const *bb = (char const *)b;
+  return strcmpbynum(aa, bb);
+}
+
+
+// List the files in the directory
+void get_files(FatReader &d)
+{
+  unsigned char c, skip;
+  char name[12];
+  char *s = "";
+  char *pch;
+  byte tsc;
+  char ts[MAX_SOUNDS][12];
+  
+  tsc = 0;
+  while ((d.readDir(dirBuf)) > 0) {     // read the next file in the directory
+    // skip subdirs . and .. as well as hidden _filenames
+    if (dirBuf.name[0] == '.' || dirBuf.name[0] == '_') 
+      continue;
+
+    // Get the name of the next file
+    dirName(dirBuf, name);
+    // Set random mode if random.txt is found
+    if (strcmp(name, random_mode_filename) == 0)
+      random_mode = true;
+    // Only save the .wav files.  Add each one to the trigger sounds array.
+    pch = strstr(name, ".WAV");
+    if (pch != NULL) {
+      // Don't include ambient.wav.  It's special.
+      if (strcmp(name, ambient_wav_filename) != 0) {
+        strcpy(ts[tsc], name);
+        tsc++;
+      }
+    }
+  }
+
+  // The unsorted array
+  // Serial.println(F("Array:"));
+  // for (c = 0; c < tsc; c++) {
+  //   Serial.println(ts[c]);
+  // }
+
+  // Sort the array alphabetically
+  qsort(ts, tsc, 12, compare);
+  Serial.println(F("Sorted:"));
+  for (c = 0; c < tsc; c++) {
+    Serial.println(ts[c]);
+  }
+
+  sdErrorCheck();                  // are we doign OK?
+}
+
 
 bool does_file_exist(char *name) {   // Should only really run at startup or if SD card is reset
   if (wave.isplaying) {     // if wave object is already playing something, stop it!
@@ -224,14 +332,20 @@ void setup(){
     //SD card logic
     if (SD_failed) {                                    // if the SD failed
         SD_failure_alert();								// alert user
-    }else{                                              // if the SD succeeded
+    } else {                                              // if the SD succeeded
+
+      // Whew! We got past the tough parts.
+      Serial.print(F("Files found:"));
+      // dirLevel = 0;
+      // Get all of the usable files on the SD card.
+      get_files(root);
+
         //sound file logic
         ambient_mode = does_file_exist(ambient_wav_filename);
         Serial.print(F("ambient = "));
         Serial.println(ambient_mode);
 
-        for (byte i=0;i<=10;i++){
-          Serial.println(i);
+        for (byte i = 0; i < trigger_sound_count; i++) {
           Serial.println(trigger_sounds[i]);
           helper(trigger_sounds[i]);
         }
@@ -241,7 +355,7 @@ void setup(){
         //     random_mode = true;
     }
 }
-
+// DARREN: command to display and play trigger sounds? Do normal operation.
 void loop(){
     if (!SD_failed){                                    // if the SD succeeded
         if (ambient_mode) {
@@ -270,3 +384,4 @@ void loop(){
       SD_failure_alert();							// alert user
     }
 }
+
