@@ -1,3 +1,5 @@
+// Simple program to torture test all the outputs on the Hauntbox. Not terriby useful past that. Logs tests to SD card.
+
 #include <SD.h>
 
 const int SD_CS = 4;      // pin 4 is the SPI select pin for the SDcard

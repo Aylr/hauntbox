@@ -1,3 +1,5 @@
+// Simple program to test all the LEDs on the Hauntbox. Not terriby useful past that.
+
 int timer = 100;           // The higher the number, the slower the timing.
 int ledPins[] = { 32,33,34,35,36,42,43,44,45,46,47,39 };       // an array of pin numbers to which LEDs are attached
 int ledPinsShifted[] = { 39,32,33,34,35,36,42,43,44,45,46,47 };       // shifed for animation
@@ -8,7 +10,7 @@ void setup() {
 
 pinMode(30, OUTPUT);
 pinMode(31, OUTPUT);
-pinMode(32, OUTPUT);  //B
+pinMode(32, OUTPUT);
 pinMode(33, OUTPUT);
 pinMode(34, OUTPUT);
 pinMode(35, OUTPUT);
