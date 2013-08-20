@@ -136,7 +136,6 @@ TinyWebServer::PathHandler handlers[] = {
   {"/manual", TinyWebServer::POST, &manual_handler },
   {"/all_off", TinyWebServer::GET, &all_off_handler },
   {"/all_on", TinyWebServer::GET, &all_on_handler },
-  {"/trigger_all", TinyWebServer::GET, &trigger_all_handler },
   {"/automatic_on", TinyWebServer::GET, &automatic_on_handler },
   {"/automatic_off", TinyWebServer::GET, &automatic_off_handler },
   {"/mode", TinyWebServer::GET, &mode_handler },
@@ -334,20 +333,21 @@ boolean trigger_handler(TinyWebServer& web_server) {
 
 
 // -------------------- trigger_all handler -------------------- 
-boolean trigger_all_handler(TinyWebServer& web_server) {   //triggers all inputs on
-  web_server.send_error_code(200);
-  web_server.send_content_type("text/plain");
-  web_server.end_headers();
-  
-  #ifdef DEBUG_MANUAL
-    Serial << prefixDEBUG_MANUAL << F("ALL\n");
-  #endif
-  
-  for (byte i=0;i<=currentRowCount;i++){
-    stateRow[i] = 2;          //set all to state 2
-  }
-  return true;
-}
+//******This caused mayhem. Removing for now.
+//boolean trigger_all_handler(TinyWebServer& web_server) {   //triggers all inputs on
+//  web_server.send_error_code(200);
+//  web_server.send_content_type("text/plain");
+//  web_server.end_headers();
+//  
+//  #ifdef DEBUG_MANUAL
+//    Serial << prefixDEBUG_MANUAL << F("ALL\n");
+//  #endif
+//  
+//  for (byte i=0;i<=currentRowCount;i++){
+//    stateRow[i] = 2;          //set all to state 2
+//  }
+//  return true;
+//}
 
 
 // -------------------- trigger_all handler -------------------- 

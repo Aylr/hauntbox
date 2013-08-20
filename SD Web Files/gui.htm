@@ -711,12 +711,7 @@ $(function(){//shortcut for doc.ready
 	$("div.override_triggers td button").click(function(){
 		//api for manual triggers
 		var tempval = $(this).attr("value");
-
-		if (tempval == "all"){				//if trigger all
-			$.get("trigger_all");			//go to url "/trigger_all"
-		}else{
-			$.post("trigger", { a: tempval });	//otherwise post the input# and on/off
-		}
+		$.post("trigger", { a: tempval });	//otherwise post the input# and on/off
 	});
 
 	$("div.manual_override_mode button").click(function(){
@@ -1364,13 +1359,8 @@ $(function(){//shortcut for doc.ready
 					</div>
 					<div class="row">
 						<div class="override_triggers span4">
-							<h3>Inputs <small>(keyboard ctrl + 1-7)</small></h3>
+							<h3>Inputs <small>(keyboard ctrl + 1-6)</small></h3>
 							<table class="override_table">
-								<tr>
-									<td colspan="2">
-										<button type="button" class="btn btn-large pull-right" value="all" data-keybind="1755"> Trigger ALL </button>
-									</td>
-								</tr>
 								<tr>
 									<td class="override_input_name">1</td>
 									<td>
@@ -1412,14 +1402,6 @@ $(function(){//shortcut for doc.ready
 						<div class="override_outputs span4">
 							<h3>Outputs <small>(keyboard alt + 1-7)</small></h3>
 							<table class="override_table">
-								<tr>
-									<td colspan="3">
-										<div class="btn-group pull-right" data-toggle="buttons-radio">
-											<button type="button" class="btn btn-large" value="all_on" data-keybind="1855"> ALL ON </button>
-											<button type="button" class="btn btn-large" value="all_off" data-keybind="1855"> ALL OFF </button>
-										</div>
-									</td>
-								</tr>
 								<tr>
 									<td class="override_output_name">1</td>
 									<td>
@@ -1471,6 +1453,14 @@ $(function(){//shortcut for doc.ready
 										<div class="btn-group" data-toggle="buttons-radio">
 											<button type="button" class="btn btn-large" value="61" data-keybind="1854"> ON </button>
 											<button type="button" class="btn btn-large" value="60" data-keybind="1854"> OFF </button>
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td colspan="3">
+										<div class="btn-group pull-right" data-toggle="buttons-radio">
+											<button type="button" class="btn btn-large" value="all_on" data-keybind="1855"> ALL ON </button>
+											<button type="button" class="btn btn-large" value="all_off" data-keybind="1855"> ALL OFF </button>
 										</div>
 									</td>
 								</tr>
