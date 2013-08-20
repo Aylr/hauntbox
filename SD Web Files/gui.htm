@@ -446,11 +446,9 @@ $(function(){//shortcut for doc.ready
 	}//end set_override_output_names
 	
 	function set_override_input_names(){			//sets real names of inputs on the override page
-		// Inputs are alpha based
-		var i_names = ["A", "B", "C", "D", "E", "F"];
 		var i = 0;
 		$("div.override td.override_input_name").each(function(){
-			$(this).html(i_names[i] + ": " + local_input_names[i]);
+			$(this).html(ABC[i] + ": " + local_input_names[i]);
 			i++;
 		});
 	}//end set_override_input_names
