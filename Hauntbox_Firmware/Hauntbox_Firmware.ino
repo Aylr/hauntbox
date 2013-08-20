@@ -22,6 +22,8 @@
 // #define DEBUG_IP_ADDRESS  true        //details about static IP address
 // #define DEBUG_DECIPHER_INPUT_SENSOR true  //details about the inner workings of the decipherIntputSensor() function
 
+#define MAJOR_VER 0
+#define MINOR_VER 1
 #define MAXROWS 20                            //Maximum # of rows. Please adjust MAX_FILE_LENGTH up accordingly
 #define MINROWS 1                             //minimum # of rows
 #define MIN_BONJOUR_NAME_LENGTH 3             //minimum length of bonjour name. Unreliable below 3.
@@ -129,6 +131,7 @@ TinyWebServer::PathHandler handlers[] = {
   // `put_handler' is defined in TinyWebServer
   // {"/", TinyWebServer::GET, &index_handler },
   {"/", TinyWebServer::GET, &index_handler },
+  {"/version", TinyWebServer::GET, &version_handler },
   {"/ram", TinyWebServer::GET, &ram_handler },
   {"/status", TinyWebServer::GET, &status_handler },
   {"/program", TinyWebServer::GET, &program_handler },
@@ -234,6 +237,19 @@ boolean ram_handler(TinyWebServer& web_server) {
   web_server.end_headers();
   Client& client = web_server.get_client();
   client.println(FreeRam());
+  client.stop();
+  return true;
+}
+
+// -------------------- version handler -------------------- 
+boolean version_handler(TinyWebServer& web_server) {
+  web_server.send_error_code(200);
+  web_server.send_content_type("text/plain");
+  web_server.end_headers();
+  Client& client = web_server.get_client();
+  client.print(MAJOR_VER);
+  client.print(".");
+  client.println(MINOR_VER);
   client.stop();
   return true;
 }
@@ -549,7 +565,7 @@ void setup() {
   */
     
   Serial.begin(115200);
-  Serial << F("Starting up Hauntbox. Free RAM: ") << FreeRam() << "\n";
+  Serial << F("Starting up Hauntbox. Free RAM: ") << FreeRam() << " Version " << MAJOR_VER << "." << MINOR_VER << "\n";
   int i;
 
   pinMode(SS_PIN, OUTPUT);	// set the SS pin as an output (necessary to keep the board as master and not SPI slave)
