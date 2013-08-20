@@ -20,7 +20,7 @@ def read_in_file():
 		# HTML
 		# Too tired. Just select all the HTML and remove indents.
 		# Write to file
-		with open('../SD Web Files/gui.min.htm', 'w') as mini_file:
+		with open('../SD Web Files/guimin.htm', 'w') as mini_file:
 			mini_file.write(str(soup))
 		# mini_file = open('SD Web Files/gui.min.htm', 'w')
 		# regex = re.compile("<script type=\"text/javascript\">(.+)</script>",re.MULTILINE|re.DOTALL)

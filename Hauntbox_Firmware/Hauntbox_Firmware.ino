@@ -195,7 +195,7 @@ boolean file_handler(TinyWebServer& web_server) {
 // -------------------- index handler -------------------- 
 boolean index_handler(TinyWebServer& web_server) {
   if(has_filesystem){                             //if SD is working send main gui file
-    send_file_name(web_server, "gui.htm");
+    send_file_name(web_server, "guimin.htm");
   }else{                                          //if SD has failed, send an informative help page
     web_server.send_error_code(200);
     web_server.send_content_type("text/html");
@@ -803,7 +803,7 @@ void statusMessage(byte n) {
   if (n==9) {Serial << prefixSTATUS << F("Error creating new default file. Check SD and reset.\n"); return;}
   if (n==10) {Serial << prefixSTATUS << F("Ethernet failed. Check network connections and reset Hauntbox. Proceeding without network services.\n"); return;}
   if (n==11) {Serial << prefixSTATUS << F("No uniqueID.txt file. Using default MAC address.\n"); return;}
-  if (n==11) {Serial << prefixSTATUS << F("****** Warning: SD not working. Check card, formatting and reset.\n"); return;}
+  if (n==12) {Serial << prefixSTATUS << F("****** Warning: SD not working. Check card, formatting and reset.\n"); return;}
 }
 
 

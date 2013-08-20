@@ -249,6 +249,7 @@ $(function(){//shortcut for doc.ready
 	var ABC = ["A","B","C","D","E","F"]		//used when naming the dynamically generated rows
 	var automatic_mode = true;				//keeps track if hauntbox is in manual mode
 	var HB = {};							//initial thoughts of a global name space
+	var modifier;							//For keyboard shortcuts
 	
 	//ADC threshold values for inputs/outputs. Maths are done here to spare Arduino CPU cycles
 	var threshold_5V = 103;				//(5V / 5)*1024 = 103
@@ -380,7 +381,7 @@ $(function(){//shortcut for doc.ready
 				//failure ALERT HERE..............
 				populate_settings(default_settings);	//if failed, use default settings
 				update_status_and_ram(default_settings);
-				status_message(8); //alert("Error loading Settings.txt Default settings used");
+				status_message(7); //alert("Error loading Settings.txt Default settings used");
 			}
 		});
 
@@ -439,7 +440,7 @@ $(function(){//shortcut for doc.ready
 	function set_override_output_names(){			//sets real names of outputs on the override page
 		var i = 0;
 		$("div.override td.override_output_name").each(function(){
-			$(this).html(i + ": " + local_output_names[i]);
+			$(this).html(i+1 + ": " + local_output_names[i]);
 			i++;
 		});
 	}//end set_override_output_names
@@ -447,7 +448,7 @@ $(function(){//shortcut for doc.ready
 	function set_override_input_names(){			//sets real names of inputs on the override page
 		var i = 0;
 		$("div.override td.override_input_name").each(function(){
-			$(this).html(i + ": " + local_input_names[i]);
+			$(this).html(i+1 + ": " + local_input_names[i]);
 			i++;
 		});
 	}//end set_override_input_names
@@ -499,7 +500,7 @@ $(function(){//shortcut for doc.ready
 					statusCode: {
 						404: function(){
 							$("div.help pre.settings").html("File not found");
-							status_message(99);
+							status_message(3);
 						}
 					},
 					error: function(){
@@ -651,7 +652,43 @@ $(function(){//shortcut for doc.ready
 		factory_defaults();
 	});
 	
+	$(document).on("keydown", function(e){
+		if (!$("div.override").is(":visible")) {
+			return; // only listen on override view
+		}
+		if (modifier > 0) {
+			if (e.which >= 49 && e.which <= 55) { // 1-7
+				if (modifier == 17) { //ctrl for inputs
+					var trigger_string = modifier + "" +  e.which;
+					var self = $("div.override_triggers td button[data-keybind='" + trigger_string + "']").button("toggle").trigger("click");
+					setTimeout(function(){
+						//To provide artifical UI feedback that trigger happened
+						self.button("toggle");
+					}, 100);
+				} else if (modifier == 18) { //alt for outputs
+					var trigger_string = modifier + "" +  e.which;
+					if ($("div.override_outputs button[data-keybind='" + trigger_string + "'].active").length > 0) {
+						$("div.override_outputs button[data-keybind='" +  trigger_string + "']:not(.active)").button("toggle").trigger("click");
+					} else {
+						$("div.override_outputs button[data-keybind='" +  trigger_string + "']:first-child").button("toggle").trigger("click");
+					}
+				}
+			}
+		} else {
+			if (e.which == 17 || e.which == 18) { // ctrl or alt
+				modifier = e.which;
+			}
+		}
+	});
+
+	$(document).on("keyup", function(e){
+		if (e.which == 17 || e.which == 18) {
+			modifier = null;
+		}
+	});
+
 	$("div.override_outputs button").click(function(){	//override controls
+		//Outputs are toggles
 		var tempval = $(this).attr("value");
 
 		if (tempval == "all_on"){											//if all on
@@ -663,6 +700,7 @@ $(function(){//shortcut for doc.ready
 			$(".override_outputs").find(".active").removeClass("active");
 			$(".override_outputs button:not(:first-child)").addClass("active");	// Set all buttons ON
 		}else{
+			$("div.override_outputs button[data-keybind='1855']").removeClass('active');
 			$.post("manual", { a: tempval });	//otherwise post the output# and on/off
 												//the first integer is the output#, the second 1 = on, 0 = off
 												//example output 1 off: 10
@@ -791,7 +829,7 @@ $(function(){//shortcut for doc.ready
 			error: function(){		//keep unsaved_changes = true
 				reset_save_button();
 				//alert which file failed --> take action
-				status_message(7);
+				status_message(13);
 			}
 		})
 	};//end cupcake()
@@ -836,7 +874,7 @@ $(function(){//shortcut for doc.ready
 		});
 		
 		function failed(){
-			status_message(6);
+			status_message(9);
 		}
 		function succeeded(status){	//only display success alert if both .ajax succeeded
 			if (status == 3){
@@ -1011,65 +1049,87 @@ $(function(){//shortcut for doc.ready
 				show_sticky = false;
 				break;
 			case 1:
-				//1 = program doesn't make sense --> reload or use defaults
 				header = "Program Error";
 				message = "Program doesn\'t make sense --> reload or use defaults";
 				status = "&#x2717;";
 				type = "alert-error";
 				break;
 			case 2:
-				//2 = no SD card --> insert valid one and reset Arduino
 				header = "No valid SD card";
-				message = "Please insert a valid SD card and reset Hauntbox";
+				message = "No SD Card --> Please insert a valid SD card and reset Hauntbox";
 				status = "&#x2717;";
 				type = "alert-error";
 				break;
 			case 3:
-				//3 = file opening problem --> NOT SURE WHAT TO DO
 				header = "File Problem";
-				message = "File opening problem. Try re-flashing Hauntbox and re-copying source web files";
+				message = "Problem opening file. Try re-copying source web files and .txt files";
 				status = "&#x2717;";
 				type = "alert-error";
 				break;
 			case 4:
-				//4 = corruption or read/write problem --> NOT SURE WHAT TO DO
 				header = "File Read/Write Problem";
-				message = "File Read/Write problem. Try re-flashing Hauntbox and re-copying source web files";
+				message = "File Read/Write problem. Try re-flashing Hauntbox and re-copying source web files and .txt files";
 				status = "&#x2717;";
 				type = "alert-error";
 				break;
 			case 5:
-				//5 = Factory Defaults Loaded
 				header = "Hauntbox reset to factory defaults";
 				message = "Factory defaults loaded. Please restart your hauntbox for changes to take full effect";
-				status = "&#x2717;";
+				status = "&#x2713;";
 				type = "alert-info";
 				break;
 			case 6:
-				//6 = Factory Defaults Failed
-				header = "Reset Failed";
-				message = "Factory defaults failed to load. Try re-copying the source web files";
+				header = "Finished writing file";
+				message = "Finished Uploading and Writing .txt file";
 				status = "&#x2717;";
 				type = "alert-error";
 				break;
 			case 7:
-				//7 = Save failed
-				header = "Save failed";
-				message = "Saving failed. Is the Hauntbox on and connected to the network? Try resetting the Hauntbox and refresh this page in 30 seconds.";
+				header = "Default Settings Loaded";
+				message = "Could not load settings. Default settings used";
 				status = "&#x2717;";
 				type = "alert-error";
 				break;
 			case 8:
-				//8 = Loading program/settings failed
-				header = "Loading program.txt or settings.txt failed";
-				message = "Please check that your SD card &amp; network are working, reset the Hauntbox power and refresh this page in 30 seconds.";
+				header = "Default Program Loaded";
+				message = "Could not load program. Default program used";
+				status = "&#x2717;";
+				type = "alert-error";
+				break;
+			case 9:
+				header = "Reset Failed";
+				message = "Factory defaults failed to load. Try re-copying the source web files and .txt files";
+				status = "&#x2717;";
+				type = "alert-error";
+				break;
+			case 10:
+				header = "Ethernet failed";
+				message = "Ethernet failed. Check network connections and reset Hauntbox. Proceeding without network services.";
+				status = "&#x2717;";
+				type = "alert-error";
+				break;
+			case 11:
+				header = "Using Default MAC Address";
+				message = "No uniqueID.txt file. Using default MAC address.";
+				status = "&#x2713;";
+				type = "alert-info";
+				break;
+			case 12:
+				header = "Warning!!";
+				message = "****** Warning: SD not working. Check card, formatting and reset.";
+				status = "&#x2717;";
+				type = "alert-error";
+				break;
+			case 13:
+				header = "Saving Failed";
+				message = "Saving failed. Is the Hauntbox on and connected to the network? Try resetting the Hauntbox and refresh this page in 30 seconds.";
 				status = "&#x2717;";
 				type = "alert-error";
 				break;
 			default:
 				//if no error code or garbled --> NO CLUE WHAT SHOULD HAPPEN HERE
 				header = "Unknown Error";
-				message = "Something has gone wrong that we haven\'t anticipated. I recommend emailing us.";
+				message = "Something has gone wrong that we haven\'t anticipated. We recommend emailing us.";
 				status = "&#x2717;";
 				type = "alert-error";
 				break;
@@ -1304,59 +1364,59 @@ $(function(){//shortcut for doc.ready
 					</div>
 					<div class="row">
 						<div class="override_triggers span4">
-							<h3>Inputs</h3>
+							<h3>Inputs <small>(keyboard ctrl + 1-7)</small></h3>
 							<table class="override_table">
 								<tr>
 									<td colspan="2">
-										<button type="button" class="btn btn-large pull-right" value="all"> Trigger ALL </button>
+										<button type="button" class="btn btn-large pull-right" value="all" data-keybind="1755"> Trigger ALL </button>
 									</td>
 								</tr>
 								<tr>
 									<td class="override_input_name">1</td>
 									<td>
-										<button type="button" class="btn btn-large" value="1"> Trigger </button>
+										<button type="button" class="btn btn-large" value="1" data-keybind="1749"> Trigger </button>
 									</td>
 								</tr>
 								<tr>
 									<td class="override_input_name">2</td>
 									<td>
-										<button type="button" class="btn btn-large" value="2"> Trigger </button>
+										<button type="button" class="btn btn-large" value="2" data-keybind="1750"> Trigger </button>
 									</td>
 								</tr>
 								<tr>
 									<td class="override_input_name">3</td>
 									<td>
-										<button type="button" class="btn btn-large" value="3"> Trigger </button>
+										<button type="button" class="btn btn-large" value="3" data-keybind="1751"> Trigger </button>
 									</td>
 								</tr>
 								<tr>
 									<td class="override_input_name">4</td>
 									<td>
-										<button type="button" class="btn btn-large" value="4"> Trigger </button>
+										<button type="button" class="btn btn-large" value="4" data-keybind="1752"> Trigger </button>
 									</td>
 								</tr>
 								<tr>
 									<td class="override_input_name">5</td>
 									<td>
-										<button type="button" class="btn btn-large" value="5"> Trigger </button>
+										<button type="button" class="btn btn-large" value="5" data-keybind="1753"> Trigger </button>
 									</td>
 								</tr>
 								<tr>
 									<td class="override_input_name">6</td>
 									<td>
-										<button type="button" class="btn btn-large" value="6"> Trigger </button>
+										<button type="button" class="btn btn-large" value="6" data-keybind="1754"> Trigger </button>
 									</td>
 								</tr>
 							</table>
 						</div>
 						<div class="override_outputs span4">
-							<h3>Outputs</h3>
+							<h3>Outputs <small>(keyboard alt + 1-7)</small></h3>
 							<table class="override_table">
 								<tr>
 									<td colspan="3">
 										<div class="btn-group pull-right" data-toggle="buttons-radio">
-											<button type="button" class="btn btn-large" value="all_on"> ALL ON </button>
-											<button type="button" class="btn btn-large" value="all_off"> ALL OFF </button>
+											<button type="button" class="btn btn-large" value="all_on" data-keybind="1855"> ALL ON </button>
+											<button type="button" class="btn btn-large" value="all_off" data-keybind="1855"> ALL OFF </button>
 										</div>
 									</td>
 								</tr>
@@ -1364,8 +1424,8 @@ $(function(){//shortcut for doc.ready
 									<td class="override_output_name">1</td>
 									<td>
 										<div class="btn-group" data-toggle="buttons-radio">
-											<button type="button" class="btn btn-large" value="11"> ON </button>
-											<button type="button" class="btn btn-large" value="10"> OFF </button>
+											<button type="button" class="btn btn-large" value="11" data-keybind="1849"> ON </button>
+											<button type="button" class="btn btn-large" value="10" data-keybind="1849"> OFF </button>
 										</div>
 									</td>
 								</tr>
@@ -1373,8 +1433,8 @@ $(function(){//shortcut for doc.ready
 									<td class="override_output_name">2</td>
 									<td>
 										<div class="btn-group" data-toggle="buttons-radio">
-											<button type="button" class="btn btn-large" value="21"> ON </button>
-											<button type="button" class="btn btn-large" value="20"> OFF </button>
+											<button type="button" class="btn btn-large" value="21" data-keybind="1850"> ON </button>
+											<button type="button" class="btn btn-large" value="20" data-keybind="1850"> OFF </button>
 										</div>
 									</td>
 								</tr>
@@ -1382,8 +1442,8 @@ $(function(){//shortcut for doc.ready
 									<td class="override_output_name">3</td>
 									<td>
 										<div class="btn-group" data-toggle="buttons-radio">
-											<button type="button" class="btn btn-large" value="31"> ON </button>
-											<button type="button" class="btn btn-large" value="30"> OFF </button>
+											<button type="button" class="btn btn-large" value="31" data-keybind="1851"> ON </button>
+											<button type="button" class="btn btn-large" value="30" data-keybind="1851"> OFF </button>
 										</div>
 									</td>
 								</tr>
@@ -1391,8 +1451,8 @@ $(function(){//shortcut for doc.ready
 									<td class="override_output_name">4</td>
 									<td>
 										<div class="btn-group" data-toggle="buttons-radio">
-											<button type="button" class="btn btn-large" value="41"> ON </button>
-											<button type="button" class="btn btn-large" value="40"> OFF </button>
+											<button type="button" class="btn btn-large" value="41" data-keybind="1852"> ON </button>
+											<button type="button" class="btn btn-large" value="40" data-keybind="1852"> OFF </button>
 										</div>
 									</td>
 								</tr>
@@ -1400,8 +1460,8 @@ $(function(){//shortcut for doc.ready
 									<td class="override_output_name">5</td>
 									<td>
 										<div class="btn-group" data-toggle="buttons-radio">
-											<button type="button" class="btn btn-large" value="51"> ON </button>
-											<button type="button" class="btn btn-large" value="50"> OFF </button>
+											<button type="button" class="btn btn-large" value="51" data-keybind="1853"> ON </button>
+											<button type="button" class="btn btn-large" value="50" data-keybind="1853"> OFF </button>
 										</div>
 									</td>
 								</tr>
@@ -1409,8 +1469,8 @@ $(function(){//shortcut for doc.ready
 									<td class="override_output_name">6</td>
 									<td>
 										<div class="btn-group" data-toggle="buttons-radio">
-											<button type="button" class="btn btn-large" value="61"> ON </button>
-											<button type="button" class="btn btn-large" value="60"> OFF </button>
+											<button type="button" class="btn btn-large" value="61" data-keybind="1854"> ON </button>
+											<button type="button" class="btn btn-large" value="60" data-keybind="1854"> OFF </button>
 										</div>
 									</td>
 								</tr>
