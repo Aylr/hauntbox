@@ -10,7 +10,7 @@ def read_in_file():
 		# JS
 		scripts = soup("script", {"id":"script_parse"})
 		script_text = scripts[0].string
-		mini_script = minify(script_text, mangle=True, mangle_toplevel=True)
+		mini_script = minify(script_text, mangle=False, mangle_toplevel=False)
 		scripts[0].string = mini_script
 		# CSS
 		css = soup("style", {"type":"text/css"})
