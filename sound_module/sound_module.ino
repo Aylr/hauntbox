@@ -221,9 +221,6 @@ void get_files(FatReader &d)
   char name[FNAME_LGTH];
   char *s = "";
   char *pch;
-  // char ts[MAX_SOUNDS][12];
-  // DARREN: Boundary check, don't get more than MAX_SOUNDS sounds
-  // DARREN: Check for good .wav file before adding to array
 
   trigger_sound_count = 0;
   while ((d.readDir(dirBuf)) > 0) {     // read the next file in the directory
@@ -241,17 +238,18 @@ void get_files(FatReader &d)
     if (pch != NULL) {
       // Don't include ambient.wav.  It's special.
       if (strcmp(name, ambient_wav_filename) != 0) {
-        strcpy(trigger_sounds[trigger_sound_count], name);
-        trigger_sound_count++;
+        // Make sure the file is a real .wav before adding it to the list
+        if (does_file_exist(name)) {
+          strcpy(trigger_sounds[trigger_sound_count], name);
+          trigger_sound_count++;
+        }
       }
     }
-  }
 
-  // The unsorted array
-  // Serial.println(F("Array:"));
-  // for (c = 0; c < tsc; c++) {
-  //   Serial.println(ts[c]);
-  // }
+    // Stop reading the directory when we've reached the max # of sounds
+    if (trigger_sound_count == MAX_SOUNDS)
+      break;
+  }
 
   // Sort the array alphabetically
   qsort(trigger_sounds, trigger_sound_count, FNAME_LGTH, compare);
@@ -279,6 +277,7 @@ bool does_file_exist(char *name) {   // Should only really run at startup or if 
   }
   return true;            // true if you made it this far without failing
 }
+
 
 bool trigger_check() {
   if (analogRead(OC_trigger_pin) <= OC_trigger_threshold || analogRead(logic_trigger_pin) >= log_trigger_threshold) {
@@ -309,12 +308,13 @@ void playfile(char *name) {   // Plays w/ possiblity to be stopped
   }
   if (!f.open(root, name)) {  // look in the root directory and open the file
     Serial.print(F("Couldn't open "));
-    // DARREN: check for sd card here! Check lots, shine led if problem
     Serial.println(name);
+    sdErrorCheck();
     return;
   }
   if (!wave.create(f)) {    // OK read the file and turn it into a wave object
-    Serial.println(F("Not a valid WAV")); return;
+    Serial.println(F("Not a valid WAV"));
+    return;
   }
   wave.play();          // ok time to play! start playback
 }
@@ -323,6 +323,8 @@ void playfile(char *name) {   // Plays w/ possiblity to be stopped
 void playbackground(char *name) {
   playfile(name);         // call our helper to find and play this name
   while (wave.isplaying) {      // While the ambient background track is playing watch for triggers
+    // Check for user input first
+    check_serial();
     if (trigger_check()) {
       play_next_trigger();
     }
@@ -353,6 +355,19 @@ void play_next_trigger() {
 //   strcat(temp,".wav");
 //   playcomplete(temp);
 // }
+
+
+// Monitor the serial port for commands
+void check_serial(void) {
+  // Check for user input
+  if (Serial.available() > 0) {
+    c = Serial.read();
+      if (c == 104 || c == 105) { // 'h' or 'i'
+        print_info();
+    }
+  }
+}
+
 
 // ---------------------------------- Main Functions ----------------------------------
 void setup() {
@@ -391,12 +406,7 @@ void loop() {
 
   if (!SD_failed) {                                   // if the SD succeeded
     // Check for user input
-    if (Serial.available() > 0) {
-      c = Serial.read();
-      if (c == 104 || c == 105) { // 'h' or 'i'
-        print_info();
-      }
-    }
+    check_serial();
 
     if (ambient_mode) {
       playbackground(ambient_wav_filename);                // play background ambient listening for triggers
