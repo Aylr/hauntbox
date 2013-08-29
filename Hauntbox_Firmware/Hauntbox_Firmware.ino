@@ -23,7 +23,7 @@
 // #define DEBUG_DECIPHER_INPUT_SENSOR true  //details about the inner workings of the decipherIntputSensor() function
 
 #define MAJOR_VER 0
-#define MINOR_VER 1
+#define MINOR_VER 2
 #define MAXROWS 20                            //Maximum # of rows. Please adjust MAX_FILE_LENGTH up accordingly
 #define MINROWS 1                             //minimum # of rows
 #define MIN_BONJOUR_NAME_LENGTH 3             //minimum length of bonjour name. Unreliable below 3.
@@ -758,7 +758,8 @@ bool decipherInputSensor(byte x) {
   bool trig = false;                      //returns 1 if input is considered triggered, 0 if not
   int val;
   int y;
-  float thresholdWithBuffer;
+  float thresholdHigh;
+  float thresholdLow;
 
   if(x == 0 || x > 6) {return 0;}         //Do nothing for "N/A" case and break out of function
   if(x == 1) {val = analogRead(pinIn1);}
@@ -771,17 +772,48 @@ bool decipherInputSensor(byte x) {
   y = inputActiveHiLowArray[x-1];         // Returns Acvive High/Low definition for corresponding input
       // x-1 because in the inputArray we are using 0 as "none"
       // whereas in inputActiveHiLowArray & inputTriggerThresholdArray we are not
-  if (y == 1) thresholdWithBuffer = (float)inputTriggerThresholdArray[x-1] * ((100.0 + HYSTERESIS_BUFFER_PERCENT) / 100.0);     //do a little maths to add a hysteresis buffer
-  if (y == 0) thresholdWithBuffer = (float)inputTriggerThresholdArray[x-1] * ((100.0 - HYSTERESIS_BUFFER_PERCENT) / 100.0);
+  if (y == 1) {
+    //do a little math to add a hysteresis buffer
+    thresholdHigh = (float)inputTriggerThresholdArray[x-1];
+    thresholdLow = (float)inputTriggerThresholdArray[x-1] * ((100.0 - HYSTERESIS_BUFFER_PERCENT) / 100.0);
+  }
+  if (y == 0) {
+    thresholdHigh = (float)inputTriggerThresholdArray[x-1] * ((100.0 + HYSTERESIS_BUFFER_PERCENT) / 100.0);
+    thresholdLow = (float)inputTriggerThresholdArray[x-1];
+  }
+
+  // Active high trigger, with hysteresis on the low end
+  if (y == 1) {
+    if (trig == 0) {
+      if (val >= thresholdHigh) {
+        trig = 1;
+      }
+    }
+    else {
+      if (val < thresholdLow) {
+        trig = 0;
+      }
+    }
+  }
+
+  // Active low trigger, with hysteresis on the high end
+  if (y == 0) {
+    if (trig == 0) {
+      if (val <= thresholdLow) {
+        trig = 1;
+      }
+    }
+    else {
+      if (val > thresholdHigh) {
+        trig = 0;
+      }
+    }
+  }
 
 
-  if((y == 1) && (val >= thresholdWithBuffer)) {trig = 1;}    // if high and supposed to be, consider input "triggered"
-  if((y == 0) && (val >= thresholdWithBuffer)) {trig = 0;}    // if low and supposed to be high, don't
-  if((y == 1) && (val <  thresholdWithBuffer)) {trig = 0;}
-  if((y == 0) && (val <  thresholdWithBuffer)) {trig = 1;}    // if low and supposed to be, consider input "triggered"
 
   #ifdef DEBUG_DECIPHER_INPUT_SENSOR
-    if (trig == 1)  Serial << "DEBUG_DECIPHER_INPUT_SENSOR: x=" << x << " val=" << val << " inputTriggerThresholdArray[x-1]=" << inputTriggerThresholdArray[x-1] <<  " thresholdWithBuffer=" << thresholdWithBuffer << " trig=" << trig << "\n";
+    if (trig == 1)  Serial << "DEBUG_DECIPHER_INPUT_SENSOR: x=" << x << " val=" << val << " inputTriggerThresholdArray[x-1]=" << inputTriggerThresholdArray[x-1] <<  " thresholdHigh=" << thresholdHigh << " trig=" << trig << "\n";
   #endif
 
   return trig;
