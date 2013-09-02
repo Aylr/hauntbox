@@ -252,7 +252,7 @@ $(function(){//shortcut for doc.ready
 	var ABC = ["A","B","C","D","E","F"]		//used when naming the dynamically generated rows
 	var automatic_mode = true;				//keeps track if hauntbox is in manual mode
 	var HB = {};							//initial thoughts of a global name space
-	var modifier;							//For keyboard shortcuts
+	var modifier = 0;						//For keyboard shortcuts
 	
 	//ADC threshold values for inputs/outputs. Maths are done here to spare Arduino CPU cycles
 	var threshold_5V = 103;				//(5V / 5)*1024 = 103
@@ -666,34 +666,34 @@ $(function(){//shortcut for doc.ready
 		if (!$("div.override").is(":visible")) {
 			return; // only listen on override view
 		}
+		if (e.which == 16 || e.which == 17 || e.which == 18) { // ctrl or alt
+			modifier = modifier + e.which;
+			console.log("Modifier", modifier);
+		}
 		if (modifier > 0) {
 			if (e.which >= 49 && e.which <= 55) { // 1-7
+				var trigger_string = modifier + "" +  e.which;
 				if (modifier == 17) { //ctrl for inputs
-					var trigger_string = modifier + "" +  e.which;
 					var self = $("div.override_triggers td button[data-keybind='" + trigger_string + "']").button("toggle").trigger("click");
-					setTimeout(function(){
-						//To provide artifical UI feedback that trigger happened
-						self.button("toggle");
-					}, 100);
-				} else if (modifier == 18) { //alt for outputs
-					var trigger_string = modifier + "" +  e.which;
-					if ($("div.override_outputs button[data-keybind='" + trigger_string + "'].active").length > 0) {
-						$("div.override_outputs button[data-keybind='" +  trigger_string + "']:not(.active)").button("toggle").trigger("click");
-					} else {
-						$("div.override_outputs button[data-keybind='" +  trigger_string + "']:first-child").button("toggle").trigger("click");
-					}
+				} else if (modifier == 18 || modifier == 34) { //alt or alt+shit for outputs
+					var self = $("div.override_outputs td button[data-keybind='" + trigger_string + "']").button("toggle").trigger("click");
 				}
-			}
-		} else {
-			if (e.which == 17 || e.which == 18) { // ctrl or alt
-				modifier = e.which;
+				setTimeout(function(){
+					//To provide artifical UI feedback that trigger happened
+					self.button("toggle");
+				}, 100);
 			}
 		}
 	});
 
 	$(document).on("keyup", function(e){
-		if (e.which == 17 || e.which == 18) {
-			modifier = null;
+		if (e.which == 16 || e.which == 17 || e.which == 18) {
+			if (e.which == 16 && modifier >= 17) {
+				modifier = modifier - e.which;
+			} else {
+				modifier = 0;
+			}
+			console.log("Modifier", modifier);
 		}
 	});
 
@@ -703,14 +703,9 @@ $(function(){//shortcut for doc.ready
 
 		if (tempval == "all_on"){											//if all on
 			$.get("all_on");												//go to url "/all_on"
-			$(".override_outputs").find(".active").removeClass("active");
-			$(".override_outputs button:first-child").addClass("active");	// Set all buttons ON
 		}else if (tempval == "all_off"){		//if all off
 			$.get("all_off");					//get url "/all_off"
-			$(".override_outputs").find(".active").removeClass("active");
-			$(".override_outputs button:not(:first-child)").addClass("active");	// Set all buttons ON
 		}else{
-			$("div.override_outputs button[data-keybind='1855']").removeClass('active');
 			$.post("manual", { a: tempval });	//otherwise post the output# and on/off
 												//the first integer is the output#, the second 1 = on, 0 = off
 												//example output 1 off: 10
@@ -1189,15 +1184,9 @@ $(function(){//shortcut for doc.ready
 		if (data[1] == 1){		//automatic mode
 			$("div.manual_mode_warning").fadeOut();								//hide warning
 			automatic_mode = 1;
-			button = $("div.manual_override_mode button[value='1']");
-			button.parent().find("button[value='0']").removeClass('active');    //Remove the active toggle
-			button.addClass('active');	//toggle radio button
 		} else if (data[1] == 0) {				//manual mode
 			$("div.manual_mode_warning").fadeIn();								//show warning
 			automatic_mode = 0;
-			button = $("div.manual_override_mode button[value='0']");
-			button.parent().find("button[value='1']").removeClass('active');    //Remove the active toggle
-			button.addClass('active');	//toggle radio button
 		}
 	}
 
@@ -1410,13 +1399,13 @@ $(function(){//shortcut for doc.ready
 							</table>
 						</div>
 						<div class="override_outputs span4">
-							<h3>Outputs <small>(keyboard alt + 1-7)</small></h3>
+							<h3>Outputs <small>(keyboard alt+shit[on]/alt[off] + 1-7)</small></h3>
 							<table class="override_table">
 								<tr>
 									<td class="override_output_name">1</td>
 									<td>
-										<div class="btn-group" data-toggle="buttons-radio">
-											<button type="button" class="btn btn-large" value="11" data-keybind="1849"> ON </button>
+										<div class="btn-group">
+											<button type="button" class="btn btn-large" value="11" data-keybind="3449"> ON </button>
 											<button type="button" class="btn btn-large" value="10" data-keybind="1849"> OFF </button>
 										</div>
 									</td>
@@ -1424,8 +1413,8 @@ $(function(){//shortcut for doc.ready
 								<tr>
 									<td class="override_output_name">2</td>
 									<td>
-										<div class="btn-group" data-toggle="buttons-radio">
-											<button type="button" class="btn btn-large" value="21" data-keybind="1850"> ON </button>
+										<div class="btn-group">
+											<button type="button" class="btn btn-large" value="21" data-keybind="3450"> ON </button>
 											<button type="button" class="btn btn-large" value="20" data-keybind="1850"> OFF </button>
 										</div>
 									</td>
@@ -1433,8 +1422,8 @@ $(function(){//shortcut for doc.ready
 								<tr>
 									<td class="override_output_name">3</td>
 									<td>
-										<div class="btn-group" data-toggle="buttons-radio">
-											<button type="button" class="btn btn-large" value="31" data-keybind="1851"> ON </button>
+										<div class="btn-group">
+											<button type="button" class="btn btn-large" value="31" data-keybind="3451"> ON </button>
 											<button type="button" class="btn btn-large" value="30" data-keybind="1851"> OFF </button>
 										</div>
 									</td>
@@ -1442,8 +1431,8 @@ $(function(){//shortcut for doc.ready
 								<tr>
 									<td class="override_output_name">4</td>
 									<td>
-										<div class="btn-group" data-toggle="buttons-radio">
-											<button type="button" class="btn btn-large" value="41" data-keybind="1852"> ON </button>
+										<div class="btn-group">
+											<button type="button" class="btn btn-large" value="41" data-keybind="3452"> ON </button>
 											<button type="button" class="btn btn-large" value="40" data-keybind="1852"> OFF </button>
 										</div>
 									</td>
@@ -1451,8 +1440,8 @@ $(function(){//shortcut for doc.ready
 								<tr>
 									<td class="override_output_name">5</td>
 									<td>
-										<div class="btn-group" data-toggle="buttons-radio">
-											<button type="button" class="btn btn-large" value="51" data-keybind="1853"> ON </button>
+										<div class="btn-group">
+											<button type="button" class="btn btn-large" value="51" data-keybind="3453"> ON </button>
 											<button type="button" class="btn btn-large" value="50" data-keybind="1853"> OFF </button>
 										</div>
 									</td>
@@ -1460,16 +1449,16 @@ $(function(){//shortcut for doc.ready
 								<tr>
 									<td class="override_output_name">6</td>
 									<td>
-										<div class="btn-group" data-toggle="buttons-radio">
-											<button type="button" class="btn btn-large" value="61" data-keybind="1854"> ON </button>
+										<div class="btn-group">
+											<button type="button" class="btn btn-large" value="61" data-keybind="3454"> ON </button>
 											<button type="button" class="btn btn-large" value="60" data-keybind="1854"> OFF </button>
 										</div>
 									</td>
 								</tr>
 								<tr>
 									<td colspan="3">
-										<div class="btn-group pull-right" data-toggle="buttons-radio">
-											<button type="button" class="btn btn-large" value="all_on" data-keybind="1855"> ALL ON </button>
+										<div class="btn-group pull-right">
+											<button type="button" class="btn btn-large" value="all_on" data-keybind="3455"> ALL ON </button>
 											<button type="button" class="btn btn-large" value="all_off" data-keybind="1855"> ALL OFF </button>
 										</div>
 									</td>
