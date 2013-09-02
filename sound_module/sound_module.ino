@@ -359,6 +359,7 @@ void play_next_trigger() {
 
 // Monitor the serial port for commands
 void check_serial(void) {
+  unsigned char c;
   // Check for user input
   if (Serial.available() > 0) {
     c = Serial.read();
