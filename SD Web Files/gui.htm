@@ -101,6 +101,9 @@
 		width: 2.5em;
 		text-align:right;
 	}
+	select {
+		width: 130px;
+	}
 	.settings select, .sensor_state, .output_state {
 		width: 4.4em;
 	}
@@ -160,16 +163,16 @@
 		margin-right: 10px;
 	}
 	.sentence_headings .input {
-		width: 259px;
+		width: 288px;
 	}
 	.sentence_headings .delay {
-		width: 310px;
+		width: 319px;
 	}
 	.sentence_headings .output {
-		width: 175px;
+		width: 208px;
 	}
 	.sentence_headings .duration {
-		width: 340px;
+		width: 319px;
 	}
 	.sentence_headings .voltage {
 		width: 105px;
@@ -234,7 +237,7 @@
 <script type="text/javascript" id="script_parse">
 $(function(){//shortcut for doc.ready
 	//##################################### Important Variables ##################################### 
-	
+	var VERSION = "1.0" 						//Current GUI version
 	var initial_rows = 6;					//how many rows to start with
 	var current_rows_from_program = initial_rows
 	var max_rows = 20;						//maximum number of rows (based on arduino capability)
@@ -487,10 +490,6 @@ $(function(){//shortcut for doc.ready
 				$.ajax({
 					url: '/settings.txt',
 					type: 'GET',
-					beforeSend: function(){
-						//show loading alert
-						//$("div.alert").alert();
-					},
 					success: function(data){
 						//hide alert
 						//$("div.alert").alert('close');
@@ -512,10 +511,6 @@ $(function(){//shortcut for doc.ready
 				$.ajax({
 					url: '/program.txt',
 					type: 'GET',
-					beforeSend: function(){
-						//show loading alert
-						//$("div.alert").alert();
-					},
 					success: function(data){
 						//hide alert
 						//$("div.alert").alert('close');
@@ -524,6 +519,21 @@ $(function(){//shortcut for doc.ready
 					error: function(){
 						//alert: fail
 						$("div.help pre.program").html("Please try again.");
+					}
+				});
+				$.ajax({
+					url: '/version',
+					type: 'GET',
+					success: function(data){
+						console.log("Data", data);
+						//hide alert
+						//$("div.alert").alert('close');
+						var ver = "GUI: " + VERSION + " \nFirmware: " + data;
+						$("div.help pre.version").html(ver);
+					},
+					error: function(){
+						//alert: fail
+						$("div.help pre.version").html("GUI: " + VERSION + "\nFirmware: Error loading version");
 					}
 				});//end ajax
 		}else if (chosen == "override"){	//"override" clicked
@@ -1081,13 +1091,13 @@ $(function(){//shortcut for doc.ready
 				break;
 			case 7:
 				header = "Default Settings Loaded";
-				message = "Could not load settings. Default settings used";
+				message = "Could not load settings. Reset the Hauntbox";
 				status = "&#x2717;";
 				type = "alert-error";
 				break;
 			case 8:
 				header = "Default Program Loaded";
-				message = "Could not load program. Default program used";
+				message = "Could not load program. Reset the Hauntbox";
 				status = "&#x2717;";
 				type = "alert-error";
 				break;
@@ -1271,7 +1281,7 @@ $(function(){//shortcut for doc.ready
 				<div class="sentence_container">
 					<!-- Template for Program Rows -->
 				</div>
-				
+
 				<div class="button_container">
 					<div>
 						<button class="btn btn-large add_row" title="Add Row" type="button"> + </button>
@@ -1307,10 +1317,10 @@ $(function(){//shortcut for doc.ready
 							<option>5V</option>
 							<option>12V</option>
 							<option>24V</option>
-						</select>:
+						</select>
 						<input type="text" class="input_name" name="input1" maxlength="16"> is considered on when its signal goes 
 						<input type="radio" class="highlow" name="highlow1" value="1" checked> High 
-						<input type="radio" class="highlow" name="highlow1" value="0"> Low.&nbsp;
+						<input type="radio" class="highlow" name="highlow1" value="0"> Low &nbsp;
 							Wait
 						<div class="wait">
 							<span class="up">+</span>
@@ -1330,7 +1340,7 @@ $(function(){//shortcut for doc.ready
 						<span class="output_title">Output 1</span>:
 						<input type="text" class="output_name" name="output1" maxlength="16"> is considered on when its signal goes 
 						<input type="radio" class="highlow" name="output_highlow1" value="1" checked> High 
-						<input type="radio" class="highlow" name="output_highlow1" value="0"> Low.
+						<input type="radio" class="highlow" name="output_highlow1" value="0"> Low
 					</div>
 				</div>
 				<div class="button_container">
@@ -1499,6 +1509,10 @@ $(function(){//shortcut for doc.ready
 						<li>Next go the the <strong>program</strong> tab. This is where the fun is. Each row is a sentence that you fill out. Press save and see the Hauntbox do your bidding.</li>
 						<li>Play and share!</li>
 					</ol>
+
+					<h3>Your current GUI and firmware version</h3>
+
+					<pre class="version">Loading versions...</pre>
 					
 					<h3>Your current settings</h3>
 					
@@ -1524,6 +1538,7 @@ $(function(){//shortcut for doc.ready
 						<li><a href="/settings.txt">/settings.txt</a> current settings file</li>
 						<li><a href="/bonjour.txt">/bonjour.txt</a> current bonjour file</li>
 						<li><a href="/ram">/ram</a> free ram</li>
+						<li><a href="/version">/version</a> current firmware version</li>
 						<li><a href="/row_status">/row_status</a> current row state (as defined in firmware)</li>
 						<li><a href="/output_status">/output_status</a> current output state (on/off)</li>
 						<li><a href="/status.htm">/status.htm</a> live status (slows down normal operation)</li>
