@@ -1,0 +1,43 @@
+# Examples
+
+## Simple Example with 1:1 control
+
+Imagine a room with a door sensor, 2 motion sensors in different parts of the room and pressure switch. This room has a desk lamp, a siren, music and a strobe light. In this example, each 1 input is mapped to 1 output. This is 1:1 control.
+
+When [door 1] is [on] wait [0] seconds, then turn [desk lamp] [on] for [30] seconds
+When [motion sensor 1] is [on] wait [0] seconds, then turn [siren] [on] [while input is triggered]
+When [motion sensor 2] is [off] wait [30] seconds, then turn [music] [off] [while input is triggered]
+When [pressure switch 1] is [on] wait [5] seconds, then turn [strobe light] [on] [for [20] seconds
+
+settings:
+1,1,1,1,1,1,1,1,1,1,1,1;door 1,motion sensor 1,motion sensor 2,pressure switch,,;desk lamp,siren,music,strobe light,,;103,103,103,103,103,103;100,100,100,100,100,100;
+program:
+1,1,1,1;1,2,3,4;1,1,1,1;0,0,0,15000;1,2,3,4;1,1,0,1;2,1,1,2;30000,5000,5000,20000;
+
+## Medium Example: Scary Room Scene
+
+Imagine a room where scary music comes on, lights turn out, and a prop is triggered all from 1 motion sensor. This is 1:4, where 1 input controls 4 outputs, each with different timing.
+
+When [motion sensor 1] is [on] wait [2] seconds, then turn [Scary Music] [toggled] for [1] seconds
+When [motion sensor 1] is [on] wait [5] seconds, then turn [main light] [off] for [30] seconds
+When [motion sensor 1] is [on] wait [10] seconds, then turn [scary prop] [on] for [20] seconds
+When [motion sensor 1] is [on] wait [10] seconds, then turn [prop spotlight] [on] for [20] seconds
+
+settings:
+1,1,1,1,1,1,1,1,1,1,1,1;door 1,motion sensor 1,motion sensor 2,pressure switch,,;main light,siren,scary music,strobe light,scary prop,prop spotlight;103,103,103,103,103,103;100,100,100,100,100,100;
+program:
+1,1,1,1;2,2,2,2;1,1,1,1;2000,5000,10000,10000;3,1,5,6;1,0,1,1;2,2,2,2;60000,30000,20000,20000;
+
+
+### Advanced: Multi-switch single light control
+
+Imagine a maze with a single light source that can be controlled by 3 switches hidden in different sections of the maze. It is like a 3-way switch you might have in your house, but awesomer. The main light can be toggled on/off from any push-button switch. This is 3:1 control.
+
+When [push switch 1] is [on] wait [0] seconds, then turn [main light]  [toggled] [until further notice]
+When [push switch 2] is [on] wait [0] seconds, then turn [main light]  [toggled] [until further notice]
+When [push switch 3] is [on] wait [0] seconds, then turn [main light]  [toggled] [until further notice]
+
+settings:
+1,1,1,1,1,1,1,1,1,1,1,1;door 1,motion sensor 1,motion sensor 2,push switch 1,push switch 2,push switch 3;main light,siren,scary music,strobe light,scary prop,prop spotlight;103,103,103,103,103,103;100,100,100,100,100,100;
+program:
+1,1,1;4,5,6;1,1,1;0,0,0;1,1,1;2,2,2;0,0,0;0,0,0;

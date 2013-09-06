@@ -1,0 +1,1 @@
+Here are 3 examples. The readme.txt file in each folder describes the scene. You can either build them yourself or import the text files. If you do want to load them, replace the settings.txt and program.txt on the hauntbox SD card. Reset your hauntbox and reload the web page.

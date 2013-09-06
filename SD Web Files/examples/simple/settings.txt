@@ -1,0 +1,1 @@
+1,1,1,1,1,1,1,1,1,1,1,1;door 1,motion sensor 1,motion sensor 2,pressure switch,,;desk lamp,siren,music,strobe light,,;103,103,103,103,103,103;100,100,100,100,100,100;

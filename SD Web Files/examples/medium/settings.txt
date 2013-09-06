@@ -1,0 +1,1 @@
+1,1,1,1,1,1,1,1,1,1,1,1;door 1,motion sensor 1,motion sensor 2,pressure switch,,;main light,siren,scary music,strobe light,scary prop,prop spotlight;103,103,103,103,103,103;100,100,100,100,100,100;
