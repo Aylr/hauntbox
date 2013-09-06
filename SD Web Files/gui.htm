@@ -675,7 +675,7 @@ $(function(){//shortcut for doc.ready
 				var trigger_string = modifier + "" +  e.which;
 				if (modifier == 17) { //ctrl for inputs
 					var self = $("div.override_triggers td button[data-keybind='" + trigger_string + "']").button("toggle").trigger("click");
-				} else if (modifier == 18 || modifier == 34) { //alt or alt+shit for outputs
+				} else if (modifier == 18 || modifier == 34) { //alt or alt+shift for outputs
 					var self = $("div.override_outputs td button[data-keybind='" + trigger_string + "']").button("toggle").trigger("click");
 				}
 				setTimeout(function(){
@@ -1399,7 +1399,7 @@ $(function(){//shortcut for doc.ready
 							</table>
 						</div>
 						<div class="override_outputs span4">
-							<h3>Outputs <small>(keyboard alt+shit[on]/alt[off] + 1-7)</small></h3>
+							<h3>Outputs <small>(keyboard ON: alt + shift + 1-7 / OFF: alt + 1-7)</small></h3>
 							<table class="override_table">
 								<tr>
 									<td class="override_output_name">1</td>
@@ -1477,23 +1477,32 @@ $(function(){//shortcut for doc.ready
 				<div class="container">
 					<h3>Where to find help</h3>
 					<ul>
-						<li>Please visit <a href="http://hauntbox.net/">hauntbox.net</a> for our store.</li>
-						<li>Please add to our <a href="https://github.com/Aylr/theHB/wiki">wiki</a> where you can find the latest instrucions, tips and tricks.</li>
-						<li>You can find, hack, and contribute to all our source code at <a href="https://github.com/Aylr/theHB/">github</a>.</li>
-						<li>Please do your duty and <a href="https://github.com/Aylr/theHB/issues/new">report all bugs</a></li>
+						<li>For the most current instructions, tips, tricks and hacks, <a href="https://github.com/Aylr/theHB/wiki">visit our wiki</a>. Also, please help us make it better.</li>
+						<li>Find ideas and tutorials on <a href="http://www.youtube.com/thehauntbox">our youtube channel</a><br /><script src="https://apis.google.com/js/plusone.js"></script><div class="g-ytsubscribe" data-channel="thehauntbox" data-layout="full"></div></li>
 						<li>We are <a href="http://twitter.com/hauntbox">@hauntbox</a> on twitter. <a href="https://twitter.com/intent/tweet?screen_name=hauntbox">Tweet to us.</a></li>
-						<li>Our original kickstarter page.</li>
+						<li>Feel free to email us at <a href="mailto:info@hauntbox.net">info@hauntbox.net</a></li>
+						<li>Please do your duty and <a href="https://github.com/Aylr/theHB/issues/new">report all bugs</a></li>
+						<li>Please visit <a href="http://hauntbox.net/">hauntbox.net</a> for our store.</li>
+						<li>You can find, hack, and contribute to all our source code at <a href="https://github.com/Aylr/theHB/">github</a>.</li>
+						<li>A mad shoutout to our awesome <a href="http://www.kickstarter.com/projects/1020117671/hauntbox/backers">kickstarter backers</a> who made this project possible.</li>
 					</ul>
 
-					<h3>Basics</h3>
-					<p><strong>Note:</strong> It is very important to protect the Hauntbox from shorts that could damage the sensitive electronics. Never change wiring to inputs or outputs when it is plugged into a power supply.</p>
+					<h3>Basic Setup</h3>
+					<p>This is only a rudimentary introduction. For the latest documentation, <a href="https://github.com/Aylr/theHB/wiki">visit our wiki</a>.</p>
+					<p><strong>Note:</strong> It is very important to protect the Hauntbox from shorts that could damage the sensitive electronics. <strong>Always unplug power from your hauntbox when changing wiring to inputs or outputs!</strong></p>
+
+					<h4>Physical Setup</h4>
 					<ol>
 						<li>Wire your sensors to the inputs on the Hauntbox. They are along the top of the board labeled A through F.</li>
 						<li>Wire up the things you want to control to the outputs. They are along the bottom of the Hauntbox labeled 1 through 6.</li>
 						<li>Plug in your network cable to the CAT5 network jack on the left side of the Hauntbox.</li>
 						<li>Plug in your power supply and plug it into the power jack on the left side of the Hauntbox.</li>
+					</ol>
+
+					<h4>Software Setup</h4>
+					<ol>
 						<li>Fire up your favorite browser and browse to http://hauntbox.local (Note that some browsers do require the "http://").
-						<ul><li><em>An aside about bonjour.</em> If you have more than one hauntbox on the same network you <strong>must</strong> change the name to be unique on the network. This is easily done by popping the microSD card out of your Hauntbox and making a file called "bonjour.txt" on the card. Edit this with your favorite text editor (Notepad on Windows, TextEdit on Mac, nano on Linux) and make up a name less than 16 characters that only has letters and numbers. No special characters. Put the card back into your Hauntbox and reset. Now browse to "http://yourname.local"</li></ul></li>
+						<ul><li><em>An aside about bonjour.</em> If you have more than one hauntbox on the same network you <strong>must</strong> change the name to be unique on the network. This is easily done by popping the microSD card out of your Hauntbox and editing the file called "bonjour.txt" on the card. Edit this with your favorite text editor (Notepad on Windows, TextEdit on Mac, nano on Linux) and make up a name less than 16 characters that only has letters and numbers. No special characters. Put the card back into your Hauntbox and reset. Now browse to "http://yourname.local"</li></ul></li>
 						<li>First take a look at the <strong>settings</strong> tab. Rename your sensors and outputs so you can easily see what you're controlling. Be sure to click "Save" when you're done.</li>
 						<li>Next go the the <strong>program</strong> tab. This is where the fun is. Each row is a sentence that you fill out. Press save and see the Hauntbox do your bidding.</li>
 						<li>Play and share!</li>
@@ -1521,6 +1530,7 @@ $(function(){//shortcut for doc.ready
 
 					<h3>Advanced URL schema for the intrepid hacker</h3>
 					<ul>
+						<li><a href="/manual">/version</a> current <em>firmware</em> version</li>
 						<li><a href="/program">/program</a> current program + status + ram</li>
 						<li><a href="/settings">/settings</a> current settings + status + ram</li>
 						<li><a href="/program.txt">/program.txt</a> current program file</li>
@@ -1528,9 +1538,7 @@ $(function(){//shortcut for doc.ready
 						<li><a href="/bonjour.txt">/bonjour.txt</a> current bonjour file</li>
 						<li><a href="/ram">/ram</a> free ram</li>
 						<li><a href="/version">/version</a> current firmware version</li>
-						<li><a href="/row_status">/row_status</a> current row state (as defined in firmware)</li>
-						<li><a href="/output_status">/output_status</a> current output state (on/off)</li>
-						<li><a href="/status.htm">/status.htm</a> live status (slows down normal operation)</li>
+						<li><a href="/status.htm">/status.htm</a> live status (drastically slows down input &amp; output operation)</li>
 						<li><a href="/status">/status</a> returns intputState ; rowState ; outputState (used by status.htm)</li>
 						<li><a href="/all_on">/all_on</a> turns all on</li>
 						<li><a href="/all_off">/all_off</a> turns all off</li>
