@@ -22,8 +22,8 @@
 // #define DEBUG_IP_ADDRESS  true        //details about static IP address
 // #define DEBUG_DECIPHER_INPUT_SENSOR true  //details about the inner workings of the decipherIntputSensor() function
 
-#define MAJOR_VER 0
-#define MINOR_VER 2
+#define MAJOR_VER 1
+#define MINOR_VER 0
 #define MAXROWS 20                            //Maximum # of rows. Please adjust MAX_FILE_LENGTH up accordingly
 #define MINROWS 1                             //minimum # of rows
 #define MIN_BONJOUR_NAME_LENGTH 3             //minimum length of bonjour name. Unreliable below 3.
