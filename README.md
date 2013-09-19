@@ -6,7 +6,7 @@
 2. A formatted microSD card.
 3. A wired network connection.
 4. Some sensors and interesting things to hook up to the outputs.
-5. A sense of adventure.
+5. A sense of adventure
 
 ## Initial overview and set up
 
@@ -69,7 +69,7 @@
 
 ### Output: Hauntbox Sound Module hook up
 
-[Insert picture here]>
+<a href="http://www.flickr.com/photos/hauntbox/9821935396/" title="sound_module_wiring_v01 by hauntbox, on Flickr"><img src="http://farm4.staticflickr.com/3786/9821935396_ebfab7807c_c.jpg" width="522" height="800" alt="sound_module_wiring_v01"></a>
 
 1. Hook up sound module **V in** to your Hauntbox output **+V** (sound module runs on 12V (or 24V) power).
 2. Hook up sound module **GND** to your Hauntbox output **GND**
