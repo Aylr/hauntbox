@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Hauntbox</title>
+    <script src="build/react.js"></script>
+    <script src="build/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+</head>
+
+<body>
+    <div id="test"></div>
+    <script type="text/babel">
+        var Sentence = React.createClass({
+            render: function() {
+                return (
+                    <div className="sentence">
+                        
+                        <div className="inner_sentence">
+                            <span className="input">
+                                When
+                                <select className="sensor" name="sensor">
+                                    <option value="0">-</option>
+                                    <option value="1">A: garage</option>
+                                    <option value="2">B: my room</option>
+                                    <option value="3">C: hall</option>
+                                    <option value="4">D: cemetery</option>
+                                    <option value="5">E: cornfield</option>
+                                    <option value="6">F: swamp</option>
+                                </select>
+                                is
+                                <select className="sensor_state" name="sensor_state">
+                                    <option value="1">on</option>
+                                    <option value="0">off</option>
+                                </select>
+                            </span><span className="delay">
+                                Wait
+                                <div className="wait">
+                                    <IncrementButton direction='up' />
+                                    <IncrementButton direction='down' />
+                                </div>
+                                <input type="text" className="wait_time" name="wait_time" maxlength="9" value="0" />
+                                second(s) then turn
+                            </span><span className="output">
+                                <select className="output" name="output">
+                                    <option value="0">-</option>
+                                    <option value="1">1: UV</option>
+                                    <option value="2">2: light</option>
+                                    <option value="3">3: strobe</option>
+                                    <option value="4">4: sound</option>
+                                    <option value="5">5: air horn</option>
+                                    <option value="6">6: zombie</option>
+                                </select>
+                                <select className="output_state" name="output_state">
+                                    <option value="1">on</option>
+                                    <option value="0">off</option>
+                                    <option value="2">toggled</option>
+                                </select>
+                            </span><span className="duration">
+                                <select className="duration_type">
+                                    <option value="0">until further notice.</option>
+                                    <option value="1">while input is triggered.</option>
+                                    <option value="2">for</option>
+                                </select>
+                                <div className="duration_container">
+                                    <div className="duration">
+                                        <IncrementButton direction='up' />
+                                        <IncrementButton direction='down' />
+                                    </div>
+                                    <input type="text" className="output_duration" name="output_duration" maxlength="9" value="0" />
+                                    second(s).
+                                </div>
+                            </span>
+                            <span className="row_status"></span>
+                        </div>
+                    </div>
+                );
+            }
+        });
+
+        var IncrementButton = React.createClass({
+            render: function(){
+                return (
+                        <span className={this.props.direction}>{this.props.direction == 'up' ? '+' : '-'}</span>
+                );
+            }
+        });
+
+        var DurationDropDown = React.createClass({
+          render: function(){
+            return (
+                <select className="duration_type">
+                    <option value="0">until further notice.</option>
+                    <option value="1">while input is triggered.</option>
+                    <option value="2">for</option>
+                </select>
+                <div className="duration_container">
+                    <div className="duration">
+                        <IncrementButton direction='up' />
+                        <IncrementButton direction='down' />
+                    </div>
+                    <input type="text" className="output_duration" name="output_duration" maxlength="9" value="0" />
+                    second(s).
+                </div>
+            );
+          }
+        });
+        ReactDOM.render(<Sentence />, document.getElementById('test') );
+    </script>
+</body>
+
+</html>
